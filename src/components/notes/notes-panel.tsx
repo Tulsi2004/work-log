@@ -6,31 +6,17 @@ import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { NoteFormDialog } from "@/components/notes/note-form";
 import { NoteCard } from "@/components/notes/note-card";
 import { useNotes } from "@/hooks/use-notes";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { deleteNote } from "@/actions/note-actions";
-import { NOTE_CATEGORIES } from "@/lib/validations/note";
-import { formatEnumLabel } from "@/utils/format";
-import type { Note } from "@/types";
 
 export function NotesPanel() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const [category, setCategory] = useState("all");
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<Note | undefined>(undefined);
 
   const queryClient = useQueryClient();
-  const { data, isLoading } = useNotes(debouncedSearch, category === "all" ? undefined : category);
+  const { data, isLoading } = useNotes(debouncedSearch);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteNote(id),
@@ -47,38 +33,18 @@ export function NotesPanel() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search notes…"
-              className="pl-8"
-            />
-          </div>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              {NOTE_CATEGORIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {formatEnumLabel(c)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search notes…"
+            className="pl-8"
+          />
         </div>
-        <Button
-          onClick={() => {
-            setEditingNote(undefined);
-            setFormOpen(true);
-          }}
-        >
+        <Button>
           <Plus className="size-4" />
-          New Note
+          Add Note
         </Button>
       </div>
 
@@ -94,10 +60,6 @@ export function NotesPanel() {
             <NoteCard
               key={note.id}
               note={note}
-              onEdit={(n) => {
-                setEditingNote(n);
-                setFormOpen(true);
-              }}
               onDelete={(n) => {
                 if (confirm(`Delete "${n.title || "this note"}"?`)) {
                   deleteMutation.mutate(n.id);
@@ -107,8 +69,6 @@ export function NotesPanel() {
           ))}
         </div>
       )}
-
-      <NoteFormDialog open={formOpen} onOpenChange={setFormOpen} note={editingNote} />
     </div>
   );
 }

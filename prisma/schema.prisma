@@ -10,10 +10,28 @@ model Note {
   id        String       @id @default(cuid())
   userId    String
   title     String?
-  content   String
+  content   String?
   category  NoteCategory @default(GENERAL)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+
+  attendanceStatus AttendanceStatus?
+  checkIn          String?
+  checkOut         String?
+  breakIn          String?
+  breakOut         String?
+
+  companyName   String?
+  companyStatus CompanyStatus?
+
+  projectName      String?
+  projectStatus    ProjectStatus?
+  projectStartDate DateTime?
+  projectEndDate   DateTime?
+
+  workLogDate   DateTime?
+  hoursWorked   Float?
+  workLogStatus WorkLogStatus?
 
   @@index([userId])
   @@index([userId, category])
@@ -29,4 +47,29 @@ enum NoteCategory {
   COMPANY
   PROJECT
   WORK_LOG
+}
+
+enum AttendanceStatus {
+  PRESENT
+  HALF_DAY
+  LEAVE
+  HOLIDAY
+  WORK_FROM_HOME
+}
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+}
+
+enum WorkLogStatus {
+  COMPLETED
+  IN_PROGRESS
+  PENDING
 }

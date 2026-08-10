@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, Plus, Settings } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { NoteFormDialog } from "@/components/notes/note-form";
 import { SidebarNav } from "./sidebar-nav";
 
 export function Navbar() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [noteFormOpen, setNoteFormOpen] = useState(false);
 
   return (
     <>
@@ -36,11 +34,6 @@ export function Navbar() {
 
         <div className="flex-1" />
 
-        <Button size="sm" onClick={() => setNoteFormOpen(true)}>
-          <Plus className="size-4" />
-          <span className="hidden sm:inline">New Note</span>
-        </Button>
-
         <Button variant="ghost" size="icon" asChild>
           <Link href="/settings">
             <Settings className="size-4" />
@@ -50,8 +43,6 @@ export function Navbar() {
 
         <UserButton />
       </header>
-
-      <NoteFormDialog open={noteFormOpen} onOpenChange={setNoteFormOpen} />
     </>
   );
 }

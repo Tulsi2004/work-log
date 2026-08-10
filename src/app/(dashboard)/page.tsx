@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { StickyNote, Plus } from "lucide-react";
+import { StickyNote } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -10,15 +9,12 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { NoteFormDialog } from "@/components/notes/note-form";
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { formatDateTime } from "@/utils/format";
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboardStats();
-  const [noteFormOpen, setNoteFormOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -47,19 +43,6 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Jump straight into writing.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button onClick={() => setNoteFormOpen(true)}>
-            <Plus className="size-4" />
-            New Note
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Recent Notes</CardTitle>
           <CardDescription>Your latest entries.</CardDescription>
         </CardHeader>
@@ -85,8 +68,6 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
-
-      <NoteFormDialog open={noteFormOpen} onOpenChange={setNoteFormOpen} />
     </div>
   );
 }
