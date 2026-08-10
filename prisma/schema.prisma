@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Note {
+  id        String       @id @default(cuid())
+  userId    String
+  title     String?
+  content   String
+  category  NoteCategory @default(GENERAL)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([userId, category])
+}
+
+enum NoteCategory {
+  GENERAL
+  WORK
+  PERSONAL
+  IDEAS
+  REFERENCE
+  ATTENDANCE
+  COMPANY
+  PROJECT
+  WORK_LOG
+}

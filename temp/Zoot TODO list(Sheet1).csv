@@ -1,0 +1,362 @@
+23/02/2026,24/02/2026,25/02/2026,26/02/2026,27/02/2026,28/02/2026,,3/1/2026,3/2/2026,3/3/2026,3/4/2026,3/5/2026,3/6/2026,3/7/2026,3/8/2026,9/3/2026,10/3/2026,11/3/2026,12/3/2026,3/13/2026,3/14/2026,3/15/2026,3/16/2026,3/17/2026,3/18/2026,3/19/2026,3/20/2026,3/21/2026,3/22/2026,23/03/2026,24/03/2026,25/03/2026,26/03/2026,27/03/2026,28/03/2026,29/03/2026,30/03/2026,31/03/2026,,1/4/2026,2/4/2026,3/4/2026,4/4/2026,5/4/2026,6/4/2026,7/4/2026,8/4/2026,9/4/2026,10/4/2026,11/4/2026,12/4/2026,13/4/2026,14/4/2026,15/4/2026,16/4/2026,17/4/2026,18/4/2026,19/4/2026,20/4/2026,21/4/2026,22/4/2026,23/4/2026,24/4/2026,25/4/2026,26/4/2026,27/4/2026,28/4/2026,29/4/2026,30/4/2026,,1/5/2026,2/5/2026,3/5/2026,4/5/2026,5/5/2026,6/5/2026,7/5/2026,8/5/2026,9/5/2026,10/5/2026,11/5/2026,12/5/2026,13/5/2026,14/5/2026,15/5/2026,16/5/2026,17/5/2026,18/5/2026,19/5/2026,20/5/2026,21/5/2026,22/5/2026,23/5/2026,24/5/2026,25/5/2026,26/5/2026,27/5/2026,28/5/2026,29/5/2026,30/5/2026,31/5/2026,,1/6/2026,2/6/2026,3/6/2026,4/6/2026,5/6/2026,6/6/2026,7/6/2026,8/6/2026,9/6/2026,10/6/2026,11/6/2026,12/6/2026,13/6/2026,14/6/2026,15/6/2026,6/16/2026,6/17/2026,6/18/2026,6/19/2026,6/20/2026,6/21/2026,6/22/2026,6/23/2026,6/24/2026,6/25/2026,6/26/2026,6/27/2026,6/28/2026,6/29/2026,6/30/2026,,7/1/2026,7/2/2026,7/3/2026,7/4/2026,7/5/2026,7/6/2026,7/7/2026,7/8/2026,7/9/2026,7/10/2026,7/11/2026,7/12/2026,7/13/2026,7/14/2026,7/15/2026,7/16/2026,7/17/2026,7/18/2026,7/19/2026,7/20/2026,7/21/2026,7/22/2026,7/23/2026,7/24/2026,7/25/2026,7/26/2026,7/27/2026,7/28/2026,7/29/2026,7/30/2026,7/31/2026,8/1/2026,,8/2/2026,8/3/2026,8/4/2026,8/5/2026,8/6/2026,8/7/2026,8/8/2026,8/9/2026,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"About company: Seo-optimization
+Fiverr 
+Websites: ZootCRM, KPCRM, (about client sites)
+		PMS (about order) https://pms.zootcloud.com/
+","Prisma documentation (and implementation) next.js
+prisma ORM 
+(Object Relational Mapping)",Clerk integration,UI for report of map citations report (for practice of shadcn),"Local Falcon/Rank tracker frontend homepage, dashboard, login",downloading progress popup for employee documents download,,SUNDAY,preview button visibility in dark mode in employee profile,LEAVE Holi,Travel Log Site ,Travel log update,to check the bug unable to get the page -> Portal admin panel -> attendance -> Employee Analytics ?,to check the bug unable to get the page -> Portal admin panel -> attendance -> Employee Analytics ?,SUNDAY,"1. npm run build -> Git push 
+3. Create new project in clerk for KORA and add them to the env
+2. create new project on vercel repo (LORA)
+4. Add env keys on vercel",No task,Flickering in the portal if the employee is not created by the admin and they have logged in ?,Extention for Fiverr (hiding the elements and page),Fiverr Access Controller Extension?? Below is the feature for how it works,Portal attendance to exclude work from home hours for the average calculating hours,SUNDAY,fiverr audit update,audit-viewer.html to separate the credentials,audit html updation for refresh and updation according to new db,fiverr extension dashboard enhancement,fiverr extension vps pull and dashboard error,extension optimization,SUNDAY,LORA in rank tracker inside view history add a search bar,No task,No task,Fixed disable button in the audit-viewer file,Backend push in the vps for search bar updation,To make the popup look good when enable/disable permission ,SUNDAY,HALF DAY Dhurandhar came at 12:30pm,No task,,Extension re-published in chrome web store,"Started devconfig-manager
+Project which manage and organize credentials of projects","Database inconsistency showing double times account, fixed",Refactored devconfig-manager website,SUNDAY,Changed the db to neondb for the page hider extension,"devconfig-manager project visiblilty, public private ",updated project and documentation setup page, Light and dark theme support,Removed the old ver from vercel,"Refactored dashboard and other pages, navbar",SUNDAY,pages refactored,refactored the documentation section ,deploy in vercel (https://devconfig-manager.vercel.app/),"For http to https chrome extension made github app, used coolify, created db again in pgadmin",Devconfig added section for manage keys,Convocation,SUNDAY,,L,E,A,V,E,SUNDAY,,Accide,Extension published in chrome web store checked,Researched about microservices,,tested the api in postman api for the microservice,Optimiziing the graph in the index.html for the microservice,SUNDAY,website audit tools -> connecting internal link API,Nodes if selected individally should be shown in focus which other nodes are connected to it and others should be hidden (BUG unable to fix),Andheri event,Internal link Api testing backend created ui for the same,Deployed with senior the backend repo,HALF DAY (train) came for 9-11am ,SUNDAY,,L,E,A,V,E,SUNDAY,bbq,portal tags & work created report page,internal linking microservice called in the website audit tools ,"added documentation of the fiverr page hider extension
+removed the setup page from the devconfig project",update the ui for ai chatbox in the freeserp,Free serp ui updation told by prasad sir,SUNDAY,share url updated in app.freeserp instead freeserp,Favicon updated in freeserp frontend,"crm reset password, logout from the devices",Freeserp Competitor analysis(CA) Url beside it icon to redirect ; url of page will be shown in which it is ranked,serp checker box in the rank tracker to place,No task,SUNDAY,,Freeserp if admin should have unlimited version,portal added popup like admin for employee for keeping mobile in box (should show in interval of 2 hrs),HALF DAY for license came at 1:30pm,Pms flow user-team-service-orderType-createOrder ,To add bithday feature in portal ,Enhance the notification section in pms,SUNDAY,"Documentation for crm, pms, portal; also update in daily work report group","PMS, team task and assigned task page removed the default table shown only appears when searched; Fixed assign and team tasks page load issue, refactored the filter option also removed the cards","
+PMS 
+/orders
+Added date and time selection support in the task deadline field.
+/order-creator/services/new
+Fixed team dropdown to fetch and display all available KP teams.",PMS; in /member/tasks when we click on start work button the whole page reloads,"Freeserp ui, 
+50+ keywords line above the logo is not visible in mobile ui
+How the free rank tracker works to enhance ui","resize the image of free serp checker page, the image size is too big if compared with the home page image",SUNDAY,obssession,"Freeserp ui fix , BlogPosting author missing url and sameAs — validator found a Person object but no url or sameAs
+FAQPage already on /serp-checker— just needs the author fix to push the blog post to 0 errors",No task,"Portal, add filter of salary cycle in break history
+remove Average Break card from /employee-panel/break
+Add card of total number of break taken in the current salary cycle /employee-panel/break/history","read about google tag and ads 
+
+added wth feature in portal","Portal, wth feature enhanced",SUNDAY,freeserp ui in that free serp checker was using scrap.do changed it to use data for seo,came 9:10-10:10am,freeserp-ui fixed serp checker page ranking,"freeserp ui debug same issue as before
+
+portal to create incentive tracker",incentive tracker feature added in portal,"portal, Order Total amt field added in my incentive table
+add order date field in incentive form
+add an edit field for share ",SUNDAY,"portal, fixed the bucket storage problem in work from home",Lusso landing page ,,"lusso contact added also faq's for each page
+
+Portal – WFH & SRP Attendance Logic
+- Update the attendance calculation logic so that when an employee is marked as Absent in SRP attendance but has approved WFH attendance data for the same day, the WFH data should override the SRP attendance status.",Lusso update according to the requirement added the img and social media logos,"Lusso replaced the img in all page according to the client 
+
+Portal refactored the asset management",Lusso replaced the img of location page and footer fixed in links,SUNDAY,"Lusso As per client made the changes in the homepage 
+and swapped","portal break bug to fix
+
+homepage started for trackly ",lusso replaced img and made the needful for the optimization,"lusso added address
+
+freeserp ui updation started using html",freeserp ui html updated in the freeserp ui,"Updated google sheet for freeserp 
+
+Leadsonus - website deveploment landing page made",SUNDAY,"updated google sheet
+
+deployed leadsonus website
+
+redesigned the leadsonus",keyword analysis page restyled,"Leadsonus styled the landing page precisely
+
+freeserp projects ui",freeserp landing page for ad,freeserp landing page for ad ,"freeserp landing page 2 for ad
+
+freeserp collapse button and added the  edit option for project name",SUNDAY,Bro birthday,"add CSV export functionality for WFH requests
+
+leadsonus landing page","landing page for real estate kamdhenu and 
+added google tag ",Passport appointment bkc and trio meetup,"estate buddy kamdhenu landing pg 
+updated
+
+leadsonus backend and database & 
+sai landing page","sai landing page update
+
+created admin for the same landing page",SUNDAY,"sai landing page admin added for meta contents & analytics  
+
+freeserp removed 2-3 words
+
+freeserp ad landing page made as static","sai landing page update 
+
+sai LP admin replay session updation 
+
+freeserp admin implemented replay session",sai LP admin update,internal linking added in the freeserp,competitor analysis added in the freeserp,admin panel for kamdhenu and reliable realities and updated the theme for sai world dreams,,SUNDAY,Passport appointment lower parel came at 2:30pm,Kamdhenu landing pg added utm and metacapi fake ui ,also create another .md file add the meta capi ui we did that ,,,,,JULY take salary slip
+"To download and install
+vscode
+nodejs
+docker
+git
+winrar
+chrome
+terminal (microsoft store)","Prisma Client: Auto-generated, type-safe ORM interface
+Prisma Migrate: Database migration system
+Prisma Studio: GUI to view and edit your data","clone of portal -> npm i 
+-> npx prisma db push 
+-> npx prisma generate",Portal remove the delete button from the user side and the admin should only have the update or remove the pic for the employee profile and documents section  ,employee Login they should not be able to use any other thing other than break unless they have upload the docs ?,,,,attendance details check in check out time is mismatch,,Meeting (Website marketing and about some add features),,landing page for the below ?,"In portal, admin tags error solve",,landing page for the below ?,,,," BLOCKS (Completely Restricts Access):
+/earnings - Earnings page
+beside profile earnings and dashboard current earnings
+completed orders",fiverr audit log option,,"1. fiverr /earning page hidden
+2. current earning on the dashboard section 
+3. completed orders section 
+4. beside the profile pic the current earning to hide",db migrate to vps to do,db migrate to vps done,,,upload the extension zip file in webstore ?,,,,,Mail for pending review,"Updation for goal to give admins full control over what employees can access, without requiring employees to disable or remove the extension.",To test Temporary Access Until To make the popup look good when enable/disable permission ,,,,,"removed the need of backend url and key 
+Published ver 2.0.3",,Git push and deployed in zoot account,"EDITED: ??
+navbar
+footer
+sidebar
+pages
+popup",,devconfig-manager website project setup and documentation page upload button,/dashboard/explore page done,navbar and sidebar alignment issue resolved,readme.md file uploaded added pushed in my repo,auth implementation,,,"setup and documentation combined, removed the upload option instead hardcorded  in the project itself",will show the email by the creator,chrome extension http to https doing,Extension re-published in chrome web store,,,,,,,Pavi wedding,,,,,,,,,to create logs understandable for internal linking,Reviewed the project and identify any shortcomings or areas for improvement.,,created docs for api then db schema table creation ,Recreating the section for internal link graph in websiteaudittools,,real time updation while crawler is crawling and using d3.js directed graph ,Tested the deployed backend with the frontend,,,,,,Kerala performance,,,,,"Admin able to see employee work tags counts, time, can filter according to sal cycle day or week",,"edited the link acc to add acc in the project details section
+fixed light mode and added shortcut for theme change",integrate  internal link api also,,,,Keyword page url displayed in the project dashboard and user's url for comparison in improve button,past roles of the users can be seen ,CA on click ask for specific page for analyzing,,,,,Freeserp ui made a page /website-ranking-checker,"freeserp, added edit button for Project Name and Domain; create /thank-you-subscription(removed already there) in freeserp and remove the theme button","sir told; added the gtm 
+Implement the 3 URL parameters:
+?new_signup=true        after first signup
+?project-first-new=true       after first project
+?keywords-first-new=true      after first keywords add",pms add feature of mark as extend in all orders and give admin the option of remove the same,deactivate account for employee in portal,"MEETING:Update portal after askin TL about take detailed convo
+-make a pdf for Saas for PMS,CRM,PORTAL",,"Karuna(CRM):No
+Diksha(PMS):No
+Sneha(PMS):
+Team task page- Active team task table (show after searching)
+same problem with assign task.
+Kritika(PMS):Slow load same as above issue
+TO IMPLEMENT: Lazy loading/infinite load/pagination, debounce,  ","implemented debounce since it was loading data in bulk
+/orders
+/asking-tasks
+needed manual enter and refresh for search implemented debounce method
+/order-creator/services
+/order-creator/order-types
+in the side panel make the notification (no.) red color 
+/delivery page added infinite load 
+/orders page add copy button beside the client name and order id","/member/team/assign-tasks
+Fixed task time display issue to show the correct user-entered time.
+/member/team/team-tasks
+Investigated missing Reassign and Delete options and verified they are hidden when a task is completed.","Freeserp ui
+1) removed the features and how it works from the navbar
+2) renamed button get started for free in the navbar
+3) added logos in the homepage
+4) added link and logo in the footer for linkden, instagram, twitter(link not added)
+5) made pricing page and added it in the navbar; updated the pricing in homepage ","PMS, /orders page when clicked on edit button the pop ui was not proper fixed","1. Reconcile pricing & free-tier  claims  - Home, /pricing, /serp-checker,
+FAQs 
+2. Organization + WebSite schema - Homepage <head>
+3. Article + author schema + profile - Every blog post; new /author
+page
+4. FAQPage schema - /serp-checker, article FAQs
+5. robots.txt for AI crawlers - /robots.txt",,,"portal
+/employee-panel/my-penalties shows 5:30am instead of real time there was no column for saving it was showing fake- fixed
+updated the table
+in create assignment can't see already assigned tags to employee's also need to improve the ui",,"freeserp, separated the privacy policy and refund return policy; started email integration","PMS, assign task and team task is loading implement cache  ?
+portal, anonymous message to admin ?",,,portal card replaced total no. of cycle instead Total break time this cycle,skid,,"module in my portal named as incentive tracker in my admin panel in that we will have fields 1. client name, 2. order status in this the dropdown will be not started, in progress, revision, dispute, cancelled, completed then 3. claimed this should be not more that 100% and i should have fields to add such as pitching employee names like i will type the name then beside that i will write the percentage they worked on it so i.e divya 60% muskan 30% sopan 10% the total should not more than 100% ",4. Paid should be boolean this should be enabled only if in order status completed is selected 5. Amount 6. Date (when was it paid) this is not equal to creation date,Landing page of Lusso executive taxi in html,,"for incentive View history for employee as well as the admin 
+
+for incentive also add card for balance minimum 500$ for withdraw 
+
+Lusso landing page Html to next js","https://www.lussoexecutive.co.uk/
+
+https://lusso-executive.vercel.app/",,"- If an employee has both SRP attendance data (office work) and WFH attendance data on the same day, the existing SRP attendance record should remain unchanged.
+- In cases where both SRP and WFH records exist, the WFH working hours should be calculated separately and added to the employee's Overtime Hours
+- While calculating WFH hours, any recorded break duration must be deducted from the total working time before the overtime value is calculated.
+- No other attendance, SRP, WFH, overtime, or payroll functionality should be modified as part of this change.","Portal assest management started 
+
+Created spreadsheet for freeserp and portal",,,,,,,,npm run dev:worker,"
+freeserp
+-improve the all projects button ui on top : 3 dots inside competitor share delete alerts 
+-the keyword button will be white and run check turns blue when selected the keywords in the table 
+-remove alerts from sidebar 
+-keywords and 3 dots button repositioned 
+-keyword analysis improve ui 
+-onpage audit  improve ui 
+-free per day checks 5 currently reduce to 3 
+-reduce the 15 days to 7 days trial 
+-if credits exhaust then option to buy more checks 
+-sidebar renamed ",,"when user adds a keyword then it is auto checking instead i want it should be done manually in projects page
+
+3 dots rename to more options in projects page
+
+remove the gap above How The Free Rank Tracker Works 
+
+country should be auto selected according to the ip 
+
+Only 2 checks per day for ananomyous user
+
+After 2 checks prompt the user for sign up",,,,,,pune performance,,,framer for ui ,,,,,,,,,,,,,,,,,,,,
+"websites: to login
+supabase (zootdigitalseo@gmail.com)
+vercel
+github
+protonPass (to do) 
+clone from github of pms",clerk documentation(read),,single download in employee profile and bulk download of documents in zip file ,,,,,to add a filter for documents uploaded by the employee and also card to table format,,,,kp-lora site change in ui-ux color scheme ,,,To change the icon and name to MrReports if the department variable is KP,,,,,,,,extension upload to web store ?,,,,,,,,,Correctness of filter dropdown,,flicker updation,,,,,count hours from all attendance statuses in admin analytics,,https://devconfig-manager.vercel.app/,,,,,,"Restarted the project using template, landing page done",,,,Mail for pending review,copy option in the documentation for the code and light mode (theme),Portal work (TODO) /employee ?,auth email otp changed from testing to mail,,,,,,,,,,,,,,,,to make a ui for visualizing data.json on the tested postman api,,, (to create route for the backend connection) not done cause used internal which was already made,,,to deploy backend in vps using coolify and frontend in vercel,"cloned crm and removed delete option in the pitching client, /query, /maintenance; should have that option in admin",,,,,,,,,,,The tags are not repeated and counted in the same also can view graph when clicked certain row ,,"Freeserp frontend recfactored removed the /serp-checker, /#features, /blog; also on login and click on the logo redirected on /dashboard","crm; in client, client tag or maintenance client if anyone deletes we should be able to know who deleted and when",,,,code updated given by sir and make the freeserp mobile compaitable frontend ,Freeserp url should not come if the keyword is not found in the page and also no re-queuing when adding a new keyword,in freeserp ui added rank tracker page,,,,,,pms forgot password url link session fix ?,pms forgot password url link session fix ? to do ?,,"PMS added section of notification under team management details about order details, asking task completed, task related to team ?",,,,"/order-creator/order-types page remove Description column
+/order-creator/services page in this remove the Time Limit, Description column
+;also if we have enable auto assign in the table we should be able to see there name
+if user is deactivated they should not be displayed under the team as well as assigned task section, there name should not come under the dropdown
+in /admin/users page added sort by alphabetical order and a search bar",,,,"6. Standardize brand name - Sitewide copy, schema, OG
+7. Tighten lead answers (40–60 words) - All FAQ/Q&A headings
+8. Speakable schema - Pillar guides 
+9. Fix footer link inconsistency - Global footer
+10. Fix placeholder links + slug - Footer; one blog URL",,,"Freeserp ui
+1.need the login details of support@freeserp.com (is polgrand07@gmail.com)
+2. Add refund and return policy on privacy policy page
+3.Create a contact page: Create a short form to submit the message, like name, email and message, we should receive 
+all the messages on support@freeserp.com",,"Meeting for* Studied and gained an overview of Google Ads and performance marketing workflows.
+* Reviewed how campaigns and conversion goals are configured in Google Ads.
+* Understood the relationship between Google Ads, Google Tags, website triggers, and application code.
+* Explored how conversion tracking is implemented through Google Tags and website events.
+* Learned how triggers and URL-based conditions are used to track user actions such as purchases and conversions.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"git config --global user.name ""Zoot009""
+git config --global user.email ""zootdigitalseo@gmail.com""",Supabase documentation(read),,employee Login they should not be able to use any other thing other than break unless they have upload the docs ?,,,,,profile photo ratio should be seen properly ?,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Force recrawl bypass the cached data,,,frontend for graph which was already present,,,,maintenance visiblity to everyone,,,,,,,,,,,added download button as excel can filter for employee and all also span of time from to ,,Changed the ui according to the style-docs folder,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+In this same page, you need to mention my name, director: Prasad Vishnu Pol
+Add this as company address: 3069, u wing, Akshar business park, Janta Market Rd, opposite APMC Fruits and Vegetable Market, Sector 25, Vashi, Navi Mumbai, Maharashtra 400703",,"* Discussed the implementation approach required to integrate Google Ads conversion tracking into our website.
+* Studied and gained an overview of Google Ads and performance marketing workflows.
+* Reviewed how campaigns and conversion goals are configured in Google Ads.
+* Understood the relationship between Google Ads, Google Tags, website triggers, and application code.
+* Explored how conversion tracking is implemented through Google Tags and website events.
+* Learned how triggers and URL-based conditions are used to track user actions such as purchases and conversions.
+* Discussed the implementation approach required to integrate Google Ads conversion tracking into our website.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"Technologies:
+Database -> Supabase
+Authentication -> Clerk or Supabase
+To talk with database (ORM) -> Prisma
+Deployment -> Vercel
+UI -> Shadcn
+Other libraries -> Tanstack Table 
+Client side Caching -> Tanstack Query
+upstash redis","commands:
+npx prisma init
+npx prisma migrate dev --name init
+npx prisma db seed
+npx prisma studio
+npx prisma generate
+npx prisma db pull
+npx prisma migrate dev --to apply migrations
+npx prisma migrate reset
+npx prisma migrate status",,"Implement Shadcn (TODO)
+button
+card
+table
+data table
+input
+field
+label
+skeleton
+tabs
+dialog
+sidebar
+sonner/toast
+dropdown
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,"	Date	Day	Status	Check In	Break In	Break Out	Check Out	Hours	Break Time	Overtime
+2026-03-04
+Wednesday	PRESENT	11:06	14:28	14:52	19:20	07:50	24m	00:00
+2026-03-03
+Tuesday	ABSENT	-	-	-	-	00:00	-	00:00
+2026-03-02
+Monday	PRESENT	09:55	14:08	14:35	19:08	08:46	27m	00:00
+2026-02-28
+Saturday	PRESENT	09:19	14:10	14:40	18:20	08:31	30m	00:00
+2026-02-27
+Friday	PRESENT	10:08	13:35	14:00	19:21	08:48	25m	00:00
+2026-02-26
+Thursday	PRESENT	10:13	14:40	14:59	19:40	09:08	19m	00:00
+2026-02-25
+Wednesday	PRESENT	10:24	13:17	13:38	19:13	08:28	21m	00:00
+2026-02-24
+Edited
+Tuesday	PRESENT	10:11	13:35	13:57	21:23	10:50	22m	00:00",,"25 February 2026
+8:03 Check Out
+8:15 Reached Station 
+8:19 Got 8:15's Vashi Train
+8:23 Reached Sanpada
+8:27 Got Csmt 8:23's Train
+8:48 Reached Chembur 
+8:53 Reached Rickshaw stand
+8:53 Got Rickshaw 
+9:01 Reached Home
+--------
+26 February 2026
+9:25 Left Home
+9:31 Got Rickshaw 
+9:39 Got 9:36 Belapur Train
+9:54 Reached Vashi 
+10:15 Got Thane Train
+10:22 Reached Turbhe
+
+8:01 Check Out
+8:20 Reached Station 
+8:25 Got 8:15's Vashi Train
+8:29 Reached Sanpada
+8:32 Got Wadala 8:31's Train
+8:55 Reached Chembur 
+9:01 Reached Rickshaw stand
+9:01 Got Rickshaw 
+9:10 Reached Home
+-----------
+27 February 2026
+9:16 Left Home
+9:20 Got Rickshaw 
+9:27 Got 9:25 Panvel Train
+9:42 Reached Vashi 
+9:50 Got Thane Train
+9:59 Reached Turbhe
+10:06 Reached akshar gate 
+10:11 Check in 
+
+8:01 Check out
+8:15 Reached station
+8:21 Got vashi's 8:15 train
+8:26 Reached Sanpada Station 
+8:31 Got 8:23 csmt train
+8:51 Reached Chembur 
+8:58 Got Rickshaw 
+9:06 Reached home
+-----------
+28 February 
+9:23 Left home 
+9:27 Got Rickshaw 
+9:32 Reached Chembur station 
+9:32 Got 9:32 Belapur train
+9:49 Reached Vashi
+9:50 Got thane train 
+9:57 Reached Turbhe 
+10:07 Reached akshar gate 
+10:12 Check in
+
+7:45 Checkout 
+7:52 Reached Turbhe station
+8:01 Got 7:55 vashi train
+8:05 Reached Sanpada 
+8:10 Took 8:03 Goregaon train
+8:30 Reached Chembur 
+8:39 Reached Rickshaw stand and got rickshaw 
+8:45 Reached home
+-------
+2 March 2026
+10:01 Left home
+10:07 Got rickshaw 
+10:12 Reached Chembur Station 
+10:16 Got 10:08 vashi train
+10:31 Reached Vashi
+10:47 Got 10:45 Thane train
+10:54 Reached Turbhe 
+11:02 Reached akshar gate
+11:10 Check in
+
+8:40 Check out
+8:57 Reached Turbhe station 
+9:02 Got 8:49 vashi train
+9:07 Reached Sanpada 
+9:08 Got 8:59 csmt train
+9:27 Reached Chembur station 
+9:41 Reached Kamraj nagar
+-------
+
+3 March
+9:59 Left home
+10:03 Got rickshaw 
+10:11 Reached Chembur station 
+10:21 Got 10:20 Panvel train
+10:39 Reached vashi
+10:45 Got 10:45 Thane train to 
+10:52 Reached Turbhe 
+11:00 Check in
+
+8:32 Check out 
+8:48 Reached Turbhe station 
+8:58 Got 8:49 Vashi train
+9:02 Reached Sanpada 
+9:04 Got 9:03 Csmt train
+9:23 Reached Chembur station 
+9:37 Reached home 
+------
+10:10 Left home 
+10:14 Got rickshaw 
+10:20 Reached Chembur station 
+10:23 Got 10:20 Panvel train 
+10:39 Reached vashi 
+10:45 Got Thane train 
+10:53 Reached Turbhe 
+11:02 Reached akshar gate 
+11:06 Check in
+
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

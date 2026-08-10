@@ -1,0 +1,403 @@
+# Work Management System – Development Prompt
+
+## Objective
+
+Build a modern, simple, and scalable **Work Management System** that serves as a personal productivity and work journal. The primary goal of this application is to replace Excel sheets and Word documents by providing a centralized platform to record daily work, manage projects, track attendance, and maintain a searchable history of all completed tasks.
+
+The application should be designed with scalability in mind so that additional features such as AI-generated reports, analytics, screenshots, documents, and team collaboration can be added in future versions.
+
+---
+
+# Tech Stack
+
+Use the following technologies:
+
+* Next.js (Latest App Router)
+* TypeScript
+* PostgreSQL
+* Prisma ORM
+* Tailwind CSS
+* shadcn/ui
+* React Hook Form
+* Zod
+* TanStack Table
+* TanStack Query
+
+The project should follow clean architecture with reusable components, proper folder structure, and scalable coding practices.
+
+---
+
+# Version 1 Scope
+
+Keep the first version intentionally simple.
+
+Do **not** build analytics, AI, dashboards with dozens of charts, notifications, calendars, or team collaboration yet.
+
+The objective is simply:
+
+> "Record every day's work and retrieve it easily in the future."
+
+---
+
+# Core Features
+
+## Dashboard
+
+Create a clean dashboard displaying:
+
+* Total Projects
+* Total Work Logs
+* Total Companies
+* Total Attendance Records
+* Recent Work Logs
+* Today's Work
+* Quick Actions
+
+Quick Actions:
+
+* Add Work Log
+* Add Project
+* Mark Attendance
+
+---
+
+# Company Management
+
+Allow creating multiple companies.
+
+Example:
+
+* Internship
+* Company A
+* Company B
+* Freelance
+
+Each company contains multiple projects.
+
+Fields
+
+* Company Name
+* Description
+* Status
+* Created Date
+
+CRUD operations required.
+
+---
+
+# Project Management
+
+Each project belongs to one company.
+
+Fields
+
+* Project Name
+* Company
+* Description
+* Status
+* Start Date
+* End Date
+* Color Label
+
+Example projects:
+
+* FreeSERP
+* Trackly
+* Leadsonus
+* Sai Landing Page
+* Estate Buddy
+* Internal Tools
+
+CRUD operations required.
+
+---
+
+# Daily Work Logs
+
+This is the most important module.
+
+Every work log belongs to a project.
+
+Fields
+
+* Date
+* Company
+* Project
+* Title
+* Description
+* Hours Worked
+* Status
+
+Status examples:
+
+* Completed
+* In Progress
+* Pending
+
+The description should support long-form text.
+
+Example
+
+Title
+
+Internal Linking Analysis
+
+Description
+
+Implemented the internal linking analysis feature using a dedicated microservice architecture.
+
+Integrated the backend with the frontend.
+
+Performed end-to-end testing.
+
+Hours Worked
+
+8
+
+---
+
+# Attendance Module
+
+Maintain attendance separately.
+
+Attendance Types
+
+* Present
+* Half Day
+* Leave
+* Holiday
+* Work From Home
+
+Fields
+
+* Date
+* Attendance Type
+* Notes
+
+---
+
+# Search
+
+Implement a global search.
+
+The user should be able to search:
+
+* Project Name
+* Work Title
+* Description
+* Company
+
+Example:
+
+Searching
+
+Heatmap
+
+Should return every work log related to Heatmap regardless of date or project.
+
+---
+
+# Filters
+
+Provide filters by
+
+* Company
+* Project
+* Date Range
+* Status
+
+---
+
+# UI Requirements
+
+Keep the interface extremely clean.
+
+Layout
+
+Sidebar
+
+* Dashboard
+* Companies
+* Projects
+* Work Logs
+* Attendance
+* Settings
+
+Top Navbar
+
+* Search
+* User Profile
+
+Use shadcn/ui components.
+
+Use TanStack Table for all tables.
+
+The UI should feel modern but minimal.
+
+---
+
+# Folder Structure
+
+Organize the project properly.
+
+Example
+
+src/
+
+app/
+
+components/
+
+lib/
+
+hooks/
+
+actions/
+
+types/
+
+utils/
+
+prisma/
+
+---
+
+# Database Design
+
+Create the following tables.
+
+Company
+
+* id
+* name
+* description
+* status
+* createdAt
+* updatedAt
+
+Project
+
+* id
+* companyId
+* name
+* description
+* color
+* status
+* startDate
+* endDate
+* createdAt
+* updatedAt
+
+WorkLog
+
+* id
+* projectId
+* title
+* description
+* date
+* hoursWorked
+* status
+* createdAt
+* updatedAt
+
+Attendance
+
+* id
+* date
+* attendanceType
+* notes
+* createdAt
+
+Create proper Prisma relationships with foreign keys.
+
+---
+
+# CRUD Operations
+
+Implement complete CRUD functionality for
+
+* Companies
+* Projects
+* Work Logs
+* Attendance
+
+Include
+
+* Create
+* Read
+* Update
+* Delete
+
+---
+
+# Validation
+
+Use
+
+* React Hook Form
+* Zod
+
+Validate all forms before submission.
+
+---
+
+# Data Tables
+
+All tables should support
+
+* Pagination
+* Sorting
+* Searching
+* Filtering
+
+---
+
+# Dashboard Statistics
+
+Display
+
+* Total Companies
+* Total Projects
+* Total Work Logs
+* Total Attendance Records
+* This Month's Work Logs
+* Recent Activity
+
+---
+
+# Code Quality
+
+Requirements
+
+* Modular architecture
+* Reusable components
+* Clean code
+* Type-safe implementation
+* Proper Prisma models
+* Well-structured API routes
+* Scalable folder organization
+
+---
+
+# Future Expansion (Do Not Build Yet)
+
+Design the architecture so the following modules can be added later without major refactoring:
+
+* AI-generated work reports
+* Resume generation
+* Monthly report generation
+* Screenshots and file attachments
+* Git commit tracking
+* Analytics dashboard
+* Charts
+* Notes
+* Documents
+* Session history
+* Team collaboration
+* Notifications
+* Calendar integration
+* Time tracking
+* Deployment history
+* Skills tracker
+
+The first version should focus entirely on creating a reliable, searchable, and maintainable work management application with a strong foundation for future enhancements.

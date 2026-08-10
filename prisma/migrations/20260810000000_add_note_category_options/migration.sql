@@ -1,0 +1,5 @@
+-- AlterEnum
+ALTER TYPE "NoteCategory" ADD VALUE 'ATTENDANCE';
+ALTER TYPE "NoteCategory" ADD VALUE 'COMPANY';
+ALTER TYPE "NoteCategory" ADD VALUE 'PROJECT';
+ALTER TYPE "NoteCategory" ADD VALUE 'WORK_LOG';
