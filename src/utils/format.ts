@@ -8,30 +8,17 @@ export function formatDateTime(date: Date | string): string {
   return format(new Date(date), "MMM d, yyyy h:mm a");
 }
 
+export function formatDay(date: Date | string): string {
+  return format(new Date(date), "EEEE");
+}
+
 const ENUM_LABELS: Record<string, string> = {
-  GENERAL: "General",
-  WORK: "Work",
-  PERSONAL: "Personal",
-  IDEAS: "Ideas",
-  REFERENCE: "Reference",
-  ATTENDANCE: "Attendance",
-  COMPANY: "Company",
-  PROJECT: "Project",
-  WORK_LOG: "Work Log",
+  LUMPSUM: "Lump sum",
+  MONTHLY: "Monthly",
 
-  PRESENT: "Present",
-  HALF_DAY: "Half Day",
-  LEAVE: "Leave",
-  HOLIDAY: "Holiday",
+  OFFICE: "Office",
   WORK_FROM_HOME: "Work From Home",
-
-  ACTIVE: "Active",
-  INACTIVE: "Inactive",
-
-  COMPLETED: "Completed",
-  ON_HOLD: "On Hold",
-  IN_PROGRESS: "In Progress",
-  PENDING: "Pending",
+  HALF_DAY: "Half Day",
 };
 
 export function formatEnumLabel(value: string): string {

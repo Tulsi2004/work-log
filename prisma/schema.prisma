@@ -6,70 +6,76 @@ datasource db {
   provider = "postgresql"
 }
 
-model Note {
-  id        String       @id @default(cuid())
+model Company {
+  id        String   @id @default(cuid())
   userId    String
-  title     String?
-  content   String?
-  category  NoteCategory @default(GENERAL)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  attendanceStatus AttendanceStatus?
-  checkIn          String?
-  checkOut         String?
-  breakIn          String?
-  breakOut         String?
+  employments Employment[]
 
-  companyName   String?
-  companyStatus CompanyStatus?
+  @@unique([userId, name])
+  @@index([userId])
+}
 
-  projectName      String?
-  projectStatus    ProjectStatus?
-  projectStartDate DateTime?
-  projectEndDate   DateTime?
+// One stint of working at a company — a company can have several of these
+// (e.g. rejoined later, or a designation change), each with its own pay history.
+model Employment {
+  id          String      @id @default(cuid())
+  companyId   String
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  designation String?
+  since       DateTime?
+  until       DateTime?
+  paymentType PaymentType @default(MONTHLY)
+  payHistory  Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  workLogDate   DateTime?
-  hoursWorked   Float?
-  workLogStatus WorkLogStatus?
+  workReports WorkReport[]
+
+  @@index([companyId])
+}
+
+model WorkReport {
+  id           String     @id @default(cuid())
+  userId       String
+  employmentId String
+  employment   Employment @relation(fields: [employmentId], references: [id], onDelete: Cascade)
+
+  date     DateTime
+  timeFrom String?
+  timeTo   String?
+  dayType  DayType  @default(OFFICE)
+
+  isLeave     Boolean   @default(false)
+  leaveFrom   DateTime?
+  leaveTo     DateTime?
+  hasMeeting  Boolean   @default(false)
+  leaveReason String?
+
+  hasNoTask  Boolean @default(false)
+  noTaskNote String?
+  tasks      Json?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
-  @@index([userId, category])
+  @@index([userId, date])
+  @@index([employmentId])
 }
 
-enum NoteCategory {
-  GENERAL
-  WORK
-  PERSONAL
-  IDEAS
-  REFERENCE
-  ATTENDANCE
-  COMPANY
-  PROJECT
-  WORK_LOG
+enum PaymentType {
+  LUMPSUM
+  MONTHLY
 }
 
-enum AttendanceStatus {
-  PRESENT
-  HALF_DAY
-  LEAVE
-  HOLIDAY
+enum DayType {
+  OFFICE
   WORK_FROM_HOME
-}
-
-enum CompanyStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum ProjectStatus {
-  ACTIVE
-  COMPLETED
-  ON_HOLD
-}
-
-enum WorkLogStatus {
-  COMPLETED
-  IN_PROGRESS
-  PENDING
+  HALF_DAY
 }

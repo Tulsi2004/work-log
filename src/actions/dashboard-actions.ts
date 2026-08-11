@@ -6,14 +6,16 @@ import { requireUserId } from "@/lib/auth";
 export async function getDashboardStats() {
   const userId = await requireUserId();
 
-  const [totalNotes, recentNotes] = await Promise.all([
-    prisma.note.count({ where: { userId } }),
-    prisma.note.findMany({
+  const [totalWorkReports, totalCompanies, recentWorkReports] = await Promise.all([
+    prisma.workReport.count({ where: { userId } }),
+    prisma.company.count({ where: { userId } }),
+    prisma.workReport.findMany({
       where: { userId },
-      orderBy: { updatedAt: "desc" },
+      include: { employment: { include: { company: true } } },
+      orderBy: { date: "desc" },
       take: 5,
     }),
   ]);
 
-  return { totalNotes, recentNotes };
+  return { totalWorkReports, totalCompanies, recentWorkReports };
 }

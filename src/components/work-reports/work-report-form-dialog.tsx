@@ -1,0 +1,365 @@
+"use client";
+
+import { useEffect } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Plus, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
+import { createWorkReport, updateWorkReport } from "@/actions/work-report-actions";
+import { formatEnumLabel, formatDay } from "@/utils/format";
+import type { WorkReportWithEmployment, WorkReportTask } from "@/types";
+
+interface WorkReportFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  employmentId: string;
+  report?: WorkReportWithEmployment;
+}
+
+function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment): WorkReportInput {
+  const tasks = (report?.tasks as WorkReportTask[] | null) ?? [];
+  return {
+    employmentId: report?.employmentId ?? employmentId,
+    date: report?.date ? new Date(report.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    timeFrom: report?.timeFrom ?? "",
+    timeTo: report?.timeTo ?? "",
+    dayType: report?.dayType ?? "OFFICE",
+
+    isLeave: report?.isLeave ?? false,
+    leaveFrom: report?.leaveFrom ? new Date(report.leaveFrom).toISOString().slice(0, 10) : "",
+    leaveTo: report?.leaveTo ? new Date(report.leaveTo).toISOString().slice(0, 10) : "",
+    hasMeeting: report?.hasMeeting ?? false,
+    leaveReason: report?.leaveReason ?? "",
+
+    hasNoTask: report?.hasNoTask ?? false,
+    noTaskNote: report?.noTaskNote ?? "",
+    tasks: tasks.length ? tasks.map((t) => ({ task: t.task, projectName: t.projectName ?? "" })) : [{ task: "", projectName: "" }],
+
+    notes: report?.notes ?? "",
+  };
+}
+
+export function WorkReportFormDialog({ open, onOpenChange, employmentId, report }: WorkReportFormDialogProps) {
+  const queryClient = useQueryClient();
+  const isEditing = !!report;
+
+  const form = useForm<WorkReportInput>({
+    resolver: zodResolver(workReportSchema),
+    defaultValues: toDefaultValues(employmentId, report),
+  });
+
+  useEffect(() => {
+    if (open) form.reset(toDefaultValues(employmentId, report));
+  }, [open, employmentId, report, form]);
+
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "tasks" });
+
+  const dateValue = form.watch("date");
+  const isLeave = form.watch("isLeave");
+  const hasNoTask = form.watch("hasNoTask");
+
+  const mutation = useMutation({
+    mutationFn: async (values: WorkReportInput) =>
+      isEditing ? updateWorkReport(report!.id, values) : createWorkReport(values),
+    onSuccess: () => {
+      toast.success(isEditing ? "Work report updated" : "Work report added");
+      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => toast.error(error.message || "Something went wrong"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? "Edit work report" : "Add work report"}</DialogTitle>
+          <DialogDescription>Log what you worked on today.</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-5">
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormItem>
+                <FormLabel>Day</FormLabel>
+                <Input value={dateValue ? formatDay(dateValue) : ""} disabled readOnly />
+              </FormItem>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="timeFrom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Time worked — from</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="timeTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="dayType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Working from</FormLabel>
+                  <FormControl>
+                    <RadioGroup value={field.value} onValueChange={field.onChange} className="grid-flow-col justify-start gap-4">
+                      {DAY_TYPES.map((type) => (
+                        <div key={type} className="flex items-center gap-2">
+                          <RadioGroupItem value={type} id={`day-type-${type}`} />
+                          <Label htmlFor={`day-type-${type}`} className="font-normal">
+                            {formatEnumLabel(type)}
+                            {type === "OFFICE" && <span className="text-muted-foreground"> (default)</span>}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-3 rounded-lg border p-3">
+              <FormField
+                control={form.control}
+                name="isLeave"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className="font-normal">On leave / long vacation</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              {isLeave && (
+                <div className="space-y-3 pl-6">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="leaveFrom"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Leave from</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="leaveTo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>To</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="hasMeeting"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">Meeting scheduled</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="leaveReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason</FormLabel>
+                        <FormControl>
+                          <Textarea rows={2} placeholder="Reason for leave" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3 rounded-lg border p-3">
+              <FormField
+                control={form.control}
+                name="hasNoTask"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className="font-normal">No task today</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              {hasNoTask ? (
+                <FormField
+                  control={form.control}
+                  name="noTaskNote"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reason</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Why there's no task today" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="space-y-2">
+                  <FormLabel>Tasks</FormLabel>
+                  {fields.map((item, index) => (
+                    <div key={item.id} className="flex items-start gap-2">
+                      <span className="mt-2 w-5 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
+                      <FormField
+                        control={form.control}
+                        name={`tasks.${index}.task`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder="Task" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`tasks.${index}.projectName`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder="Project name" {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="mt-0.5"
+                        onClick={() => remove(index)}
+                        disabled={fields.length === 1}
+                      >
+                        <Trash2 className="size-4" />
+                        <span className="sr-only">Remove task</span>
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ task: "", projectName: "" })}
+                  >
+                    <Plus className="size-4" />
+                    Add task
+                  </Button>
+                  {form.formState.errors.tasks?.message && (
+                    <p className="text-sm text-destructive">{form.formState.errors.tasks.message}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Details to note</FormLabel>
+                  <FormControl>
+                    <Textarea rows={4} placeholder="Anything else worth noting…" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {isEditing ? "Save changes" : "Save work report"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
