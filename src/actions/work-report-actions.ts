@@ -76,13 +76,24 @@ export async function updateEmployment(id: string, input: EmploymentInput) {
 export async function deleteEmployment(id: string) {
   const userId = await requireUserId();
 
-  const result = await prisma.employment.deleteMany({
-    where: { id, company: { userId } },
-  });
+  await prisma.$transaction(async (tx) => {
+    const employment = await tx.employment.findFirst({
+      where: { id, company: { userId } },
+      select: { companyId: true },
+    });
+    if (!employment) {
+      throw new Error("Company not found");
+    }
 
-  if (result.count === 0) {
-    throw new Error("Company not found");
-  }
+    await tx.employment.delete({ where: { id } });
+
+    const remainingEmployments = await tx.employment.count({
+      where: { companyId: employment.companyId },
+    });
+    if (remainingEmployments === 0) {
+      await tx.company.delete({ where: { id: employment.companyId } });
+    }
+  });
 
   revalidatePath("/work-reports");
 }
