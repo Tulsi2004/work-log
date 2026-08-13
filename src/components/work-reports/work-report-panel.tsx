@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -33,13 +34,25 @@ export function WorkReportPanel() {
   const employmentId = selectedEmploymentId || employments?.[0]?.id || "";
   const [search, setSearch] = useState("");
   const [dayType, setDayType] = useState(ALL_DAY_TYPES);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const debouncedSearch = useDebouncedValue(search);
+
+  const hasActiveFilters = !!(search || dayType !== ALL_DAY_TYPES || dateFrom || dateTo);
+  const clearFilters = () => {
+    setSearch("");
+    setDayType(ALL_DAY_TYPES);
+    setDateFrom("");
+    setDateTo("");
+  };
 
   const queryClient = useQueryClient();
   const { data, isLoading } = useWorkReports({
     search: debouncedSearch,
     employmentId,
     dayType: dayType === ALL_DAY_TYPES ? undefined : dayType,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
   });
 
   const [formOpen, setFormOpen] = useState(false);
@@ -64,8 +77,8 @@ export function WorkReportPanel() {
       <EmploymentHeader employmentId={employmentId} onEmploymentChange={setSelectedEmploymentId} />
 
       <div className="rounded-xl border p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -76,7 +89,7 @@ export function WorkReportPanel() {
               />
             </div>
             <Select value={dayType} onValueChange={setDayType}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -88,6 +101,17 @@ export function WorkReportPanel() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-2">
+              <DatePicker value={dateFrom} onChange={setDateFrom} className="w-full sm:w-36" placeholder="From" />
+              <span className="text-sm text-muted-foreground">–</span>
+              <DatePicker value={dateTo} onChange={setDateTo} className="w-full sm:w-36" placeholder="To" />
+            </div>
+            {hasActiveFilters && (
+              <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="size-4" />
+                Clear filters
+              </Button>
+            )}
           </div>
           <Button
             disabled={!employmentId}

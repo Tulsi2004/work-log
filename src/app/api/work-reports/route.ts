@@ -11,6 +11,15 @@ export async function GET(request: NextRequest) {
   const dateFrom = request.nextUrl.searchParams.get("dateFrom")?.trim() ?? "";
   const dateTo = request.nextUrl.searchParams.get("dateTo")?.trim() ?? "";
 
+  let taskMatchIds: string[] = [];
+  if (search) {
+    const rows = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "WorkReport"
+      WHERE "userId" = ${userId} AND tasks::text ILIKE ${`%${search}%`}
+    `;
+    taskMatchIds = rows.map((r) => r.id);
+  }
+
   const where: Prisma.WorkReportWhereInput = {
     userId,
     ...(employmentId ? { employmentId } : {}),
@@ -31,6 +40,7 @@ export async function GET(request: NextRequest) {
             { leaveReason: { contains: search, mode: "insensitive" } },
             { employment: { designation: { contains: search, mode: "insensitive" } } },
             { employment: { company: { name: { contains: search, mode: "insensitive" } } } },
+            ...(taskMatchIds.length ? [{ id: { in: taskMatchIds } }] : []),
           ],
         }
       : {}),
