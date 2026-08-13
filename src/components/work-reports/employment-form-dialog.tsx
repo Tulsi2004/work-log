@@ -156,7 +156,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                 <FormItem>
                   <FormLabel>Payment</FormLabel>
                   <FormControl>
-                    <RadioGroup value={field.value} onValueChange={field.onChange} className="grid-flow-col justify-start gap-4">
+                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="LUMPSUM" id="payment-lumpsum" />
                         <Label htmlFor="payment-lumpsum" className="font-normal">Lump sum</Label>
@@ -176,30 +176,32 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
               <FormLabel>Pay history</FormLabel>
               {fields.map((item, index) => (
                 <div key={item.id} className="flex items-start gap-2">
-                  <FormField
-                    control={form.control}
-                    name={`payHistory.${index}.amount`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <Input type="number" step="0.01" placeholder="Amount" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`payHistory.${index}.effectiveFrom`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                    <FormField
+                      control={form.control}
+                      name={`payHistory.${index}.amount`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="Amount" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`payHistory.${index}.effectiveFrom`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"

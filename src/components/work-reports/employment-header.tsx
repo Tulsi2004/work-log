@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmploymentFormDialog } from "@/components/work-reports/employment-form-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useEmployments } from "@/hooks/use-employments";
 import { deleteEmployment } from "@/actions/work-report-actions";
 import { formatDate, formatEnumLabel } from "@/utils/format";
@@ -33,6 +34,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
   const { data: employments, isLoading } = useEmployments();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployment, setEditingEmployment] = useState<EmploymentWithCompany | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const selected = employments?.find((e) => e.id === employmentId);
@@ -46,6 +48,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
       queryClient.invalidateQueries({ queryKey: ["work-reports"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       onEmploymentChange("");
+      setDeleteDialogOpen(false);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to remove company"),
   });
@@ -87,7 +90,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
       </div>
 
       {selected && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{formatEnumLabel(selected.paymentType)}</Badge>
           {pay && <Badge variant="secondary">₹{pay.amount}</Badge>}
           {(selected.since || selected.until) && (
@@ -113,15 +116,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
             size="icon-sm"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             disabled={deleteMutation.isPending}
-            onClick={() => {
-              if (
-                confirm(
-                  `Remove ${selected.company.name}${selected.designation ? ` — ${selected.designation}` : ""}? This will also delete all of its work reports.`
-                )
-              ) {
-                deleteMutation.mutate(selected.id);
-              }
-            }}
+            onClick={() => setDeleteDialogOpen(true)}
           >
             <Trash2 className="size-4" />
             <span className="sr-only">Remove company</span>
@@ -135,6 +130,16 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
         employment={editingEmployment}
         onSaved={(id) => onEmploymentChange(id)}
       />
+
+      {selected && (
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Remove company?"
+          description={`This will permanently remove ${selected.company.name}${selected.designation ? ` — ${selected.designation}` : ""} and all of its work reports.`}
+          onConfirm={() => deleteMutation.mutate(selected.id)}
+        />
+      )}
     </div>
   );
 }

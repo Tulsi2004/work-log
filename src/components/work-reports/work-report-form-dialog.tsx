@@ -159,7 +159,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                 <FormItem>
                   <FormLabel>Working from</FormLabel>
                   <FormControl>
-                    <RadioGroup value={field.value} onValueChange={field.onChange} className="grid-flow-col justify-start gap-4">
+                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
                       {DAY_TYPES.map((type) => (
                         <div key={type} className="flex items-center gap-2">
                           <RadioGroupItem value={type} id={`day-type-${type}`} />
@@ -283,29 +283,31 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                   {fields.map((item, index) => (
                     <div key={item.id} className="flex items-start gap-2">
                       <span className="mt-2 w-5 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
-                      <FormField
-                        control={form.control}
-                        name={`tasks.${index}.task`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input placeholder="Task" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`tasks.${index}.projectName`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input placeholder="Project name" {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                      <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                        <FormField
+                          control={form.control}
+                          name={`tasks.${index}.task`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input placeholder="Task" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`tasks.${index}.projectName`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input placeholder="Project name" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"

@@ -16,6 +16,7 @@ import {
 import { EmploymentHeader } from "@/components/work-reports/employment-header";
 import { WorkReportCard } from "@/components/work-reports/work-report-card";
 import { WorkReportFormDialog } from "@/components/work-reports/work-report-form-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useWorkReports } from "@/hooks/use-work-reports";
 import { useEmployments } from "@/hooks/use-employments";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -43,6 +44,7 @@ export function WorkReportPanel() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<WorkReportWithEmployment | undefined>(undefined);
+  const [deletingReport, setDeletingReport] = useState<WorkReportWithEmployment | undefined>(undefined);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteWorkReport(id),
@@ -50,6 +52,7 @@ export function WorkReportPanel() {
       toast.success("Work report deleted");
       queryClient.invalidateQueries({ queryKey: ["work-reports"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setDeletingReport(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to delete work report"),
   });
@@ -117,11 +120,7 @@ export function WorkReportPanel() {
                     setEditingReport(r);
                     setFormOpen(true);
                   }}
-                  onDelete={(r) => {
-                    if (confirm(`Delete the work report for ${r.date ? new Date(r.date).toLocaleDateString() : "this day"}?`)) {
-                      deleteMutation.mutate(r.id);
-                    }
-                  }}
+                  onDelete={(r) => setDeletingReport(r)}
                 />
               ))}
             </div>
@@ -137,6 +136,18 @@ export function WorkReportPanel() {
           report={editingReport}
         />
       )}
+
+      <ConfirmDialog
+        open={!!deletingReport}
+        onOpenChange={(open) => !open && setDeletingReport(undefined)}
+        title="Delete work report?"
+        description={
+          deletingReport
+            ? `This will permanently delete the work report for ${new Date(deletingReport.date).toLocaleDateString()}.`
+            : undefined
+        }
+        onConfirm={() => deletingReport && deleteMutation.mutate(deletingReport.id)}
+      />
     </div>
   );
 }
