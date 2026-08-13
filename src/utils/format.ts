@@ -12,6 +12,15 @@ export function formatDay(date: Date | string): string {
   return format(new Date(date), "EEEE");
 }
 
+export function formatTime(time?: string | null): string | undefined {
+  if (!time) return undefined;
+  const [hours, minutes] = time.split(":").map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return time;
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return format(date, "h:mm a");
+}
+
 const ENUM_LABELS: Record<string, string> = {
   LUMPSUM: "Lump sum",
   MONTHLY: "Monthly",

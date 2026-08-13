@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatDate, formatDay, formatEnumLabel } from "@/utils/format";
+import { formatDate, formatDay, formatEnumLabel, formatTime } from "@/utils/format";
 import type { WorkReportWithEmployment, WorkReportTask } from "@/types";
 
 interface WorkReportTableProps {
@@ -74,7 +74,9 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {report.timeFrom || report.timeTo ? `${report.timeFrom || "—"} to ${report.timeTo || "—"}` : "—"}
+                  {report.timeFrom || report.timeTo
+                    ? `${formatTime(report.timeFrom) || "—"} to ${formatTime(report.timeTo) || "—"}`
+                    : "—"}
                 </TableCell>
                 <TableCell className="whitespace-normal">
                   {report.hasNoTask ? (
