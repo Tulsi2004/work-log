@@ -5,6 +5,7 @@ export type { Company, Employment, WorkReport, PaymentType, DayType };
 export interface WorkReportTask {
   task: string;
   projectName?: string;
+  assignedBy?: string;
 }
 
 export interface PayRate {

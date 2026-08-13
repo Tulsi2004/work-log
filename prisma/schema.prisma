@@ -25,11 +25,12 @@ model Employment {
   id          String      @id @default(cuid())
   companyId   String
   company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  designation String?
-  since       DateTime?
-  until       DateTime?
-  paymentType PaymentType @default(MONTHLY)
-  payHistory  Json?
+  designation    String?
+  employmentType EmploymentType @default(FULL_TIME)
+  since          DateTime?
+  until          DateTime?
+  paymentType    PaymentType    @default(MONTHLY)
+  payHistory     Json?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -72,6 +73,13 @@ model WorkReport {
 enum PaymentType {
   LUMPSUM
   MONTHLY
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+  CONTRACT
 }
 
 enum DayType {

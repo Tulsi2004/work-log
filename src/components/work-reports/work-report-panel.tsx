@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmploymentHeader } from "@/components/work-reports/employment-header";
-import { WorkReportCard } from "@/components/work-reports/work-report-card";
+import { WorkReportTable } from "@/components/work-reports/work-report-table";
 import { WorkReportFormDialog } from "@/components/work-reports/work-report-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useWorkReports } from "@/hooks/use-work-reports";
@@ -111,19 +111,14 @@ export function WorkReportPanel() {
               No work reports yet. Add your first one instead of reaching for Word or Excel.
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {reports.map((report) => (
-                <WorkReportCard
-                  key={report.id}
-                  report={report}
-                  onEdit={(r) => {
-                    setEditingReport(r);
-                    setFormOpen(true);
-                  }}
-                  onDelete={(r) => setDeletingReport(r)}
-                />
-              ))}
-            </div>
+            <WorkReportTable
+              reports={reports}
+              onEdit={(r) => {
+                setEditingReport(r);
+                setFormOpen(true);
+              }}
+              onDelete={(r) => setDeletingReport(r)}
+            />
           )}
         </div>
       </div>

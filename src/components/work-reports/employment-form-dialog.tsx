@@ -24,9 +24,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { employmentSchema, type EmploymentInput } from "@/lib/validations/work-report";
+import { cn } from "@/lib/utils";
+import { employmentSchema, EMPLOYMENT_TYPES, type EmploymentInput } from "@/lib/validations/work-report";
+import { formatEnumLabel } from "@/utils/format";
 import { createEmployment, updateEmployment } from "@/actions/work-report-actions";
 import { useEmployments } from "@/hooks/use-employments";
 import type { EmploymentWithCompany, PayRate } from "@/types";
@@ -43,6 +47,7 @@ function toDefaultValues(employment?: EmploymentWithCompany): EmploymentInput {
   return {
     companyName: employment?.company.name ?? "",
     designation: employment?.designation ?? "",
+    employmentType: employment?.employmentType ?? "FULL_TIME",
     since: employment?.since ? new Date(employment.since).toISOString().slice(0, 10) : "",
     until: employment?.until ? new Date(employment.until).toISOString().slice(0, 10) : "",
     paymentType: employment?.paymentType ?? "MONTHLY",
@@ -66,6 +71,9 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
   useEffect(() => {
     if (open) form.reset(toDefaultValues(employment));
   }, [open, employment, form]);
+
+  const untilValue = form.watch("until");
+  const isCurrent = !untilValue;
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "payHistory" });
 
@@ -121,7 +129,41 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="employmentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employment type</FormLabel>
+                  <FormControl>
+                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
+                      {EMPLOYMENT_TYPES.map((type) => (
+                        <div key={type} className="flex items-center gap-2">
+                          <RadioGroupItem value={type} id={`employment-type-${type}`} />
+                          <Label htmlFor={`employment-type-${type}`} className="font-normal">
+                            {formatEnumLabel(type)}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="currently-working"
+                checked={isCurrent}
+                onCheckedChange={(checked) => {
+                  form.setValue("until", checked === true ? "" : new Date().toISOString().slice(0, 10));
+                }}
+              />
+              <Label htmlFor="currently-working" className="font-normal">
+                Currently working here
+              </Label>
+            </div>
+            <div className={cn("grid gap-3", isCurrent ? "grid-cols-1" : "grid-cols-2")}>
               <FormField
                 control={form.control}
                 name="since"
@@ -129,25 +171,27 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                   <FormItem>
                     <FormLabel>From</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} placeholder="Start date" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="until"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>To</FormLabel>
-                    <FormControl>
-                      <Input type="date" placeholder="Present" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!isCurrent && (
+                <FormField
+                  control={form.control}
+                  name="until"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>To</FormLabel>
+                      <FormControl>
+                        <DatePicker value={field.value} onChange={field.onChange} placeholder="End date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
             <FormField
               control={form.control}
@@ -195,7 +239,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <DatePicker value={field.value} onChange={field.onChange} placeholder="Effective from" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

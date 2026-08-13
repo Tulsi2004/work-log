@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const PAYMENT_TYPES = ["LUMPSUM", "MONTHLY"] as const;
 export const DAY_TYPES = ["OFFICE", "WORK_FROM_HOME", "HALF_DAY"] as const;
+export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRACT"] as const;
 
 const optionalString = z.string().optional().or(z.literal(""));
 
@@ -19,6 +20,7 @@ export const employmentSchema = z
   .object({
     companyName: z.string().min(1, "Company name is required").max(150),
     designation: optionalString,
+    employmentType: z.enum(EMPLOYMENT_TYPES),
     since: optionalString,
     until: optionalString,
     paymentType: z.enum(PAYMENT_TYPES),
@@ -35,6 +37,7 @@ export type EmploymentInput = z.infer<typeof employmentSchema>;
 const taskSchema = z.object({
   task: z.string().min(1, "Task is required").max(300),
   projectName: optionalString,
+  assignedBy: optionalString,
 });
 
 export const workReportSchema = z

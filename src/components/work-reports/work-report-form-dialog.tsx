@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
@@ -57,7 +58,9 @@ function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment
 
     hasNoTask: report?.hasNoTask ?? false,
     noTaskNote: report?.noTaskNote ?? "",
-    tasks: tasks.length ? tasks.map((t) => ({ task: t.task, projectName: t.projectName ?? "" })) : [{ task: "", projectName: "" }],
+    tasks: tasks.length
+      ? tasks.map((t) => ({ task: t.task, projectName: t.projectName ?? "", assignedBy: t.assignedBy ?? "" }))
+      : [{ task: "", projectName: "", assignedBy: "" }],
 
     notes: report?.notes ?? "",
   };
@@ -111,7 +114,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                   <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +203,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                         <FormItem>
                           <FormLabel>Leave from</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <DatePicker value={field.value} onChange={field.onChange} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -213,7 +216,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                         <FormItem>
                           <FormLabel>To</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <DatePicker value={field.value} onChange={field.onChange} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -283,12 +286,12 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                   {fields.map((item, index) => (
                     <div key={item.id} className="flex items-start gap-2">
                       <span className="mt-2 w-5 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
-                      <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                      <div className="flex flex-1 flex-col gap-2">
                         <FormField
                           control={form.control}
                           name={`tasks.${index}.task`}
                           render={({ field }) => (
-                            <FormItem className="flex-1">
+                            <FormItem>
                               <FormControl>
                                 <Input placeholder="Task" {...field} />
                               </FormControl>
@@ -296,17 +299,30 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name={`tasks.${index}.projectName`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl>
-                                <Input placeholder="Project name" {...field} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <FormField
+                            control={form.control}
+                            name={`tasks.${index}.projectName`}
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input placeholder="Project name" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`tasks.${index}.assignedBy`}
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input placeholder="Assigned by" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                       <Button
                         type="button"
@@ -325,7 +341,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append({ task: "", projectName: "" })}
+                    onClick={() => append({ task: "", projectName: "", assignedBy: "" })}
                   >
                     <Plus className="size-4" />
                     Add task

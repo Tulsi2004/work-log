@@ -63,7 +63,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
             onValueChange={onEmploymentChange}
             disabled={isLoading || !employments?.length}
           >
-            <SelectTrigger className="w-56">
+            <SelectTrigger className="min-w-0 flex-1 sm:w-64 sm:flex-none">
               <SelectValue placeholder={isLoading ? "Loading…" : "Select company"} />
             </SelectTrigger>
             <SelectContent>
@@ -78,6 +78,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
             type="button"
             variant="ghost"
             size="icon-sm"
+            className="shrink-0"
             onClick={() => {
               setEditingEmployment(undefined);
               setDialogOpen(true);
@@ -91,6 +92,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
 
       {selected && (
         <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary">{formatEnumLabel(selected.employmentType)}</Badge>
           <Badge variant="secondary">{formatEnumLabel(selected.paymentType)}</Badge>
           {pay && <Badge variant="secondary">₹{pay.amount}</Badge>}
           {(selected.since || selected.until) && (

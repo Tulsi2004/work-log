@@ -19,6 +19,11 @@ const ENUM_LABELS: Record<string, string> = {
   OFFICE: "Office",
   WORK_FROM_HOME: "Work From Home",
   HALF_DAY: "Half Day",
+
+  FULL_TIME: "Full-time",
+  PART_TIME: "Part-time",
+  INTERNSHIP: "Internship",
+  CONTRACT: "Contract",
 };
 
 export function formatEnumLabel(value: string): string {

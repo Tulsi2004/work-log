@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
 import { employmentSchema, workReportSchema, type EmploymentInput, type WorkReportInput } from "@/lib/validations/work-report";
@@ -14,10 +15,17 @@ export async function listEmployments() {
   });
 }
 
-async function findOrCreateCompany(userId: string, name: string) {
-  const existing = await prisma.company.findFirst({ where: { userId, name } });
+async function findOrCreateCompany(client: Prisma.TransactionClient, userId: string, name: string) {
+  const existing = await client.company.findFirst({ where: { userId, name } });
   if (existing) return existing;
-  return prisma.company.create({ data: { userId, name } });
+  return client.company.create({ data: { userId, name } });
+}
+
+async function deleteCompanyIfOrphaned(client: Prisma.TransactionClient, companyId: string) {
+  const remainingEmployments = await client.employment.count({ where: { companyId } });
+  if (remainingEmployments === 0) {
+    await client.company.delete({ where: { id: companyId } });
+  }
 }
 
 function toEmploymentData(data: EmploymentInput) {
@@ -27,6 +35,7 @@ function toEmploymentData(data: EmploymentInput) {
 
   return {
     designation: data.designation || null,
+    employmentType: data.employmentType,
     since: data.since ? new Date(data.since) : null,
     until: data.until ? new Date(data.until) : null,
     paymentType: data.paymentType,
@@ -38,11 +47,12 @@ export async function createEmployment(input: EmploymentInput) {
   const userId = await requireUserId();
   const data = employmentSchema.parse(input);
 
-  const company = await findOrCreateCompany(userId, data.companyName);
-
-  const employment = await prisma.employment.create({
-    data: { ...toEmploymentData(data), companyId: company.id },
-    include: { company: true },
+  const employment = await prisma.$transaction(async (tx) => {
+    const company = await findOrCreateCompany(tx, userId, data.companyName);
+    return tx.employment.create({
+      data: { ...toEmploymentData(data), companyId: company.id },
+      include: { company: true },
+    });
   });
 
   revalidatePath("/work-reports");
@@ -53,21 +63,23 @@ export async function updateEmployment(id: string, input: EmploymentInput) {
   const userId = await requireUserId();
   const data = employmentSchema.parse(input);
 
-  const existing = await prisma.employment.findFirst({ where: { id, company: { userId } } });
-  if (!existing) {
-    throw new Error("Employment not found");
-  }
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.employment.findFirst({ where: { id, company: { userId } } });
+    if (!existing) {
+      throw new Error("Employment not found");
+    }
 
-  const company = await findOrCreateCompany(userId, data.companyName);
+    const company = await findOrCreateCompany(tx, userId, data.companyName);
 
-  const result = await prisma.employment.updateMany({
-    where: { id, company: { userId } },
-    data: { ...toEmploymentData(data), companyId: company.id },
+    await tx.employment.update({
+      where: { id },
+      data: { ...toEmploymentData(data), companyId: company.id },
+    });
+
+    if (existing.companyId !== company.id) {
+      await deleteCompanyIfOrphaned(tx, existing.companyId);
+    }
   });
-
-  if (result.count === 0) {
-    throw new Error("Employment not found");
-  }
 
   revalidatePath("/work-reports");
   return { id };
@@ -86,13 +98,7 @@ export async function deleteEmployment(id: string) {
     }
 
     await tx.employment.delete({ where: { id } });
-
-    const remainingEmployments = await tx.employment.count({
-      where: { companyId: employment.companyId },
-    });
-    if (remainingEmployments === 0) {
-      await tx.company.delete({ where: { id: employment.companyId } });
-    }
+    await deleteCompanyIfOrphaned(tx, employment.companyId);
   });
 
   revalidatePath("/work-reports");
