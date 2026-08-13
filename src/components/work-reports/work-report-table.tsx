@@ -37,6 +37,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
             <TableHead>Type</TableHead>
             <TableHead>Time</TableHead>
             <TableHead className="min-w-64">Tasks</TableHead>
+            <TableHead className="min-w-32">Assigned By</TableHead>
             <TableHead className="min-w-48">Notes</TableHead>
             <TableHead className="w-10" />
           </TableRow>
@@ -84,12 +85,22 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                         <li key={i}>
                           {t.task}
                           {t.projectName && <span className="text-muted-foreground"> · {t.projectName}</span>}
-                          {t.assignedBy && <span className="text-muted-foreground"> · Assigned by {t.assignedBy}</span>}
                         </li>
                       ))}
                     </ol>
                   ) : (
                     <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="whitespace-normal text-muted-foreground">
+                  {!report.hasNoTask && tasks.length > 0 ? (
+                    <div className="space-y-0.5">
+                      {tasks.map((t, i) => (
+                        <div key={i}>{t.assignedBy || "—"}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    "—"
                   )}
                 </TableCell>
                 <TableCell className="whitespace-normal text-muted-foreground">
