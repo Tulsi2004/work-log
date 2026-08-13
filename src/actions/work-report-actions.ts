@@ -73,6 +73,20 @@ export async function updateEmployment(id: string, input: EmploymentInput) {
   return { id };
 }
 
+export async function deleteEmployment(id: string) {
+  const userId = await requireUserId();
+
+  const result = await prisma.employment.deleteMany({
+    where: { id, company: { userId } },
+  });
+
+  if (result.count === 0) {
+    throw new Error("Company not found");
+  }
+
+  revalidatePath("/work-reports");
+}
+
 function toWorkReportData(data: WorkReportInput) {
   return {
     employmentId: data.employmentId,
