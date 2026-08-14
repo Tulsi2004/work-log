@@ -46,6 +46,8 @@ function toDefaultValues(employment?: EmploymentWithCompany): EmploymentInput {
   const payHistory = (employment?.payHistory as PayRate[] | null) ?? [];
   return {
     companyName: employment?.company.name ?? "",
+    ceoName: employment?.company.ceoName ?? "",
+    jobSource: employment?.company.jobSource ?? "",
     designation: employment?.designation ?? "",
     employmentType: employment?.employmentType ?? "FULL_TIME",
     since: employment?.since ? new Date(employment.since).toISOString().slice(0, 10) : "",
@@ -112,6 +114,32 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                       <option key={name} value={name} />
                     ))}
                   </datalist>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ceoName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CEO name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Jane Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="jobSource"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Source of job</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. LinkedIn, referral, Naukri" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

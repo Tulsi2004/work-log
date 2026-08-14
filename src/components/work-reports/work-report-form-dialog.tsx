@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -29,6 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
 import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
 import { createWorkReport, updateWorkReport } from "@/actions/work-report-actions";
 import { formatEnumLabel, formatDay } from "@/utils/format";
@@ -84,6 +85,26 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
   const dateValue = form.watch("date");
   const isLeave = form.watch("isLeave");
   const hasNoTask = form.watch("hasNoTask");
+
+  const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
+    queryKey: ["work-reports-suggestions", "projectName"],
+    queryFn: async () => {
+      const res = await fetch("/api/work-reports/suggestions?type=projectName");
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      return (await res.json()).data as string[];
+    },
+    enabled: open,
+  });
+
+  const { data: assignedBySuggestions = [], isLoading: isLoadingAssignedBySuggestions } = useQuery({
+    queryKey: ["work-reports-suggestions", "assignedBy"],
+    queryFn: async () => {
+      const res = await fetch("/api/work-reports/suggestions?type=assignedBy");
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      return (await res.json()).data as string[];
+    },
+    enabled: open,
+  });
 
   const mutation = useMutation({
     mutationFn: async (values: WorkReportInput) =>
@@ -252,6 +273,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
               )}
             </div>
 
+            {!isLeave && (
             <div className="space-y-3 rounded-lg border p-3">
               <FormField
                 control={form.control}
@@ -306,7 +328,13 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                             render={({ field }) => (
                               <FormItem className="flex-1">
                                 <FormControl>
-                                  <Input placeholder="Project name" {...field} />
+                                  <AutocompleteInput
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                    placeholder="Project name"
+                                    suggestions={projectSuggestions}
+                                    isLoadingSuggestions={isLoadingProjectSuggestions}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -317,7 +345,13 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                             render={({ field }) => (
                               <FormItem className="flex-1">
                                 <FormControl>
-                                  <Input placeholder="Assigned by" {...field} />
+                                  <AutocompleteInput
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                    placeholder="Assigned by"
+                                    suggestions={assignedBySuggestions}
+                                    isLoadingSuggestions={isLoadingAssignedBySuggestions}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -352,6 +386,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                 </div>
               )}
             </div>
+            )}
 
             <FormField
               control={form.control}

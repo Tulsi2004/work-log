@@ -7,5 +7,13 @@ export function ThemeProvider({
   children,
   ...props
 }: ComponentProps<typeof NextThemesProvider>) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return (
+    <NextThemesProvider
+      {...props}
+      forcedTheme={undefined}
+      enableColorSchemeQuery
+    >
+      {children}
+    </NextThemesProvider>
+  );
 }

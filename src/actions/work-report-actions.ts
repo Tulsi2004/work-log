@@ -15,10 +15,15 @@ export async function listEmployments() {
   });
 }
 
-async function findOrCreateCompany(client: Prisma.TransactionClient, userId: string, name: string) {
+async function findOrCreateCompany(
+  client: Prisma.TransactionClient,
+  userId: string,
+  name: string,
+  details: { ceoName: string | null; jobSource: string | null }
+) {
   const existing = await client.company.findFirst({ where: { userId, name } });
-  if (existing) return existing;
-  return client.company.create({ data: { userId, name } });
+  if (existing) return client.company.update({ where: { id: existing.id }, data: details });
+  return client.company.create({ data: { userId, name, ...details } });
 }
 
 async function deleteCompanyIfOrphaned(client: Prisma.TransactionClient, companyId: string) {
@@ -48,7 +53,10 @@ export async function createEmployment(input: EmploymentInput) {
   const data = employmentSchema.parse(input);
 
   const employment = await prisma.$transaction(async (tx) => {
-    const company = await findOrCreateCompany(tx, userId, data.companyName);
+    const company = await findOrCreateCompany(tx, userId, data.companyName, {
+      ceoName: data.ceoName || null,
+      jobSource: data.jobSource || null,
+    });
     return tx.employment.create({
       data: { ...toEmploymentData(data), companyId: company.id },
       include: { company: true },
@@ -69,7 +77,10 @@ export async function updateEmployment(id: string, input: EmploymentInput) {
       throw new Error("Employment not found");
     }
 
-    const company = await findOrCreateCompany(tx, userId, data.companyName);
+    const company = await findOrCreateCompany(tx, userId, data.companyName, {
+      ceoName: data.ceoName || null,
+      jobSource: data.jobSource || null,
+    });
 
     await tx.employment.update({
       where: { id },
@@ -118,9 +129,9 @@ function toWorkReportData(data: WorkReportInput) {
     hasMeeting: data.isLeave ? data.hasMeeting : false,
     leaveReason: data.isLeave ? data.leaveReason || null : null,
 
-    hasNoTask: data.hasNoTask,
-    noTaskNote: data.hasNoTask ? data.noTaskNote || null : null,
-    tasks: data.hasNoTask ? [] : data.tasks,
+    hasNoTask: data.isLeave ? false : data.hasNoTask,
+    noTaskNote: !data.isLeave && data.hasNoTask ? data.noTaskNote || null : null,
+    tasks: data.isLeave || data.hasNoTask ? [] : data.tasks,
 
     notes: data.notes || null,
   };

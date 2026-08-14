@@ -7,11 +7,13 @@ datasource db {
 }
 
 model Company {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  ceoName     String?
+  jobSource   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   employments Employment[]
 

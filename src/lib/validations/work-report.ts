@@ -19,6 +19,8 @@ export type PayRateInput = z.infer<typeof payRateSchema>;
 export const employmentSchema = z
   .object({
     companyName: z.string().min(1, "Company name is required").max(150),
+    ceoName: optionalString,
+    jobSource: optionalString,
     designation: optionalString,
     employmentType: z.enum(EMPLOYMENT_TYPES),
     since: optionalString,
@@ -35,7 +37,7 @@ export const employmentSchema = z
 export type EmploymentInput = z.infer<typeof employmentSchema>;
 
 const taskSchema = z.object({
-  task: z.string().min(1, "Task is required").max(300),
+  task: z.string().max(300),
   projectName: optionalString,
   assignedBy: optionalString,
 });
@@ -68,14 +70,23 @@ export const workReportSchema = z
       if (!data.leaveTo) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave to date is required", path: ["leaveTo"] });
       }
+      return;
     }
     if (data.hasNoTask) {
       if (!data.noTaskNote) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add a reason for no task", path: ["noTaskNote"] });
       }
-    } else if (data.tasks.length === 0) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add at least one task", path: ["tasks"] });
+      return;
     }
+    if (data.tasks.length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add at least one task", path: ["tasks"] });
+      return;
+    }
+    data.tasks.forEach((t, index) => {
+      if (!t.task.trim()) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Task is required", path: ["tasks", index, "task"] });
+      }
+    });
   });
 
 export type WorkReportInput = z.infer<typeof workReportSchema>;
