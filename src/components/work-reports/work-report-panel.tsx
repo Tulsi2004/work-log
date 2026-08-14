@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { EmploymentHeader } from "@/components/work-reports/employment-header";
 import { WorkReportTable } from "@/components/work-reports/work-report-table";
 import { WorkReportFormDialog } from "@/components/work-reports/work-report-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
 import { useWorkReports } from "@/hooks/use-work-reports";
 import { useEmployments } from "@/hooks/use-employments";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -43,6 +44,25 @@ export function WorkReportPanel() {
   const debouncedSearch = useDebouncedValue(search);
   const debouncedProjectName = useDebouncedValue(projectName);
   const debouncedAssignedBy = useDebouncedValue(assignedBy);
+
+  // Fetch suggestions for project names and assigned by
+  const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
+    queryKey: ["work-reports-suggestions", "projectName"],
+    queryFn: async () => {
+      const res = await fetch("/api/work-reports/suggestions?type=projectName");
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      return (await res.json()).data as string[];
+    },
+  });
+
+  const { data: assignedBySuggestions = [], isLoading: isLoadingAssignedBySuggestions } = useQuery({
+    queryKey: ["work-reports-suggestions", "assignedBy"],
+    queryFn: async () => {
+      const res = await fetch("/api/work-reports/suggestions?type=assignedBy");
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      return (await res.json()).data as string[];
+    },
+  });
 
   const hasActiveFilters = !!(search || dayType !== ALL_DAY_TYPES || dateFrom || dateTo || filterByLeave || projectName || assignedBy);
   const clearFilters = () => {
@@ -128,18 +148,24 @@ export function WorkReportPanel() {
                 Leave only
               </label>
             </div>
-            <Input
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              placeholder="Project name…"
-              className="w-full sm:max-w-xs"
-            />
-            <Input
-              value={assignedBy}
-              onChange={(e) => setAssignedBy(e.target.value)}
-              placeholder="Assigned by…"
-              className="w-full sm:max-w-xs"
-            />
+            <div className="w-full sm:max-w-xs">
+              <AutocompleteInput
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Project name…"
+                suggestions={projectSuggestions}
+                isLoadingSuggestions={isLoadingProjectSuggestions}
+              />
+            </div>
+            <div className="w-full sm:max-w-xs">
+              <AutocompleteInput
+                value={assignedBy}
+                onChange={setAssignedBy}
+                placeholder="Assigned by…"
+                suggestions={assignedBySuggestions}
+                isLoadingSuggestions={isLoadingAssignedBySuggestions}
+              />
+            </div>
             {hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
                 <X className="size-4" />
