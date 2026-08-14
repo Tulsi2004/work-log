@@ -7,6 +7,7 @@ import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,14 +37,22 @@ export function WorkReportPanel() {
   const [dayType, setDayType] = useState(ALL_DAY_TYPES);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [filterByLeave, setFilterByLeave] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [assignedBy, setAssignedBy] = useState("");
   const debouncedSearch = useDebouncedValue(search);
+  const debouncedProjectName = useDebouncedValue(projectName);
+  const debouncedAssignedBy = useDebouncedValue(assignedBy);
 
-  const hasActiveFilters = !!(search || dayType !== ALL_DAY_TYPES || dateFrom || dateTo);
+  const hasActiveFilters = !!(search || dayType !== ALL_DAY_TYPES || dateFrom || dateTo || filterByLeave || projectName || assignedBy);
   const clearFilters = () => {
     setSearch("");
     setDayType(ALL_DAY_TYPES);
     setDateFrom("");
     setDateTo("");
+    setFilterByLeave(false);
+    setProjectName("");
+    setAssignedBy("");
   };
 
   const queryClient = useQueryClient();
@@ -53,6 +62,9 @@ export function WorkReportPanel() {
     dayType: dayType === ALL_DAY_TYPES ? undefined : dayType,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
+    isLeave: filterByLeave ? true : undefined,
+    projectName: debouncedProjectName || undefined,
+    assignedBy: debouncedAssignedBy || undefined,
   });
 
   const [formOpen, setFormOpen] = useState(false);
@@ -106,6 +118,28 @@ export function WorkReportPanel() {
               <span className="text-sm text-muted-foreground">–</span>
               <DatePicker value={dateTo} onChange={setDateTo} className="w-full sm:w-36" placeholder="To" />
             </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="filter-leave"
+                checked={filterByLeave}
+                onCheckedChange={(checked) => setFilterByLeave(checked as boolean)}
+              />
+              <label htmlFor="filter-leave" className="text-sm cursor-pointer whitespace-nowrap">
+                Leave only
+              </label>
+            </div>
+            <Input
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="Project name…"
+              className="w-full sm:max-w-xs"
+            />
+            <Input
+              value={assignedBy}
+              onChange={(e) => setAssignedBy(e.target.value)}
+              placeholder="Assigned by…"
+              className="w-full sm:max-w-xs"
+            />
             {hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
                 <X className="size-4" />

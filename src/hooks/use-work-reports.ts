@@ -10,6 +10,9 @@ export interface WorkReportFilters {
   dayType?: string;
   dateFrom?: string;
   dateTo?: string;
+  isLeave?: boolean;
+  projectName?: string;
+  assignedBy?: string;
 }
 
 export function useWorkReports(filters: WorkReportFilters) {
