@@ -11,7 +11,7 @@ export function ThemeProvider({
     <NextThemesProvider
       {...props}
       forcedTheme={undefined}
-      enableColorSchemeQuery
+      enableColorScheme
     >
       {children}
     </NextThemesProvider>

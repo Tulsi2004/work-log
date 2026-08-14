@@ -59,11 +59,11 @@ export async function GET(request: NextRequest) {
           OR: [
             ...(search
               ? [
-                  { notes: { contains: search, mode: "insensitive" } },
-                  { noTaskNote: { contains: search, mode: "insensitive" } },
-                  { leaveReason: { contains: search, mode: "insensitive" } },
-                  { employment: { designation: { contains: search, mode: "insensitive" } } },
-                  { employment: { company: { name: { contains: search, mode: "insensitive" } } } },
+                  { notes: { contains: search, mode: "insensitive" as const } },
+                  { noTaskNote: { contains: search, mode: "insensitive" as const } },
+                  { leaveReason: { contains: search, mode: "insensitive" as const } },
+                  { employment: { designation: { contains: search, mode: "insensitive" as const } } },
+                  { employment: { company: { name: { contains: search, mode: "insensitive" as const } } } },
                   ...(taskMatchIds.length ? [{ id: { in: taskMatchIds } }] : []),
                 ]
               : []),
