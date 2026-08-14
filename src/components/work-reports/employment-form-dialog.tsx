@@ -54,8 +54,13 @@ function toDefaultValues(employment?: EmploymentWithCompany): EmploymentInput {
     until: employment?.until ? new Date(employment.until).toISOString().slice(0, 10) : "",
     paymentType: employment?.paymentType ?? "MONTHLY",
     payHistory: payHistory.length
-      ? payHistory.map((p) => ({ amount: String(p.amount), effectiveFrom: p.effectiveFrom }))
-      : [{ amount: "", effectiveFrom: new Date().toISOString().slice(0, 10) }],
+      ? payHistory.map((p) => ({
+          actualSalary: String(p.actualSalary),
+          pf: p.pf ? String(p.pf) : "",
+          inHandSalary: String(p.inHandSalary),
+          effectiveFrom: p.effectiveFrom,
+        }))
+      : [{ actualSalary: "", pf: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) }],
   };
 }
 
@@ -247,32 +252,60 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
             <div className="space-y-2">
               <FormLabel>Pay history</FormLabel>
               {fields.map((item, index) => (
-                <div key={item.id} className="flex items-start gap-2">
-                  <div className="flex flex-1 flex-col gap-2 sm:flex-row">
-                    <FormField
-                      control={form.control}
-                      name={`payHistory.${index}.amount`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input type="number" step="0.01" placeholder="Amount" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`payHistory.${index}.effectiveFrom`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <DatePicker value={field.value} onChange={field.onChange} placeholder="Effective from" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <div key={item.id} className="flex items-start gap-2 rounded-md border p-2">
+                  <div className="flex flex-1 flex-col gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`payHistory.${index}.actualSalary`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="Actual salary" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`payHistory.${index}.pf`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="PF" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`payHistory.${index}.inHandSalary`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="In-hand salary" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`payHistory.${index}.effectiveFrom`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <DatePicker value={field.value} onChange={field.onChange} placeholder="Effective from" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                   <Button
                     type="button"
@@ -291,7 +324,9 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ amount: "", effectiveFrom: new Date().toISOString().slice(0, 10) })}
+                onClick={() =>
+                  append({ actualSalary: "", pf: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) })
+                }
               >
                 <Plus className="size-4" />
                 Add a hike

@@ -35,7 +35,12 @@ async function deleteCompanyIfOrphaned(client: Prisma.TransactionClient, company
 
 function toEmploymentData(data: EmploymentInput) {
   const payHistory = [...data.payHistory]
-    .map((entry) => ({ amount: Number(entry.amount), effectiveFrom: entry.effectiveFrom }))
+    .map((entry) => ({
+      actualSalary: Number(entry.actualSalary),
+      pf: entry.pf ? Number(entry.pf) : 0,
+      inHandSalary: Number(entry.inHandSalary),
+      effectiveFrom: entry.effectiveFrom,
+    }))
     .sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
 
   return {
@@ -126,8 +131,11 @@ function toWorkReportData(data: WorkReportInput) {
     isLeave: data.isLeave,
     leaveFrom: data.isLeave && data.leaveFrom ? new Date(data.leaveFrom) : null,
     leaveTo: data.isLeave && data.leaveTo ? new Date(data.leaveTo) : null,
-    hasMeeting: data.isLeave ? data.hasMeeting : false,
     leaveReason: data.isLeave ? data.leaveReason || null : null,
+
+    hasMeeting: data.hasMeeting,
+    meetingWith: data.hasMeeting ? data.meetingWith || null : null,
+    meetingTopic: data.hasMeeting ? data.meetingTopic || null : null,
 
     hasNoTask: data.isLeave ? false : data.hasNoTask,
     noTaskNote: !data.isLeave && data.hasNoTask ? data.noTaskNote || null : null,

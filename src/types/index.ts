@@ -9,7 +9,9 @@ export interface WorkReportTask {
 }
 
 export interface PayRate {
-  amount: number;
+  actualSalary: number;
+  pf: number;
+  inHandSalary: number;
   effectiveFrom: string;
 }
 

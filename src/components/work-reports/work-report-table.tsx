@@ -60,14 +60,18 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    <Badge variant="secondary">{formatEnumLabel(report.dayType)}</Badge>
-                    {report.isLeave && (
+                    {report.isLeave ? (
                       <Badge variant="secondary">
                         <Plane className="size-3" /> Leave
                       </Badge>
+                    ) : (
+                      <Badge variant="secondary">{formatEnumLabel(report.dayType)}</Badge>
                     )}
                     {report.hasMeeting && (
-                      <Badge variant="secondary">
+                      <Badge
+                        variant="secondary"
+                        title={[report.meetingWith, report.meetingTopic].filter(Boolean).join(" — ") || undefined}
+                      >
                         <Users className="size-3" /> Meeting
                       </Badge>
                     )}

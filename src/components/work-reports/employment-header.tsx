@@ -94,7 +94,9 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{formatEnumLabel(selected.employmentType)}</Badge>
           <Badge variant="secondary">{formatEnumLabel(selected.paymentType)}</Badge>
-          {pay && <Badge variant="secondary">₹{pay.amount}</Badge>}
+          {pay && <Badge variant="secondary">₹{pay.actualSalary} actual</Badge>}
+          {pay && pay.pf > 0 && <Badge variant="secondary">₹{pay.pf} PF</Badge>}
+          {pay && <Badge variant="secondary">₹{pay.inHandSalary} in-hand</Badge>}
           {(selected.since || selected.until) && (
             <Badge variant="secondary">
               {selected.since ? formatDate(selected.since) : "—"} – {selected.until ? formatDate(selected.until) : "Present"}

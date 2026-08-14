@@ -7,9 +7,17 @@ export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRA
 const optionalString = z.string().optional().or(z.literal(""));
 
 const payRateSchema = z.object({
-  amount: z
+  actualSalary: z
     .string()
-    .min(1, "Amount is required")
+    .min(1, "Actual salary is required")
+    .refine((v) => !Number.isNaN(Number(v)) && Number(v) >= 0, "Enter a valid amount"),
+  pf: optionalString.refine(
+    (v) => !v || (!Number.isNaN(Number(v)) && Number(v) >= 0),
+    "Enter a valid amount"
+  ),
+  inHandSalary: z
+    .string()
+    .min(1, "In-hand salary is required")
     .refine((v) => !Number.isNaN(Number(v)) && Number(v) >= 0, "Enter a valid amount"),
   effectiveFrom: z.string().min(1, "Effective date is required"),
 });
@@ -53,8 +61,11 @@ export const workReportSchema = z
     isLeave: z.boolean(),
     leaveFrom: optionalString,
     leaveTo: optionalString,
-    hasMeeting: z.boolean(),
     leaveReason: optionalString,
+
+    hasMeeting: z.boolean(),
+    meetingWith: optionalString,
+    meetingTopic: optionalString,
 
     hasNoTask: z.boolean(),
     noTaskNote: optionalString,
@@ -63,6 +74,9 @@ export const workReportSchema = z
     notes: optionalString,
   })
   .superRefine((data, ctx) => {
+    if (data.hasMeeting && !data.meetingTopic) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add a topic for the meeting", path: ["meetingTopic"] });
+    }
     if (data.isLeave) {
       if (!data.leaveFrom) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave from date is required", path: ["leaveFrom"] });

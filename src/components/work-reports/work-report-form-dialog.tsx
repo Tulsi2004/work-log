@@ -54,8 +54,11 @@ function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment
     isLeave: report?.isLeave ?? false,
     leaveFrom: report?.leaveFrom ? new Date(report.leaveFrom).toISOString().slice(0, 10) : "",
     leaveTo: report?.leaveTo ? new Date(report.leaveTo).toISOString().slice(0, 10) : "",
-    hasMeeting: report?.hasMeeting ?? false,
     leaveReason: report?.leaveReason ?? "",
+
+    hasMeeting: report?.hasMeeting ?? false,
+    meetingWith: report?.meetingWith ?? "",
+    meetingTopic: report?.meetingTopic ?? "",
 
     hasNoTask: report?.hasNoTask ?? false,
     noTaskNote: report?.noTaskNote ?? "",
@@ -85,6 +88,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
   const dateValue = form.watch("date");
   const isLeave = form.watch("isLeave");
   const hasNoTask = form.watch("hasNoTask");
+  const hasMeeting = form.watch("hasMeeting");
 
   const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
     queryKey: ["work-reports-suggestions", "projectName"],
@@ -176,29 +180,31 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="dayType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Working from</FormLabel>
-                  <FormControl>
-                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
-                      {DAY_TYPES.map((type) => (
-                        <div key={type} className="flex items-center gap-2">
-                          <RadioGroupItem value={type} id={`day-type-${type}`} />
-                          <Label htmlFor={`day-type-${type}`} className="font-normal">
-                            {formatEnumLabel(type)}
-                            {type === "OFFICE" && <span className="text-muted-foreground"> (default)</span>}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isLeave && (
+              <FormField
+                control={form.control}
+                name="dayType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Working from</FormLabel>
+                    <FormControl>
+                      <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
+                        {DAY_TYPES.map((type) => (
+                          <div key={type} className="flex items-center gap-2">
+                            <RadioGroupItem value={type} id={`day-type-${type}`} />
+                            <Label htmlFor={`day-type-${type}`} className="font-normal">
+                              {formatEnumLabel(type)}
+                              {type === "OFFICE" && <span className="text-muted-foreground"> (default)</span>}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="space-y-3 rounded-lg border p-3">
               <FormField
@@ -224,7 +230,13 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                         <FormItem>
                           <FormLabel>Leave from</FormLabel>
                           <FormControl>
-                            <DatePicker value={field.value} onChange={field.onChange} />
+                            <DatePicker
+                              value={field.value}
+                              onChange={(value) => {
+                                field.onChange(value);
+                                if (!form.getValues("leaveTo")) form.setValue("leaveTo", value);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -246,24 +258,58 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                   </div>
                   <FormField
                     control={form.control}
-                    name="hasMeeting"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center gap-2 space-y-0">
-                        <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <FormLabel className="font-normal">Meeting scheduled</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
                     name="leaveReason"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Reason</FormLabel>
                         <FormControl>
                           <Textarea rows={2} placeholder="Reason for leave" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3 rounded-lg border p-3">
+              <FormField
+                control={form.control}
+                name="hasMeeting"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className="font-normal">Meeting scheduled</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              {hasMeeting && (
+                <div className="space-y-3 pl-6">
+                  <FormField
+                    control={form.control}
+                    name="meetingWith"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Who all</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Manager, client name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="meetingTopic"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Topic</FormLabel>
+                        <FormControl>
+                          <Input placeholder="What the meeting is about" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

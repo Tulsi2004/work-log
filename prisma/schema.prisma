@@ -55,8 +55,11 @@ model WorkReport {
   isLeave     Boolean   @default(false)
   leaveFrom   DateTime?
   leaveTo     DateTime?
-  hasMeeting  Boolean   @default(false)
   leaveReason String?
+
+  hasMeeting   Boolean @default(false)
+  meetingWith  String?
+  meetingTopic String?
 
   hasNoTask  Boolean @default(false)
   noTaskNote String?
