@@ -93,9 +93,6 @@ export const workReportSchema = z
       return;
     }
     if (data.hasNoTask) {
-      if (!data.noTaskNote) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add a reason for no task", path: ["noTaskNote"] });
-      }
       return;
     }
     if (data.tasks.length === 0) {
