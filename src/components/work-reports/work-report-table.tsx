@@ -45,6 +45,11 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
         <TableBody>
           {reports.map((report) => {
             const tasks = (report.tasks as WorkReportTask[] | null) ?? [];
+            const isLongVacation =
+              report.isLeave &&
+              !!report.leaveFrom &&
+              !!report.leaveTo &&
+              new Date(report.leaveTo).toDateString() !== new Date(report.leaveFrom).toDateString();
 
             return (
               <TableRow key={report.id}>
@@ -112,7 +117,26 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                   )}
                 </TableCell>
                 <TableCell className="whitespace-normal text-muted-foreground">
-                  {report.notes || "—"}
+                  <div className="space-y-1">
+                    {report.hasMeeting && (
+                      <div className="flex items-start gap-1 text-xs">
+                        <Users className="mt-0.5 size-3 shrink-0" />
+                        <span>
+                          {report.meetingWith && <span>{report.meetingWith}</span>}
+                          {report.meetingWith && report.meetingTopic && " — "}
+                          {report.meetingTopic}
+                          {!report.meetingWith && !report.meetingTopic && "Meeting"}
+                        </span>
+                      </div>
+                    )}
+                    {isLongVacation && (
+                      <div className="flex items-start gap-1 text-xs">
+                        <Plane className="mt-0.5 size-3 shrink-0" />
+                        <span>Till {formatDate(report.leaveTo!)}</span>
+                      </div>
+                    )}
+                    {report.notes || (!report.hasMeeting && !isLongVacation && "—")}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
