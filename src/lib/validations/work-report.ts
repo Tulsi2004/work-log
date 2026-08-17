@@ -59,6 +59,7 @@ export const workReportSchema = z
     dayType: z.enum(DAY_TYPES),
 
     isLeave: z.boolean(),
+    isLongVacation: z.boolean(),
     leaveFrom: optionalString,
     leaveTo: optionalString,
     leaveReason: optionalString,
@@ -78,11 +79,16 @@ export const workReportSchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add a topic for the meeting", path: ["meetingTopic"] });
     }
     if (data.isLeave) {
-      if (!data.leaveFrom) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave from date is required", path: ["leaveFrom"] });
-      }
-      if (!data.leaveTo) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave to date is required", path: ["leaveTo"] });
+      if (data.isLongVacation) {
+        if (!data.leaveFrom) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave from date is required", path: ["leaveFrom"] });
+        }
+        if (!data.leaveTo) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave to date is required", path: ["leaveTo"] });
+        }
+        if (data.leaveFrom && data.leaveTo && data.leaveTo < data.leaveFrom) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leave to date must be after leave from date", path: ["leaveTo"] });
+        }
       }
       return;
     }

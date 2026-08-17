@@ -44,6 +44,8 @@ interface WorkReportFormDialogProps {
 
 function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment): WorkReportInput {
   const tasks = (report?.tasks as WorkReportTask[] | null) ?? [];
+  const leaveFrom = report?.leaveFrom ? new Date(report.leaveFrom).toISOString().slice(0, 10) : "";
+  const leaveTo = report?.leaveTo ? new Date(report.leaveTo).toISOString().slice(0, 10) : "";
   return {
     employmentId: report?.employmentId ?? employmentId,
     date: report?.date ? new Date(report.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
@@ -52,8 +54,9 @@ function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment
     dayType: report?.dayType ?? "OFFICE",
 
     isLeave: report?.isLeave ?? false,
-    leaveFrom: report?.leaveFrom ? new Date(report.leaveFrom).toISOString().slice(0, 10) : "",
-    leaveTo: report?.leaveTo ? new Date(report.leaveTo).toISOString().slice(0, 10) : "",
+    isLongVacation: !!(leaveFrom && leaveTo && leaveFrom !== leaveTo),
+    leaveFrom,
+    leaveTo,
     leaveReason: report?.leaveReason ?? "",
 
     hasMeeting: report?.hasMeeting ?? false,
@@ -87,8 +90,16 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
 
   const dateValue = form.watch("date");
   const isLeave = form.watch("isLeave");
+  const isLongVacation = form.watch("isLongVacation");
   const hasNoTask = form.watch("hasNoTask");
   const hasMeeting = form.watch("hasMeeting");
+
+  useEffect(() => {
+    if (isLeave && !isLongVacation) {
+      form.setValue("leaveFrom", dateValue);
+      form.setValue("leaveTo", dateValue);
+    }
+  }, [isLeave, isLongVacation, dateValue, form]);
 
   const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
     queryKey: ["work-reports-suggestions", "projectName"],
@@ -215,47 +226,62 @@ export function WorkReportFormDialog({ open, onOpenChange, employmentId, report 
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
-                    <FormLabel className="font-normal">On leave / long vacation</FormLabel>
+                    <FormLabel className="font-normal">On leave</FormLabel>
                   </FormItem>
                 )}
               />
 
               {isLeave && (
                 <div className="space-y-3 pl-6">
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="leaveFrom"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Leave from</FormLabel>
-                          <FormControl>
-                            <DatePicker
-                              value={field.value}
-                              onChange={(value) => {
-                                field.onChange(value);
-                                if (!form.getValues("leaveTo")) form.setValue("leaveTo", value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="leaveTo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>To</FormLabel>
-                          <FormControl>
-                            <DatePicker value={field.value} onChange={field.onChange} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="isLongVacation"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">Long vacation (multiple days)</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+
+                  {isLongVacation && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="leaveFrom"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Leave from</FormLabel>
+                            <FormControl>
+                              <DatePicker
+                                value={field.value}
+                                onChange={(value) => {
+                                  field.onChange(value);
+                                  if (!form.getValues("leaveTo")) form.setValue("leaveTo", value);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="leaveTo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>To</FormLabel>
+                            <FormControl>
+                              <DatePicker value={field.value} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                   <FormField
                     control={form.control}
                     name="leaveReason"

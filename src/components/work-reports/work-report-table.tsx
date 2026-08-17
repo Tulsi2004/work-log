@@ -83,7 +83,9 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                     : "—"}
                 </TableCell>
                 <TableCell className="whitespace-normal">
-                  {report.hasNoTask ? (
+                  {report.isLeave ? (
+                    <span className="text-muted-foreground">{report.leaveReason || "—"}</span>
+                  ) : report.hasNoTask ? (
                     <span className="text-muted-foreground">No task — {report.noTaskNote || "—"}</span>
                   ) : tasks.length > 0 ? (
                     <ol className="list-decimal space-y-0.5 pl-4">
