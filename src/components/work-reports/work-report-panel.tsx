@@ -35,6 +35,7 @@ export function WorkReportPanel() {
   const { data: employments } = useEmployments();
   const [selectedEmploymentId, setSelectedEmploymentId] = useState("");
   const employmentId = selectedEmploymentId || employments?.[0]?.id || "";
+  const employment = employments?.find((e) => e.id === employmentId);
   const [search, setSearch] = useState("");
   const [dayType, setDayType] = useState(ALL_DAY_TYPES);
   const [dateFrom, setDateFrom] = useState("");
@@ -225,11 +226,11 @@ export function WorkReportPanel() {
         </div>
       </div>
 
-      {employmentId && (
+      {employment && (
         <WorkReportFormDialog
           open={formOpen}
           onOpenChange={setFormOpen}
-          employmentId={employmentId}
+          employment={employment}
           report={editingReport}
         />
       )}

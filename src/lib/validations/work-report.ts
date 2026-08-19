@@ -29,6 +29,8 @@ export const employmentSchema = z
     companyName: z.string().min(1, "Company name is required").max(150),
     ceoName: optionalString,
     jobSource: optionalString,
+    defaultTimeFrom: optionalString,
+    defaultTimeTo: optionalString,
     designation: optionalString,
     employmentType: z.enum(EMPLOYMENT_TYPES),
     since: optionalString,

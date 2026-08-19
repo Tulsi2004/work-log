@@ -33,24 +33,24 @@ import { AutocompleteInput } from "@/components/work-reports/autocomplete-input"
 import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
 import { createWorkReport, updateWorkReport } from "@/actions/work-report-actions";
 import { formatEnumLabel, formatDay } from "@/utils/format";
-import type { WorkReportWithEmployment, WorkReportTask } from "@/types";
+import type { EmploymentWithCompany, WorkReportWithEmployment, WorkReportTask } from "@/types";
 
 interface WorkReportFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employmentId: string;
+  employment: EmploymentWithCompany;
   report?: WorkReportWithEmployment;
 }
 
-function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment): WorkReportInput {
+function toDefaultValues(employment: EmploymentWithCompany, report?: WorkReportWithEmployment): WorkReportInput {
   const tasks = (report?.tasks as WorkReportTask[] | null) ?? [];
   const leaveFrom = report?.leaveFrom ? new Date(report.leaveFrom).toISOString().slice(0, 10) : "";
   const leaveTo = report?.leaveTo ? new Date(report.leaveTo).toISOString().slice(0, 10) : "";
   return {
-    employmentId: report?.employmentId ?? employmentId,
+    employmentId: report?.employmentId ?? employment.id,
     date: report?.date ? new Date(report.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
-    timeFrom: report?.timeFrom ?? "",
-    timeTo: report?.timeTo ?? "",
+    timeFrom: report?.timeFrom ?? employment.company.defaultTimeFrom ?? "",
+    timeTo: report?.timeTo ?? employment.company.defaultTimeTo ?? "",
     dayType: report?.dayType ?? "OFFICE",
 
     isLeave: report?.isLeave ?? false,
@@ -73,18 +73,18 @@ function toDefaultValues(employmentId: string, report?: WorkReportWithEmployment
   };
 }
 
-export function WorkReportFormDialog({ open, onOpenChange, employmentId, report }: WorkReportFormDialogProps) {
+export function WorkReportFormDialog({ open, onOpenChange, employment, report }: WorkReportFormDialogProps) {
   const queryClient = useQueryClient();
   const isEditing = !!report;
 
   const form = useForm<WorkReportInput>({
     resolver: zodResolver(workReportSchema),
-    defaultValues: toDefaultValues(employmentId, report),
+    defaultValues: toDefaultValues(employment, report),
   });
 
   useEffect(() => {
-    if (open) form.reset(toDefaultValues(employmentId, report));
-  }, [open, employmentId, report, form]);
+    if (open) form.reset(toDefaultValues(employment, report));
+  }, [open, employment, report, form]);
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "tasks" });
 

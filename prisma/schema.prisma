@@ -12,6 +12,8 @@ model Company {
   name        String
   ceoName     String?
   jobSource   String?
+  defaultTimeFrom String?
+  defaultTimeTo   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

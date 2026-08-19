@@ -19,7 +19,7 @@ async function findOrCreateCompany(
   client: Prisma.TransactionClient,
   userId: string,
   name: string,
-  details: { ceoName: string | null; jobSource: string | null }
+  details: { ceoName: string | null; jobSource: string | null; defaultTimeFrom: string | null; defaultTimeTo: string | null }
 ) {
   const existing = await client.company.findFirst({ where: { userId, name } });
   if (existing) return client.company.update({ where: { id: existing.id }, data: details });
@@ -61,6 +61,8 @@ export async function createEmployment(input: EmploymentInput) {
     const company = await findOrCreateCompany(tx, userId, data.companyName, {
       ceoName: data.ceoName || null,
       jobSource: data.jobSource || null,
+      defaultTimeFrom: data.defaultTimeFrom || null,
+      defaultTimeTo: data.defaultTimeTo || null,
     });
     return tx.employment.create({
       data: { ...toEmploymentData(data), companyId: company.id },
@@ -85,6 +87,8 @@ export async function updateEmployment(id: string, input: EmploymentInput) {
     const company = await findOrCreateCompany(tx, userId, data.companyName, {
       ceoName: data.ceoName || null,
       jobSource: data.jobSource || null,
+      defaultTimeFrom: data.defaultTimeFrom || null,
+      defaultTimeTo: data.defaultTimeTo || null,
     });
 
     await tx.employment.update({

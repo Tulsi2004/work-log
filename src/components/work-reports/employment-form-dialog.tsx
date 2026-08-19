@@ -48,6 +48,8 @@ function toDefaultValues(employment?: EmploymentWithCompany): EmploymentInput {
     companyName: employment?.company.name ?? "",
     ceoName: employment?.company.ceoName ?? "",
     jobSource: employment?.company.jobSource ?? "",
+    defaultTimeFrom: employment?.company.defaultTimeFrom ?? "",
+    defaultTimeTo: employment?.company.defaultTimeTo ?? "",
     designation: employment?.designation ?? "",
     employmentType: employment?.employmentType ?? "FULL_TIME",
     since: employment?.since ? new Date(employment.since).toISOString().slice(0, 10) : "",
@@ -149,6 +151,34 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="defaultTimeFrom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Default shift start</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="defaultTimeTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Default shift end</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="designation"
