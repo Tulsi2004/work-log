@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getDay } from "date-fns";
 import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export function WorkReportPanel() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [filterByLeave, setFilterByLeave] = useState(false);
+  const [weekendOnly, setWeekendOnly] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [assignedBy, setAssignedBy] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -64,13 +66,14 @@ export function WorkReportPanel() {
     },
   });
 
-  const hasActiveFilters = !!(search || dayType !== ALL_DAY_TYPES || dateFrom || dateTo || filterByLeave || projectName || assignedBy);
+  const hasActiveFilters = !!(search || dayType !== ALL_DAY_TYPES || dateFrom || dateTo || filterByLeave || weekendOnly || projectName || assignedBy);
   const clearFilters = () => {
     setSearch("");
     setDayType(ALL_DAY_TYPES);
     setDateFrom("");
     setDateTo("");
     setFilterByLeave(false);
+    setWeekendOnly(false);
     setProjectName("");
     setAssignedBy("");
   };
@@ -103,6 +106,9 @@ export function WorkReportPanel() {
   });
 
   const reports = data?.data ?? [];
+  const visibleReports = weekendOnly
+    ? reports.filter((r) => [0, 6].includes(getDay(new Date(r.date))))
+    : reports;
 
   return (
     <div className="space-y-4">
@@ -146,6 +152,16 @@ export function WorkReportPanel() {
               />
               <label htmlFor="filter-leave" className="text-sm cursor-pointer whitespace-nowrap">
                 Leave only
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="filter-weekend"
+                checked={weekendOnly}
+                onCheckedChange={(checked) => setWeekendOnly(checked as boolean)}
+              />
+              <label htmlFor="filter-weekend" className="text-sm cursor-pointer whitespace-nowrap">
+                Weekends only
               </label>
             </div>
             <div className="w-full sm:max-w-xs">
@@ -194,9 +210,11 @@ export function WorkReportPanel() {
             <p className="text-sm text-muted-foreground">
               No work reports yet. Add your first one instead of reaching for Word or Excel.
             </p>
+          ) : visibleReports.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No work reports match the current filters.</p>
           ) : (
             <WorkReportTable
-              reports={reports}
+              reports={visibleReports}
               onEdit={(r) => {
                 setEditingReport(r);
                 setFormOpen(true);
