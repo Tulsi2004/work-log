@@ -52,6 +52,13 @@ const taskSchema = z.object({
   assignedBy: optionalString,
 });
 
+const wfhDaySchema = z.object({
+  date: z.string(),
+  hasNoTask: z.boolean(),
+  noTaskNote: optionalString,
+  tasks: z.array(taskSchema),
+});
+
 export const workReportSchema = z
   .object({
     employmentId: z.string().min(1, "Select a company"),
@@ -62,6 +69,7 @@ export const workReportSchema = z
 
     isLeave: z.boolean(),
     isLongVacation: z.boolean(),
+    isCompanyGranted: z.boolean(),
     leaveFrom: optionalString,
     leaveTo: optionalString,
     leaveReason: optionalString,
@@ -74,11 +82,48 @@ export const workReportSchema = z
     noTaskNote: optionalString,
     tasks: z.array(taskSchema),
 
+    isWfhRange: z.boolean(),
+    wfhFrom: optionalString,
+    wfhTo: optionalString,
+    wfhDays: z.array(wfhDaySchema),
+
     notes: optionalString,
   })
   .superRefine((data, ctx) => {
     if (data.hasMeeting && !data.meetingTopic) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add a topic for the meeting", path: ["meetingTopic"] });
+    }
+    const isWfhRangeActive = !data.isLeave && data.dayType === "WORK_FROM_HOME" && data.isWfhRange;
+    if (isWfhRangeActive) {
+      if (!data.wfhFrom) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "From date is required", path: ["wfhFrom"] });
+      }
+      if (!data.wfhTo) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "To date is required", path: ["wfhTo"] });
+      }
+      if (data.wfhFrom && data.wfhTo && data.wfhTo < data.wfhFrom) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "To date must be after from date", path: ["wfhTo"] });
+      }
+      if (data.wfhFrom && data.wfhTo && data.wfhTo >= data.wfhFrom && data.wfhDays.length === 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Set the date range to load each day", path: ["wfhTo"] });
+      }
+      data.wfhDays.forEach((day, index) => {
+        if (day.hasNoTask) return;
+        if (day.tasks.length === 0 || day.tasks.every((t) => !t.task.trim())) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Add at least one task for ${day.date}`,
+            path: ["wfhDays", index, "tasks"],
+          });
+          return;
+        }
+        day.tasks.forEach((t, ti) => {
+          if (!t.task.trim()) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Task is required", path: ["wfhDays", index, "tasks", ti, "task"] });
+          }
+        });
+      });
+      return;
     }
     if (data.isLeave) {
       if (data.isLongVacation) {

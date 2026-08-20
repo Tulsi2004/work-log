@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Trash2, Pencil, Users, Plane } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Users, Plane, Home } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -50,6 +50,12 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
               !!report.leaveFrom &&
               !!report.leaveTo &&
               new Date(report.leaveTo).toDateString() !== new Date(report.leaveFrom).toDateString();
+            const isWfhSpan =
+              !report.isLeave &&
+              report.dayType === "WORK_FROM_HOME" &&
+              !!report.wfhFrom &&
+              !!report.wfhTo &&
+              new Date(report.wfhTo).toDateString() !== new Date(report.wfhFrom).toDateString();
 
             return (
               <TableRow key={report.id}>
@@ -67,7 +73,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                   <div className="flex flex-wrap gap-1">
                     {report.isLeave ? (
                       <Badge variant="secondary">
-                        <Plane className="size-3" /> Leave
+                        <Plane className="size-3" /> {report.isCompanyGranted ? "Company Leave" : "Leave"}
                       </Badge>
                     ) : (
                       <Badge variant="secondary">{formatEnumLabel(report.dayType)}</Badge>
@@ -135,7 +141,15 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                         <span>Till {formatDate(report.leaveTo!)}</span>
                       </div>
                     )}
-                    {report.notes || (!report.hasMeeting && !isLongVacation && "—")}
+                    {isWfhSpan && (
+                      <div className="flex items-start gap-1 text-xs">
+                        <Home className="mt-0.5 size-3 shrink-0" />
+                        <span>
+                          WFH: {formatDate(report.wfhFrom!)} – {formatDate(report.wfhTo!)}
+                        </span>
+                      </div>
+                    )}
+                    {report.notes || (!report.hasMeeting && !isLongVacation && !isWfhSpan && "—")}
                   </div>
                 </TableCell>
                 <TableCell>

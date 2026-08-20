@@ -131,8 +131,11 @@ function toWorkReportData(data: WorkReportInput) {
     timeFrom: data.timeFrom || null,
     timeTo: data.timeTo || null,
     dayType: data.dayType,
+    wfhFrom: !data.isLeave && data.dayType === "WORK_FROM_HOME" && data.wfhFrom ? new Date(data.wfhFrom) : null,
+    wfhTo: !data.isLeave && data.dayType === "WORK_FROM_HOME" && data.wfhTo ? new Date(data.wfhTo) : null,
 
     isLeave: data.isLeave,
+    isCompanyGranted: data.isLeave ? data.isCompanyGranted : false,
     leaveFrom: data.isLeave && data.leaveFrom ? new Date(data.leaveFrom) : null,
     leaveTo: data.isLeave && data.leaveTo ? new Date(data.leaveTo) : null,
     leaveReason: data.isLeave ? data.leaveReason || null : null,

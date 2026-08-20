@@ -52,12 +52,15 @@ model WorkReport {
   date     DateTime
   timeFrom String?
   timeTo   String?
-  dayType  DayType  @default(OFFICE)
+  dayType  DayType   @default(OFFICE)
+  wfhFrom  DateTime?
+  wfhTo    DateTime?
 
-  isLeave     Boolean   @default(false)
-  leaveFrom   DateTime?
-  leaveTo     DateTime?
-  leaveReason String?
+  isLeave          Boolean   @default(false)
+  isCompanyGranted Boolean   @default(false)
+  leaveFrom        DateTime?
+  leaveTo          DateTime?
+  leaveReason      String?
 
   hasMeeting   Boolean @default(false)
   meetingWith  String?
