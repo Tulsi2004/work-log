@@ -26,6 +26,16 @@ interface WorkReportTableProps {
   onDelete: (report: WorkReportWithEmployment) => void;
 }
 
+const DAY_TYPE_BADGE_CLASSES: Record<string, string> = {
+  OFFICE: "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  WORK_FROM_HOME: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  HALF_DAY: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+};
+
+const LEAVE_BADGE_CLASS = "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300";
+const COMPANY_LEAVE_BADGE_CLASS = "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300";
+const MEETING_BADGE_CLASS = "bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300";
+
 export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTableProps) {
   return (
     <div className="rounded-md border">
@@ -72,15 +82,21 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {report.isLeave ? (
-                      <Badge variant="secondary">
+                      <Badge
+                        variant="secondary"
+                        className={report.isCompanyGranted ? COMPANY_LEAVE_BADGE_CLASS : LEAVE_BADGE_CLASS}
+                      >
                         <Plane className="size-3" /> {report.isCompanyGranted ? "Company Leave" : "Leave"}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">{formatEnumLabel(report.dayType)}</Badge>
+                      <Badge variant="secondary" className={DAY_TYPE_BADGE_CLASSES[report.dayType]}>
+                        {formatEnumLabel(report.dayType)}
+                      </Badge>
                     )}
                     {report.hasMeeting && (
                       <Badge
                         variant="secondary"
+                        className={MEETING_BADGE_CLASS}
                         title={[report.meetingWith, report.meetingTopic].filter(Boolean).join(" — ") || undefined}
                       >
                         <Users className="size-3" /> Meeting
