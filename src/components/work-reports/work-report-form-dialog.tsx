@@ -354,59 +354,81 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
               </FormItem>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="timeFrom"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Time worked — from</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="timeTo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>To</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {!isLeave && (
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="timeFrom"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Time worked — from</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="timeTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>To</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             {!isLeave && (
-              <FormField
-                control={form.control}
-                name="dayType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Working from</FormLabel>
-                    <FormControl>
-                      <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
-                        {DAY_TYPES.map((type) => (
-                          <div key={type} className="flex items-center gap-2">
-                            <RadioGroupItem value={type} id={`day-type-${type}`} />
-                            <Label htmlFor={`day-type-${type}`} className="font-normal">
-                              {formatEnumLabel(type)}
-                              {type === "OFFICE" && <span className="text-muted-foreground"> (default)</span>}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <FormField
+                  control={form.control}
+                  name="dayType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Working from</FormLabel>
+                      <FormControl>
+                        <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-x-4 gap-y-2">
+                          {DAY_TYPES.map((type) => (
+                            <div key={type} className="flex items-center gap-2">
+                              <RadioGroupItem value={type} id={`day-type-${type}`} />
+                              <Label htmlFor={`day-type-${type}`} className="font-normal">
+                                {formatEnumLabel(type)}
+                                {type === "OFFICE" && <span className="text-muted-foreground"> (default)</span>}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isCompanyGranted"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2 space-y-0 pt-6">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            if (checked) form.setValue("isLeave", true);
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal whitespace-nowrap">Company-granted leave</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
 
             {!isLeave && !isEditing && dayType === "WORK_FROM_HOME" && (

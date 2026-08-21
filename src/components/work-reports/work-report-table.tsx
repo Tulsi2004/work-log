@@ -89,7 +89,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {report.timeFrom || report.timeTo
+                  {!report.isLeave && (report.timeFrom || report.timeTo)
                     ? `${formatTime(report.timeFrom) || "—"} to ${formatTime(report.timeTo) || "—"}`
                     : "—"}
                 </TableCell>

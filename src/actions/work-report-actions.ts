@@ -128,8 +128,8 @@ function toWorkReportData(data: WorkReportInput) {
   return {
     employmentId: data.employmentId,
     date: new Date(data.date),
-    timeFrom: data.timeFrom || null,
-    timeTo: data.timeTo || null,
+    timeFrom: !data.isLeave && data.timeFrom ? data.timeFrom : null,
+    timeTo: !data.isLeave && data.timeTo ? data.timeTo : null,
     dayType: data.dayType,
     wfhFrom: !data.isLeave && data.dayType === "WORK_FROM_HOME" && data.wfhFrom ? new Date(data.wfhFrom) : null,
     wfhTo: !data.isLeave && data.dayType === "WORK_FROM_HOME" && data.wfhTo ? new Date(data.wfhTo) : null,

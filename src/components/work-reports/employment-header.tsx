@@ -17,17 +17,13 @@ import { EmploymentFormDialog } from "@/components/work-reports/employment-form-
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useEmployments } from "@/hooks/use-employments";
 import { deleteEmployment } from "@/actions/work-report-actions";
-import { formatDate, formatEnumLabel } from "@/utils/format";
+import { formatDate, formatEnumLabel, employmentLabel } from "@/utils/format";
 import { currentPayRate } from "@/types";
 import type { EmploymentWithCompany } from "@/types";
 
 interface EmploymentHeaderProps {
   employmentId: string;
   onEmploymentChange: (employmentId: string) => void;
-}
-
-function employmentLabel(e: EmploymentWithCompany) {
-  return e.designation ? `${e.company.name} — ${e.designation}` : e.company.name;
 }
 
 export function EmploymentHeader({ employmentId, onEmploymentChange }: EmploymentHeaderProps) {

@@ -31,10 +31,13 @@ import type { WorkReportWithEmployment } from "@/types";
 
 const ALL_DAY_TYPES = "ALL";
 
-export function WorkReportPanel() {
+interface WorkReportPanelProps {
+  employmentId: string;
+  onEmploymentChange: (employmentId: string) => void;
+}
+
+export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReportPanelProps) {
   const { data: employments } = useEmployments();
-  const [selectedEmploymentId, setSelectedEmploymentId] = useState("");
-  const employmentId = selectedEmploymentId || employments?.[0]?.id || "";
   const employment = employments?.find((e) => e.id === employmentId);
   const [search, setSearch] = useState("");
   const [dayType, setDayType] = useState(ALL_DAY_TYPES);
@@ -113,7 +116,7 @@ export function WorkReportPanel() {
 
   return (
     <div className="space-y-4">
-      <EmploymentHeader employmentId={employmentId} onEmploymentChange={setSelectedEmploymentId} />
+      <EmploymentHeader employmentId={employmentId} onEmploymentChange={onEmploymentChange} />
 
       <div className="rounded-xl border p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

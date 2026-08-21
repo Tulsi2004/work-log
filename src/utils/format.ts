@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import type { EmploymentWithCompany } from "@/types";
 
 export function formatDate(date: Date | string): string {
   return format(new Date(date), "MMM d, yyyy");
@@ -37,4 +38,8 @@ const ENUM_LABELS: Record<string, string> = {
 
 export function formatEnumLabel(value: string): string {
   return ENUM_LABELS[value] ?? value;
+}
+
+export function employmentLabel(e: EmploymentWithCompany): string {
+  return e.designation ? `${e.company.name} — ${e.designation}` : e.company.name;
 }

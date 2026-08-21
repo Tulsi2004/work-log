@@ -3,9 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats } from "@/actions/dashboard-actions";
 
-export function useDashboardStats() {
+export function useDashboardStats(employmentId?: string) {
   return useQuery({
-    queryKey: ["dashboard-stats"],
-    queryFn: () => getDashboardStats(),
+    queryKey: ["dashboard-stats", employmentId],
+    queryFn: () => getDashboardStats(employmentId),
   });
 }
