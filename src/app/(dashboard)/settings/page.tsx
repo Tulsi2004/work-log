@@ -34,7 +34,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Appearance</CardTitle>
-          <CardDescription>Choose how Worklog looks on this device.</CardDescription>
+          <CardDescription>Choose how TULSI looks on this device.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">

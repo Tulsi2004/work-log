@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
+import {
+  loadCustomValues,
+  attachCustomValues,
+  recordIdsMatchingFilters,
+} from "@/lib/custom-field-store";
+import { readCustomFilters } from "@/lib/custom-field-params";
 import type { Prisma, DayType } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
@@ -13,6 +19,8 @@ export async function GET(request: NextRequest) {
   const isLeave = request.nextUrl.searchParams.get("isLeave")?.trim() === "true";
   const projectName = request.nextUrl.searchParams.get("projectName")?.trim() ?? "";
   const assignedBy = request.nextUrl.searchParams.get("assignedBy")?.trim() ?? "";
+  const customFilters = readCustomFilters(request.nextUrl.searchParams);
+  const customMatchIds = await recordIdsMatchingFilters(userId, "WORK_REPORT", customFilters);
 
   let taskMatchIds: string[] = [];
   if (search) {
@@ -43,6 +51,7 @@ export async function GET(request: NextRequest) {
 
   const where: Prisma.WorkReportWhereInput = {
     userId,
+    ...(customMatchIds ? { id: { in: customMatchIds } } : {}),
     ...(employmentId ? { employmentId } : {}),
     ...(dayType ? { dayType: dayType as DayType } : {}),
     ...(isLeave ? { isLeave: true } : {}),
@@ -80,5 +89,7 @@ export async function GET(request: NextRequest) {
     orderBy: { date: "desc" },
   });
 
-  return NextResponse.json({ data: reports });
+  const values = await loadCustomValues(userId, reports.map((r) => r.id));
+
+  return NextResponse.json({ data: attachCustomValues(reports, values) });
 }

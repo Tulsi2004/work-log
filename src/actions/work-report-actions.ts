@@ -5,14 +5,22 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
 import { employmentSchema, workReportSchema, type EmploymentInput, type WorkReportInput } from "@/lib/validations/work-report";
+import {
+  saveCustomValues,
+  deleteCustomValues,
+  loadCustomValues,
+  attachCustomValues,
+} from "@/lib/custom-field-store";
 
 export async function listEmployments() {
   const userId = await requireUserId();
-  return prisma.employment.findMany({
+  const employments = await prisma.employment.findMany({
     where: { company: { userId } },
     include: { company: true },
     orderBy: [{ company: { name: "asc" } }, { since: "desc" }],
   });
+  const values = await loadCustomValues(userId, employments.map((e) => e.id));
+  return attachCustomValues(employments, values);
 }
 
 async function findOrCreateCompany(
@@ -70,6 +78,8 @@ export async function createEmployment(input: EmploymentInput) {
     });
   });
 
+  await saveCustomValues(prisma, userId, "EMPLOYMENT", employment.id, data.customValues);
+
   revalidatePath("/work-reports");
   return employment;
 }
@@ -101,6 +111,8 @@ export async function updateEmployment(id: string, input: EmploymentInput) {
     }
   });
 
+  await saveCustomValues(prisma, userId, "EMPLOYMENT", id, data.customValues);
+
   revalidatePath("/work-reports");
   return { id };
 }
@@ -116,6 +128,10 @@ export async function deleteEmployment(id: string) {
     if (!employment) {
       throw new Error("Company not found");
     }
+
+    // Work reports cascade with the employment, so their values go too.
+    const reports = await tx.workReport.findMany({ where: { employmentId: id }, select: { id: true } });
+    await deleteCustomValues(tx, userId, [id, ...reports.map((r) => r.id)]);
 
     await tx.employment.delete({ where: { id } });
     await deleteCompanyIfOrphaned(tx, employment.companyId);
@@ -165,6 +181,8 @@ export async function createWorkReport(input: WorkReportInput) {
     data: { ...toWorkReportData(data), userId },
   });
 
+  await saveCustomValues(prisma, userId, "WORK_REPORT", report.id, data.customValues);
+
   revalidatePath("/work-reports");
   return report;
 }
@@ -187,6 +205,8 @@ export async function updateWorkReport(id: string, input: WorkReportInput) {
     throw new Error("Work report not found");
   }
 
+  await saveCustomValues(prisma, userId, "WORK_REPORT", id, data.customValues);
+
   revalidatePath("/work-reports");
   return { id };
 }
@@ -202,5 +222,20 @@ export async function deleteWorkReport(id: string) {
     throw new Error("Work report not found");
   }
 
+  await deleteCustomValues(prisma, userId, [id]);
+
   revalidatePath("/work-reports");
+}
+
+// Bulk delete from the table's selection. Scoped by userId, so ids that are not
+// the user's own are simply not matched.
+export async function deleteWorkReports(ids: string[]) {
+  const userId = await requireUserId();
+  if (ids.length === 0) return { count: 0 };
+
+  const result = await prisma.workReport.deleteMany({ where: { id: { in: ids }, userId } });
+  await deleteCustomValues(prisma, userId, ids);
+
+  revalidatePath("/work-reports");
+  return { count: result.count };
 }

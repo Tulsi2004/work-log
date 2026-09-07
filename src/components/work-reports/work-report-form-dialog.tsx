@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -31,8 +31,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
 import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
-import { createWorkReport, updateWorkReport } from "@/actions/work-report-actions";
+import { createWorkReport, updateWorkReport, deleteWorkReport } from "@/actions/work-report-actions";
 import { formatEnumLabel, formatDay, formatDate } from "@/utils/format";
+import { CustomFieldInputs } from "@/components/custom-fields/custom-field-inputs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { EmploymentWithCompany, WorkReportWithEmployment, WorkReportTask } from "@/types";
 
 function enumerateDates(from: string, to: string): string[] {
@@ -224,6 +226,8 @@ function toDefaultValues(employment: EmploymentWithCompany, report?: WorkReportW
     wfhDays: [],
 
     notes: report?.notes ?? "",
+    // Blanks for fields the record has no value for are filled in by CustomFieldInputs.
+    customValues: report?.customValues ?? {},
   };
 }
 
@@ -323,6 +327,19 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
       onOpenChange(false);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteWorkReport(report!.id),
+    onSuccess: () => {
+      toast.success("Work report deleted");
+      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setConfirmDelete(false);
+      onOpenChange(false);
+    },
+    onError: (error: Error) => toast.error(error.message || "Failed to delete work report"),
   });
 
   return (
@@ -775,16 +792,43 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
               )}
             />
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {isEditing ? "Save changes" : "Save work report"}
-              </Button>
+            <CustomFieldInputs entity="WORK_REPORT" />
+
+            <DialogFooter className="sm:justify-between">
+              {isEditing ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="size-4" />
+                  Delete
+                </Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={mutation.isPending}>
+                  {isEditing ? "Save changes" : "Save work report"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
+
+        <ConfirmDialog
+          open={confirmDelete}
+          onOpenChange={setConfirmDelete}
+          title="Delete work report?"
+          description={
+            report ? `This will permanently delete the work report for ${formatDate(report.date)}.` : undefined
+          }
+          onConfirm={() => deleteMutation.mutate()}
+        />
       </DialogContent>
     </Dialog>
   );

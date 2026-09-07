@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,18 +31,21 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { employmentSchema, EMPLOYMENT_TYPES, type EmploymentInput } from "@/lib/validations/work-report";
 import { formatEnumLabel } from "@/utils/format";
-import { createEmployment, updateEmployment } from "@/actions/work-report-actions";
+import { createEmployment, updateEmployment, deleteEmployment } from "@/actions/work-report-actions";
 import { useEmployments } from "@/hooks/use-employments";
-import type { EmploymentWithCompany, PayRate } from "@/types";
+import { CustomFieldInputs } from "@/components/custom-fields/custom-field-inputs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import type { EmploymentListItem, PayRate } from "@/types";
 
 interface EmploymentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employment?: EmploymentWithCompany;
+  employment?: EmploymentListItem;
   onSaved?: (employmentId: string) => void;
+  onDeleted?: () => void;
 }
 
-function toDefaultValues(employment?: EmploymentWithCompany): EmploymentInput {
+function toDefaultValues(employment?: EmploymentListItem): EmploymentInput {
   const payHistory = (employment?.payHistory as PayRate[] | null) ?? [];
   return {
     companyName: employment?.company.name ?? "",
@@ -63,10 +66,12 @@ function toDefaultValues(employment?: EmploymentWithCompany): EmploymentInput {
           effectiveFrom: p.effectiveFrom,
         }))
       : [{ actualSalary: "", pf: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) }],
+    // Blanks for fields the record has no value for are filled in by CustomFieldInputs.
+    customValues: employment?.customValues ?? {},
   };
 }
 
-export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }: EmploymentFormDialogProps) {
+export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, onDeleted }: EmploymentFormDialogProps) {
   const queryClient = useQueryClient();
   const { data: employments } = useEmployments();
   const isEditing = !!employment;
@@ -96,6 +101,21 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
       onSaved?.(result.id);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteEmployment(employment!.id),
+    onSuccess: () => {
+      toast.success("Company removed");
+      queryClient.invalidateQueries({ queryKey: ["employments"] });
+      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setConfirmDelete(false);
+      onOpenChange(false);
+      onDeleted?.();
+    },
+    onError: (error: Error) => toast.error(error.message || "Failed to remove company"),
   });
 
   return (
@@ -366,16 +386,45 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved }
               )}
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {isEditing ? "Save changes" : "Add company"}
-              </Button>
+            <CustomFieldInputs entity="EMPLOYMENT" />
+
+            <DialogFooter className="sm:justify-between">
+              {isEditing ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="size-4" />
+                  Delete
+                </Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={mutation.isPending}>
+                  {isEditing ? "Save changes" : "Add company"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
+
+        <ConfirmDialog
+          open={confirmDelete}
+          onOpenChange={setConfirmDelete}
+          title="Remove company?"
+          description={
+            employment
+              ? `This will permanently remove ${employment.company.name} and all of its work reports.`
+              : undefined
+          }
+          onConfirm={() => deleteMutation.mutate()}
+        />
       </DialogContent>
     </Dialog>
   );

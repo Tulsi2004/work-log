@@ -39,6 +39,7 @@ model Employment {
   updatedAt   DateTime    @updatedAt
 
   workReports WorkReport[]
+  dayPlans    DayPlan[]
 
   @@index([companyId])
 }
@@ -96,4 +97,110 @@ enum DayType {
   OFFICE
   WORK_FROM_HOME
   HALF_DAY
+}
+
+// A colour-coded thing to do on a given day — the planner side of the app,
+// independent of whether a work report exists for that date.
+model DayPlan {
+  id           String      @id @default(cuid())
+  userId       String
+  employmentId String?
+  employment   Employment? @relation(fields: [employmentId], references: [id], onDelete: SetNull)
+
+  date   DateTime
+  title  String
+  detail String?
+  label  PlanLabel @default(GENERAL)
+  isDone Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, date])
+  @@index([employmentId])
+}
+
+enum PlanLabel {
+  URGENT
+  CLIENT
+  FOLLOW_UP
+  MEETING
+  IDEA
+  PERSONAL
+  GENERAL
+}
+
+// A field the user defined for themselves, on top of the built-in ones.
+// Definitions are rows, not columns — one user adding a field never touches
+// another user's data or the shape of the tables.
+model CustomField {
+  id     String            @id @default(cuid())
+  userId String
+  entity CustomFieldEntity
+  name   String
+  type   CustomFieldType   @default(TEXT)
+  // Choice list for SELECT fields — a Json array of strings, null otherwise.
+  options   Json?
+  required  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  values CustomFieldValue[]
+
+  @@unique([userId, entity, name])
+  @@index([userId, entity])
+}
+
+// One user-defined field's value on one record. `recordId` points at a
+// WorkReport, Employment or DayPlan depending on the field's entity; it is a
+// loose reference, so the delete actions clear these alongside the record.
+model CustomFieldValue {
+  id      String      @id @default(cuid())
+  fieldId String
+  field   CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  userId   String
+  recordId String
+  // Every type is held as text and parsed per the field's type on read.
+  value String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fieldId, recordId])
+  @@index([userId])
+  @@index([recordId])
+}
+
+enum CustomFieldEntity {
+  WORK_REPORT
+  EMPLOYMENT
+  DAY_PLAN
+}
+
+enum CustomFieldType {
+  TEXT
+  LONG_TEXT
+  NUMBER
+  DATE
+  CHECKBOX
+  SELECT
+}
+
+// Small per-user settings that are not worth a table of their own — currently
+// which dashboard cards are shown and in what order.
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String
+  key    String
+  value  Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId])
 }

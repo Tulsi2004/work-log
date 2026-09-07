@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Worklog",
+  title: "TULSI",
   description: "Daily work reports, right on your dashboard.",
 };
 

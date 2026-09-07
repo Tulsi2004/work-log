@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { customValuesSchema } from "@/lib/validations/custom-field";
 
 export const PAYMENT_TYPES = ["LUMPSUM", "MONTHLY"] as const;
 export const DAY_TYPES = ["OFFICE", "WORK_FROM_HOME", "HALF_DAY"] as const;
@@ -37,6 +38,7 @@ export const employmentSchema = z
     until: optionalString,
     paymentType: z.enum(PAYMENT_TYPES),
     payHistory: z.array(payRateSchema).min(1, "Add at least one pay entry"),
+    customValues: customValuesSchema,
   })
   .superRefine((data, ctx) => {
     if (data.since && data.until && data.until < data.since) {
@@ -88,6 +90,7 @@ export const workReportSchema = z
     wfhDays: z.array(wfhDaySchema),
 
     notes: optionalString,
+    customValues: customValuesSchema,
   })
   .superRefine((data, ctx) => {
     if (data.hasMeeting && !data.meetingTopic) {

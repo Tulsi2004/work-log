@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatEnumLabel, formatTenure, formatTime } from "@/utils/format";
-import type { EmploymentWithCompany, PayRate } from "@/types";
+import { CustomFieldValueList } from "@/components/custom-fields/custom-field-values";
+import type { EmploymentListItem, PayRate } from "@/types";
 
 interface EmploymentViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employment: EmploymentWithCompany;
+  employment: EmploymentListItem;
 }
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -84,6 +85,12 @@ export function EmploymentViewDialog({ open, onOpenChange, employment }: Employm
               <p className="text-sm font-medium">—</p>
             )}
           </div>
+
+          <CustomFieldValueList
+            entity="EMPLOYMENT"
+            values={employment.customValues}
+            className="grid grid-cols-2 gap-4 text-sm"
+          />
         </div>
       </DialogContent>
     </Dialog>

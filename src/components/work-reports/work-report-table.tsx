@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +19,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDate, formatDay, formatEnumLabel, formatTime } from "@/utils/format";
+import { formatCustomValue } from "@/lib/custom-fields";
+import { useCustomFields } from "@/hooks/use-custom-fields";
 import type { WorkReportWithEmployment, WorkReportTask } from "@/types";
 
 interface WorkReportTableProps {
   reports: WorkReportWithEmployment[];
   onEdit: (report: WorkReportWithEmployment) => void;
   onDelete: (report: WorkReportWithEmployment) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
 }
 
 const DAY_TYPE_BADGE_CLASSES: Record<string, string> = {
@@ -36,12 +41,40 @@ const LEAVE_BADGE_CLASS = "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:tex
 const COMPANY_LEAVE_BADGE_CLASS = "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300";
 const MEETING_BADGE_CLASS = "bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300";
 
-export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTableProps) {
+export function WorkReportTable({
+  reports,
+  onEdit,
+  onDelete,
+  selectedIds,
+  onSelectionChange,
+}: WorkReportTableProps) {
+  // Empty by default, so the table keeps exactly the columns it always had.
+  const { data: customFields = [] } = useCustomFields("WORK_REPORT");
+
+  const selected = new Set(selectedIds);
+  const allSelected = reports.length > 0 && reports.every((report) => selected.has(report.id));
+
+  const toggleOne = (id: string, checked: boolean) => {
+    const next = new Set(selected);
+    if (checked) next.add(id);
+    else next.delete(id);
+    onSelectionChange([...next]);
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={(checked) =>
+                  onSelectionChange(checked ? reports.map((report) => report.id) : [])
+                }
+                aria-label={allSelected ? "Clear selection" : "Select every row"}
+              />
+            </TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Company</TableHead>
             <TableHead>Type</TableHead>
@@ -49,6 +82,11 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
             <TableHead className="min-w-64">Tasks</TableHead>
             <TableHead className="min-w-32">Assigned By</TableHead>
             <TableHead className="min-w-48">Notes</TableHead>
+            {customFields.map((field) => (
+              <TableHead key={field.id} className="min-w-32">
+                {field.name}
+              </TableHead>
+            ))}
             <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
@@ -68,7 +106,14 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
               new Date(report.wfhTo).toDateString() !== new Date(report.wfhFrom).toDateString();
 
             return (
-              <TableRow key={report.id}>
+              <TableRow key={report.id} data-state={selected.has(report.id) ? "selected" : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.has(report.id)}
+                    onCheckedChange={(checked) => toggleOne(report.id, checked as boolean)}
+                    aria-label={`Select the report for ${formatDate(report.date)}`}
+                  />
+                </TableCell>
                 <TableCell>
                   <div className="font-medium">{formatDate(report.date)}</div>
                   <div className="text-xs text-muted-foreground">{formatDay(report.date)}</div>
@@ -168,6 +213,11 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                     {report.notes || (!report.hasMeeting && !isLongVacation && !isWfhSpan && "—")}
                   </div>
                 </TableCell>
+                {customFields.map((field) => (
+                  <TableCell key={field.id} className="whitespace-normal text-muted-foreground">
+                    {formatCustomValue(field, report.customValues[field.id])}
+                  </TableCell>
+                ))}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

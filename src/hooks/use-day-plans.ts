@@ -3,29 +3,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { buildSearchParams } from "@/lib/query-params";
 import { toCustomFilterParams } from "@/lib/custom-field-params";
-import type { WorkReportWithEmployment } from "@/types";
+import type { DayPlanWithEmployment } from "@/types";
 
-export interface WorkReportFilters {
+export interface DayPlanFilters {
   search: string;
+  label?: string;
   employmentId?: string;
-  dayType?: string;
   dateFrom?: string;
   dateTo?: string;
-  isLeave?: boolean;
-  projectName?: string;
-  assignedBy?: string;
+  status?: "open" | "done";
   customFilters?: Record<string, string>;
 }
 
-export function useWorkReports(filters: WorkReportFilters) {
+export function useDayPlans(filters: DayPlanFilters) {
   return useQuery({
-    queryKey: ["work-reports", filters],
+    queryKey: ["day-plans", filters],
     queryFn: async () => {
       const { customFilters, ...rest } = filters;
       const sp = buildSearchParams({ ...rest, ...toCustomFilterParams(customFilters ?? {}) });
-      const res = await fetch(`/api/work-reports?${sp.toString()}`);
-      if (!res.ok) throw new Error("Failed to load work reports");
-      return (await res.json()) as { data: WorkReportWithEmployment[] };
+      const res = await fetch(`/api/day-plans?${sp.toString()}`);
+      if (!res.ok) throw new Error("Failed to load to-dos");
+      return (await res.json()) as { data: DayPlanWithEmployment[] };
     },
     placeholderData: (prev) => prev,
   });

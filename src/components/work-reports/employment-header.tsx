@@ -20,7 +20,7 @@ import { useEmployments } from "@/hooks/use-employments";
 import { deleteEmployment } from "@/actions/work-report-actions";
 import { formatDate, formatEnumLabel, formatTenure, employmentLabel } from "@/utils/format";
 import { currentPayRate } from "@/types";
-import type { EmploymentWithCompany } from "@/types";
+import type { EmploymentListItem } from "@/types";
 
 interface EmploymentHeaderProps {
   employmentId: string;
@@ -30,7 +30,7 @@ interface EmploymentHeaderProps {
 export function EmploymentHeader({ employmentId, onEmploymentChange }: EmploymentHeaderProps) {
   const { data: employments, isLoading } = useEmployments();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingEmployment, setEditingEmployment] = useState<EmploymentWithCompany | undefined>(undefined);
+  const [editingEmployment, setEditingEmployment] = useState<EmploymentListItem | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -142,6 +142,7 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
         onOpenChange={setDialogOpen}
         employment={editingEmployment}
         onSaved={(id) => onEmploymentChange(id)}
+        onDeleted={() => onEmploymentChange("")}
       />
 
       {selected && (

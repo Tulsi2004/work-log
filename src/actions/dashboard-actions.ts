@@ -1,6 +1,7 @@
 "use server";
 
-import { differenceInMonths } from "date-fns";
+import { differenceInMonths, startOfMonth } from "date-fns";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
 
@@ -33,22 +34,57 @@ function totalExperienceMonths(stints: { since: Date | null; until: Date | null 
 export async function getDashboardStats(employmentId?: string) {
   const userId = await requireUserId();
 
-  const [totalWorkReports, totalCompanies, employmentWorkReports, stints] = await Promise.all([
+  // Cards marked "this company" narrow to the selection in the header; without a
+  // selection they cover every company, so the numbers are never blank.
+  const scope: Prisma.WorkReportWhereInput = { userId, ...(employmentId ? { employmentId } : {}) };
+  const count = (where: Prisma.WorkReportWhereInput) => prisma.workReport.count({ where: { ...scope, ...where } });
+
+  const [
+    totalWorkReports,
+    totalCompanies,
+    stints,
+    openTodos,
+    doneTodos,
+    employmentWorkReports,
+    officeDays,
+    wfhDays,
+    halfDays,
+    leaveDays,
+    companyGrantedLeaveDays,
+    meetings,
+    noTaskDays,
+    reportsThisMonth,
+  ] = await Promise.all([
     prisma.workReport.count({ where: { userId } }),
     prisma.company.count({ where: { userId } }),
-    employmentId
-      ? prisma.workReport.count({ where: { userId, employmentId } })
-      : Promise.resolve(0),
-    prisma.employment.findMany({
-      where: { company: { userId } },
-      select: { since: true, until: true },
-    }),
+    prisma.employment.findMany({ where: { company: { userId } }, select: { since: true, until: true } }),
+    prisma.dayPlan.count({ where: { userId, isDone: false } }),
+    prisma.dayPlan.count({ where: { userId, isDone: true } }),
+    count({}),
+    count({ isLeave: false, dayType: "OFFICE" }),
+    count({ isLeave: false, dayType: "WORK_FROM_HOME" }),
+    count({ isLeave: false, dayType: "HALF_DAY" }),
+    count({ isLeave: true }),
+    count({ isLeave: true, isCompanyGranted: true }),
+    count({ hasMeeting: true }),
+    count({ isLeave: false, hasNoTask: true }),
+    count({ date: { gte: startOfMonth(new Date()) } }),
   ]);
 
   return {
     totalWorkReports,
     totalCompanies,
-    employmentWorkReports,
     experienceMonths: totalExperienceMonths(stints),
+    openTodos,
+    doneTodos,
+    employmentWorkReports,
+    officeDays,
+    wfhDays,
+    halfDays,
+    leaveDays,
+    companyGrantedLeaveDays,
+    meetings,
+    noTaskDays,
+    reportsThisMonth,
   };
 }
