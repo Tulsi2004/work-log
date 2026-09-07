@@ -1,11 +1,14 @@
 import { config } from "dotenv";
 import { defineConfig, env } from "@prisma/config";
 
-config({ path: ".env.local" });
+config({ path: ".env" });
+config({ path: ".env.local", override: true });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: env("DATABASE_URL"),
+    // Migrations need a session-mode connection; the transaction pooler in
+    // DATABASE_URL cannot hold the advisory locks migrate relies on.
+    url: env("DIRECT_URL"),
   },
 });
