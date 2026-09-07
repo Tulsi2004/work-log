@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,10 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmploymentFormDialog } from "@/components/work-reports/employment-form-dialog";
+import { EmploymentViewDialog } from "@/components/work-reports/employment-view-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useEmployments } from "@/hooks/use-employments";
 import { deleteEmployment } from "@/actions/work-report-actions";
-import { formatDate, formatEnumLabel, employmentLabel } from "@/utils/format";
+import { formatDate, formatEnumLabel, formatTenure, employmentLabel } from "@/utils/format";
 import { currentPayRate } from "@/types";
 import type { EmploymentWithCompany } from "@/types";
 
@@ -31,10 +32,12 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployment, setEditingEmployment] = useState<EmploymentWithCompany | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const selected = employments?.find((e) => e.id === employmentId);
   const pay = selected ? currentPayRate(selected.payHistory) : undefined;
+  const tenure = selected ? formatTenure(selected.since, selected.until) : undefined;
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteEmployment(id),
@@ -98,6 +101,16 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
               {selected.since ? formatDate(selected.since) : "—"} – {selected.until ? formatDate(selected.until) : "Present"}
             </Badge>
           )}
+          {tenure && <Badge variant="secondary">{tenure} total</Badge>}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setViewDialogOpen(true)}
+          >
+            <Eye className="size-4" />
+            <span className="sr-only">View company</span>
+          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -130,6 +143,14 @@ export function EmploymentHeader({ employmentId, onEmploymentChange }: Employmen
         employment={editingEmployment}
         onSaved={(id) => onEmploymentChange(id)}
       />
+
+      {selected && (
+        <EmploymentViewDialog
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          employment={selected}
+        />
+      )}
 
       {selected && (
         <ConfirmDialog
