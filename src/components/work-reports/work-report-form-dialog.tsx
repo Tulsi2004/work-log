@@ -5,7 +5,7 @@ import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
+import { TaskListFields } from "@/components/work-reports/task-list-fields";
 import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
 import { createWorkReport, updateWorkReport, deleteWorkReport } from "@/actions/work-report-actions";
 import { formatEnumLabel, formatDay, formatDate } from "@/utils/format";
@@ -74,7 +74,6 @@ function WfhDayTasks({
   assignedBySuggestions,
   isLoadingAssignedBySuggestions,
 }: WfhDayTasksProps) {
-  const { fields, append, remove } = useFieldArray({ control, name: `wfhDays.${dayIndex}.tasks` });
   const hasNoTask = useWatch({ control, name: `wfhDays.${dayIndex}.hasNoTask` });
 
   return (
@@ -110,83 +109,13 @@ function WfhDayTasks({
           )}
         />
       ) : (
-        <div className="space-y-2">
-          {fields.map((item, index) => (
-            <div key={item.id} className="flex items-start gap-2">
-              <span className="mt-2 w-5 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
-              <div className="flex flex-1 flex-col gap-2">
-                <FormField
-                  control={control}
-                  name={`wfhDays.${dayIndex}.tasks.${index}.task`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input placeholder="Task" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <FormField
-                    control={control}
-                    name={`wfhDays.${dayIndex}.tasks.${index}.projectName`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <AutocompleteInput
-                            value={field.value ?? ""}
-                            onChange={field.onChange}
-                            placeholder="Project name"
-                            suggestions={projectSuggestions}
-                            isLoadingSuggestions={isLoadingProjectSuggestions}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={control}
-                    name={`wfhDays.${dayIndex}.tasks.${index}.assignedBy`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <AutocompleteInput
-                            value={field.value ?? ""}
-                            onChange={field.onChange}
-                            placeholder="Assigned by"
-                            suggestions={assignedBySuggestions}
-                            isLoadingSuggestions={isLoadingAssignedBySuggestions}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="mt-0.5"
-                onClick={() => remove(index)}
-                disabled={fields.length === 1}
-              >
-                <Trash2 className="size-4" />
-                <span className="sr-only">Remove task</span>
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => append({ task: "", projectName: "", assignedBy: "" })}
-          >
-            <Plus className="size-4" />
-            Add task
-          </Button>
-        </div>
+        <TaskListFields
+          name={`wfhDays.${dayIndex}.tasks`}
+          projectSuggestions={projectSuggestions}
+          isLoadingProjectSuggestions={isLoadingProjectSuggestions}
+          assignedBySuggestions={assignedBySuggestions}
+          isLoadingAssignedBySuggestions={isLoadingAssignedBySuggestions}
+        />
       )}
     </div>
   );
@@ -244,7 +173,6 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
     if (open) form.reset(toDefaultValues(employment, report));
   }, [open, employment, report, form]);
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "tasks" });
   const { fields: wfhDayFields, replace: replaceWfhDays } = useFieldArray({ control: form.control, name: "wfhDays" });
 
   const dateValue = form.watch("date");
@@ -693,87 +621,13 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
                   )}
                 />
               ) : (
-                <div className="space-y-2">
-                  <FormLabel>Tasks</FormLabel>
-                  {fields.map((item, index) => (
-                    <div key={item.id} className="flex items-start gap-2">
-                      <span className="mt-2 w-5 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
-                      <div className="flex flex-1 flex-col gap-2">
-                        <FormField
-                          control={form.control}
-                          name={`tasks.${index}.task`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input placeholder="Task" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <FormField
-                            control={form.control}
-                            name={`tasks.${index}.projectName`}
-                            render={({ field }) => (
-                              <FormItem className="flex-1">
-                                <FormControl>
-                                  <AutocompleteInput
-                                    value={field.value ?? ""}
-                                    onChange={field.onChange}
-                                    placeholder="Project name"
-                                    suggestions={projectSuggestions}
-                                    isLoadingSuggestions={isLoadingProjectSuggestions}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`tasks.${index}.assignedBy`}
-                            render={({ field }) => (
-                              <FormItem className="flex-1">
-                                <FormControl>
-                                  <AutocompleteInput
-                                    value={field.value ?? ""}
-                                    onChange={field.onChange}
-                                    placeholder="Assigned by"
-                                    suggestions={assignedBySuggestions}
-                                    isLoadingSuggestions={isLoadingAssignedBySuggestions}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="mt-0.5"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                      >
-                        <Trash2 className="size-4" />
-                        <span className="sr-only">Remove task</span>
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => append({ task: "", projectName: "", assignedBy: "" })}
-                  >
-                    <Plus className="size-4" />
-                    Add task
-                  </Button>
-                  {form.formState.errors.tasks?.message && (
-                    <p className="text-sm text-destructive">{form.formState.errors.tasks.message}</p>
-                  )}
-                </div>
+                <TaskListFields
+                  name="tasks"
+                  projectSuggestions={projectSuggestions}
+                  isLoadingProjectSuggestions={isLoadingProjectSuggestions}
+                  assignedBySuggestions={assignedBySuggestions}
+                  isLoadingAssignedBySuggestions={isLoadingAssignedBySuggestions}
+                />
               )}
             </div>
             )}
