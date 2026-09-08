@@ -41,6 +41,19 @@ const LEAVE_BADGE_CLASS = "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:tex
 const COMPANY_LEAVE_BADGE_CLASS = "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300";
 const MEETING_BADGE_CLASS = "bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300";
 
+/** Same project can be repeated on several tasks of one day - show each name once. */
+function uniqueValues(values: Array<string | undefined | null>) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (!trimmed || seen.has(trimmed.toLowerCase())) continue;
+    seen.add(trimmed.toLowerCase());
+    result.push(trimmed);
+  }
+  return result;
+}
+
 export function WorkReportTable({
   reports,
   onEdit,
@@ -99,6 +112,7 @@ export function WorkReportTable({
               !!report.leaveFrom &&
               !!report.leaveTo &&
               new Date(report.leaveTo).toDateString() !== new Date(report.leaveFrom).toDateString();
+            const projectNames = report.hasNoTask ? [] : uniqueValues(tasks.map((t) => t.projectName));
             const isWfhSpan =
               !report.isLeave &&
               report.dayType === "WORK_FROM_HOME" &&
@@ -173,10 +187,10 @@ export function WorkReportTable({
                   )}
                 </TableCell>
                 <TableCell className="whitespace-normal text-muted-foreground">
-                  {!report.hasNoTask && tasks.length > 0 ? (
+                  {projectNames.length > 0 ? (
                     <div className="space-y-0.5">
-                      {tasks.map((t, i) => (
-                        <div key={i}>{t.projectName || "—"}</div>
+                      {projectNames.map((name) => (
+                        <div key={name}>{name}</div>
                       ))}
                     </div>
                   ) : (
