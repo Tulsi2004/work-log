@@ -80,6 +80,7 @@ export function WorkReportTable({
             <TableHead>Type</TableHead>
             <TableHead>Time</TableHead>
             <TableHead className="min-w-64">Tasks</TableHead>
+            <TableHead className="min-w-32">Project</TableHead>
             <TableHead className="min-w-32">Assigned By</TableHead>
             <TableHead className="min-w-48">Notes</TableHead>
             {customFields.map((field) => (
@@ -164,12 +165,22 @@ export function WorkReportTable({
                       {tasks.map((t, i) => (
                         <li key={i}>
                           {t.task}
-                          {t.projectName && <span className="text-muted-foreground"> · {t.projectName}</span>}
                         </li>
                       ))}
                     </ol>
                   ) : (
                     <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="whitespace-normal text-muted-foreground">
+                  {!report.hasNoTask && tasks.length > 0 ? (
+                    <div className="space-y-0.5">
+                      {tasks.map((t, i) => (
+                        <div key={i}>{t.projectName || "—"}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    "—"
                   )}
                 </TableCell>
                 <TableCell className="whitespace-normal text-muted-foreground">

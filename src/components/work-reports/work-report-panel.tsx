@@ -56,12 +56,14 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
 
   // Fetch suggestions for project names and assigned by
   const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
-    queryKey: ["work-reports-suggestions", "projectName"],
+    queryKey: ["work-reports-suggestions", "projectName", employmentId],
     queryFn: async () => {
-      const res = await fetch("/api/work-reports/suggestions?type=projectName");
+      const res = await fetch(`/api/work-reports/suggestions?type=projectName&employmentId=${employmentId}`);
       if (!res.ok) throw new Error("Failed to load suggestions");
       return (await res.json()).data as string[];
     },
+    // Without an employment there is nothing to scope to, so ask for nothing.
+    enabled: !!employmentId,
   });
 
   const { data: assignedBySuggestions = [], isLoading: isLoadingAssignedBySuggestions } = useQuery({

@@ -5,15 +5,17 @@ import { requireUserId } from "@/lib/auth";
 export async function GET(request: NextRequest) {
   const userId = await requireUserId();
   const type = request.nextUrl.searchParams.get("type")?.trim() ?? ""; // "projectName" or "assignedBy"
+  // Optional: keep suggestions to a single employment, so past jobs' values do not leak in.
+  const employmentId = request.nextUrl.searchParams.get("employmentId")?.trim() ?? "";
 
   if (type !== "projectName" && type !== "assignedBy") {
     return NextResponse.json({ data: [] });
   }
 
   try {
-    // Fetch all work reports for this user and extract unique values from tasks JSON
+    // Fetch the matching work reports and extract unique values from tasks JSON
     const reports = await prisma.workReport.findMany({
-      where: { userId },
+      where: { userId, ...(employmentId ? { employmentId } : {}) },
       select: { tasks: true },
     });
 

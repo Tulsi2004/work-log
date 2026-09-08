@@ -278,9 +278,9 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
   }, [isWfhRange, isLeave, dayType, wfhFromValue, wfhToValue, form, replaceWfhDays]);
 
   const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
-    queryKey: ["work-reports-suggestions", "projectName"],
+    queryKey: ["work-reports-suggestions", "projectName", employment.id],
     queryFn: async () => {
-      const res = await fetch("/api/work-reports/suggestions?type=projectName");
+      const res = await fetch(`/api/work-reports/suggestions?type=projectName&employmentId=${employment.id}`);
       if (!res.ok) throw new Error("Failed to load suggestions");
       return (await res.json()).data as string[];
     },
