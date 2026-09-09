@@ -2,16 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, ClipboardList, Settings } from "lucide-react";
+import { CalendarCheck, ClipboardList, Settings, type LucideIcon } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TulsiLogo } from "./tulsi-logo";
 import { ThemeToggle } from "./theme-toggle";
+import { PlannerBadge } from "./planner-badge";
 
-const NAV_LINKS = [
+interface NavLink {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  // Rendered inside the link — an unread-style count or dot.
+  badge?: () => React.ReactNode;
+}
+
+const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Work log", icon: ClipboardList },
-  { href: "/planner", label: "Planner", icon: CalendarCheck },
+  { href: "/planner", label: "Planner", icon: CalendarCheck, badge: PlannerBadge },
 ];
 
 export function Navbar() {
@@ -25,7 +34,7 @@ export function Navbar() {
       </Link>
 
       <nav className="ml-3 flex items-center gap-1">
-        {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+        {NAV_LINKS.map(({ href, label, icon: Icon, badge: Badge }) => (
           <Button
             key={href}
             variant="ghost"
@@ -36,6 +45,7 @@ export function Navbar() {
             <Link href={href}>
               <Icon className="size-4" />
               <span className="hidden sm:inline">{label}</span>
+              {Badge && <Badge />}
             </Link>
           </Button>
         ))}
