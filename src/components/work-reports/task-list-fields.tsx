@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Plus, Trash2 } from "lucide-react";
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
 import type { WorkReportInput } from "@/lib/validations/work-report";
 
@@ -37,12 +38,22 @@ export function TaskListFields({
   isLoadingAssignedBySuggestions,
 }: TaskListFieldsProps) {
   const form = useFormContext<WorkReportInput>();
-  const { fields, append, remove } = useFieldArray({ control: form.control, name });
+  const { fields, append, remove, move } = useFieldArray({ control: form.control, name });
   const tasks = (useWatch({ control: form.control, name }) ?? []) as TaskValue[];
   // Until the user picks a mode, follow the data: a report whose tasks already
   // differ opens in per-task mode, everything else in shared mode.
   const [modeOverride, setModeOverride] = useState<boolean | null>(null);
   const perTask = modeOverride ?? isMixed(tasks);
+
+  // The row currently being dragged, and the one row allowed to start a drag —
+  // only the grip arms it, so text stays selectable inside the inputs.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [armedIndex, setArmedIndex] = useState<number | null>(null);
+
+  const endDrag = () => {
+    setDragIndex(null);
+    setArmedIndex(null);
+  };
 
   // All three task keys are string fields, so one concrete path type covers them.
   const path = (index: number, key: TaskField) =>
@@ -111,8 +122,39 @@ export function TaskListFields({
       )}
 
       {fields.map((item, index) => (
-        <div key={item.id} className="flex items-start gap-2">
-          <span className="mt-2 w-5 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
+        <div
+          key={item.id}
+          draggable={armedIndex === index}
+          onDragStart={(event) => {
+            setDragIndex(index);
+            event.dataTransfer.effectAllowed = "move";
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            if (dragIndex === null || dragIndex === index) return;
+            // Reorder as the pointer passes each row, so the list previews the drop.
+            move(dragIndex, index);
+            setDragIndex(index);
+          }}
+          onDragEnd={endDrag}
+          onDrop={endDrag}
+          className={cn(
+            "flex items-start gap-1.5 rounded-md transition-opacity",
+            dragIndex === index && "opacity-40"
+          )}
+        >
+          <button
+            type="button"
+            aria-label={`Drag task ${index + 1} to reorder`}
+            // Arming on press keeps the draggable attribute off the row until the
+            // grip is actually grabbed.
+            onPointerDown={() => setArmedIndex(index)}
+            onPointerUp={() => setArmedIndex(null)}
+            className="mt-1.5 cursor-grab rounded-sm p-0.5 text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          >
+            <GripVertical className="size-4" />
+          </button>
+          <span className="mt-2 w-4 shrink-0 text-sm text-muted-foreground">{index + 1}.</span>
           <div className="flex flex-1 flex-col gap-2">
             <FormField
               control={form.control}
@@ -165,17 +207,38 @@ export function TaskListFields({
               </div>
             )}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="mt-0.5"
-            onClick={() => remove(index)}
-            disabled={fields.length === 1}
-          >
-            <Trash2 className="size-4" />
-            <span className="sr-only">Remove task</span>
-          </Button>
+          <div className="mt-0.5 flex shrink-0 items-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => move(index, index - 1)}
+              disabled={index === 0}
+            >
+              <ChevronUp className="size-4" />
+              <span className="sr-only">Move task up</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => move(index, index + 1)}
+              disabled={index === fields.length - 1}
+            >
+              <ChevronDown className="size-4" />
+              <span className="sr-only">Move task down</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => remove(index)}
+              disabled={fields.length === 1}
+            >
+              <Trash2 className="size-4" />
+              <span className="sr-only">Remove task</span>
+            </Button>
+          </div>
         </div>
       ))}
 

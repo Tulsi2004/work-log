@@ -226,16 +226,3 @@ export async function deleteWorkReport(id: string) {
 
   revalidatePath("/work-reports");
 }
-
-// Bulk delete from the table's selection. Scoped by userId, so ids that are not
-// the user's own are simply not matched.
-export async function deleteWorkReports(ids: string[]) {
-  const userId = await requireUserId();
-  if (ids.length === 0) return { count: 0 };
-
-  const result = await prisma.workReport.deleteMany({ where: { id: { in: ids }, userId } });
-  await deleteCustomValues(prisma, userId, ids);
-
-  revalidatePath("/work-reports");
-  return { count: result.count };
-}

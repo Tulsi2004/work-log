@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getDay } from "date-fns";
-import { Plus, Search, Trash2, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -25,7 +25,7 @@ import { CustomFieldFilters } from "@/components/custom-fields/custom-field-filt
 import { useWorkReports } from "@/hooks/use-work-reports";
 import { useEmployments } from "@/hooks/use-employments";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { deleteWorkReport, deleteWorkReports } from "@/actions/work-report-actions";
+import { deleteWorkReport } from "@/actions/work-report-actions";
 import { DAY_TYPES } from "@/lib/validations/work-report";
 import { formatEnumLabel } from "@/utils/format";
 import type { WorkReportWithEmployment } from "@/types";
@@ -105,8 +105,6 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
   const [formOpen, setFormOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<WorkReportWithEmployment | undefined>(undefined);
   const [deletingReport, setDeletingReport] = useState<WorkReportWithEmployment | undefined>(undefined);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteWorkReport(id),
@@ -119,25 +117,10 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
     onError: (error: Error) => toast.error(error.message || "Failed to delete work report"),
   });
 
-  const bulkDeleteMutation = useMutation({
-    mutationFn: (ids: string[]) => deleteWorkReports(ids),
-    onSuccess: ({ count }) => {
-      toast.success(count === 1 ? "1 work report deleted" : `${count} work reports deleted`);
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      setSelectedIds([]);
-      setConfirmBulkDelete(false);
-    },
-    onError: (error: Error) => toast.error(error.message || "Failed to delete work reports"),
-  });
-
   const reports = data?.data ?? [];
   const visibleReports = weekendOnly
     ? reports.filter((r) => [0, 6].includes(getDay(new Date(r.date))))
     : reports;
-  // Only ever act on rows the current filters actually show.
-  const visibleIds = new Set(visibleReports.map((r) => r.id));
-  const selectedVisibleIds = selectedIds.filter((id) => visibleIds.has(id));
 
   return (
     <div className="space-y-4">
@@ -235,28 +218,6 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
           </Button>
         </div>
 
-        {selectedVisibleIds.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2">
-            <span className="text-sm">
-              {selectedVisibleIds.length} selected
-            </span>
-            <div className="flex-1" />
-            <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
-              Clear
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              disabled={bulkDeleteMutation.isPending}
-              onClick={() => setConfirmBulkDelete(true)}
-            >
-              <Trash2 className="size-4" />
-              Delete selected
-            </Button>
-          </div>
-        )}
-
         <div className="mt-4">
           {!employmentId ? (
             <p className="text-sm text-muted-foreground">Add a company above to start logging work reports.</p>
@@ -270,8 +231,6 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
             <p className="text-sm text-muted-foreground">No work reports match the current filters.</p>
           ) : (
             <WorkReportTable
-              selectedIds={selectedVisibleIds}
-              onSelectionChange={setSelectedIds}
               reports={visibleReports}
               onEdit={(r) => {
                 setEditingReport(r);
@@ -291,14 +250,6 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
           report={editingReport}
         />
       )}
-
-      <ConfirmDialog
-        open={confirmBulkDelete}
-        onOpenChange={setConfirmBulkDelete}
-        title={`Delete ${selectedVisibleIds.length} work report${selectedVisibleIds.length === 1 ? "" : "s"}?`}
-        description="This permanently deletes every selected work report, including anything saved in your own fields."
-        onConfirm={() => bulkDeleteMutation.mutate(selectedVisibleIds)}
-      />
 
       <ConfirmDialog
         open={!!deletingReport}
