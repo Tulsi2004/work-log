@@ -13,6 +13,12 @@ export default function HomePage() {
 
   return (
     <div className="space-y-4">
+      <div>
+        <h1 className="text-lg font-semibold tracking-tight">Work log</h1>
+        <p className="text-sm text-muted-foreground">
+          Your daily work reports for the company selected below.
+        </p>
+      </div>
       <StatsStrip employmentId={employmentId} />
       <WorkReportPanel employmentId={employmentId} onEmploymentChange={setSelectedEmploymentId} />
     </div>

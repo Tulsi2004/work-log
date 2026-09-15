@@ -1,6 +1,6 @@
 import type { CustomField } from "@prisma/client";
 
-export const CUSTOM_FIELD_ENTITIES = ["WORK_REPORT", "EMPLOYMENT", "DAY_PLAN"] as const;
+export const CUSTOM_FIELD_ENTITIES = ["WORK_REPORT", "EMPLOYMENT", "DAY_PLAN", "SALARY_ENTRY"] as const;
 export const CUSTOM_FIELD_TYPES = [
   "TEXT",
   "LONG_TEXT",
@@ -17,6 +17,7 @@ export const CUSTOM_FIELD_ENTITY_LABELS: Record<CustomFieldEntityValue, string> 
   WORK_REPORT: "Work reports",
   EMPLOYMENT: "Companies",
   DAY_PLAN: "Planner to-dos",
+  SALARY_ENTRY: "Money entries",
 };
 
 export const CUSTOM_FIELD_TYPE_LABELS: Record<CustomFieldTypeValue, string> = {

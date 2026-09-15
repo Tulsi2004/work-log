@@ -4,15 +4,30 @@ import { requireUserId } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const userId = await requireUserId();
-  const type = request.nextUrl.searchParams.get("type")?.trim() ?? ""; // "projectName" or "assignedBy"
+  // "projectName" and "assignedBy" live inside the tasks Json; "meetingWith" is
+  // a column of its own.
+  const type = request.nextUrl.searchParams.get("type")?.trim() ?? "";
   // Optional: keep suggestions to a single employment, so past jobs' values do not leak in.
   const employmentId = request.nextUrl.searchParams.get("employmentId")?.trim() ?? "";
 
-  if (type !== "projectName" && type !== "assignedBy") {
+  if (type !== "projectName" && type !== "assignedBy" && type !== "meetingWith") {
     return NextResponse.json({ data: [] });
   }
 
   try {
+    if (type === "meetingWith") {
+      const rows = await prisma.workReport.findMany({
+        where: { userId, ...(employmentId ? { employmentId } : {}), hasMeeting: true },
+        select: { meetingWith: true },
+      });
+      const names = new Set<string>();
+      for (const row of rows) {
+        const value = row.meetingWith?.trim();
+        if (value) names.add(value);
+      }
+      return NextResponse.json({ data: Array.from(names).sort() });
+    }
+
     // Fetch the matching work reports and extract unique values from tasks JSON
     const reports = await prisma.workReport.findMany({
       where: { userId, ...(employmentId ? { employmentId } : {}) },

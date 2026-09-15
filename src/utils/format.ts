@@ -13,6 +13,15 @@ export function formatDay(date: Date | string): string {
   return format(new Date(date), "EEEE");
 }
 
+// "₹45,000" — grouped the Indian way, with paise only when there are any.
+export function formatMoney(value: number): string {
+  const hasPaise = Math.round(value * 100) % 100 !== 0;
+  return `₹${value.toLocaleString("en-IN", {
+    minimumFractionDigits: hasPaise ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
 export function formatTime(time?: string | null): string | undefined {
   if (!time) return undefined;
   const [hours, minutes] = time.split(":").map(Number);

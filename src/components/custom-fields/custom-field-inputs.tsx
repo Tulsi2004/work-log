@@ -114,6 +114,7 @@ export function CustomFieldInputs({ entity }: { entity: CustomFieldEntity }) {
       queryClient.invalidateQueries({ queryKey: ["work-reports"] });
       queryClient.invalidateQueries({ queryKey: ["day-plans"] });
       queryClient.invalidateQueries({ queryKey: ["employments"] });
+      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
       setDeletingField(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to remove field"),

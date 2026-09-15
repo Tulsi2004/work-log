@@ -194,7 +194,7 @@ export function DayPlanPanel() {
                 : "border-border text-muted-foreground hover:bg-muted"
             )}
           >
-            All colours
+            All labels
           </button>
           {PLAN_LABELS.map((value) => {
             const meta = PLAN_LABEL_META[value];

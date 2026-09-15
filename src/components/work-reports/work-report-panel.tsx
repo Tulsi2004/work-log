@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getDay } from "date-fns";
+import Link from "next/link";
 import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmploymentHeader } from "@/components/work-reports/employment-header";
 import { WorkReportTable } from "@/components/work-reports/work-report-table";
 import { WorkReportFormDialog } from "@/components/work-reports/work-report-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -27,7 +27,7 @@ import { useEmployments } from "@/hooks/use-employments";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { deleteWorkReport } from "@/actions/work-report-actions";
 import { DAY_TYPES } from "@/lib/validations/work-report";
-import { formatEnumLabel } from "@/utils/format";
+import { employmentLabel, formatEnumLabel } from "@/utils/format";
 import type { WorkReportWithEmployment } from "@/types";
 
 const ALL_DAY_TYPES = "ALL";
@@ -124,11 +124,27 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
 
   return (
     <div className="space-y-4">
-      <EmploymentHeader employmentId={employmentId} onEmploymentChange={onEmploymentChange} />
-
       <div className="rounded-xl border p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            {/* Which company this page is logging against — the scope everything
+                else here narrows within, not one filter among the rest. */}
+            <Select
+              value={employmentId || undefined}
+              onValueChange={onEmploymentChange}
+              disabled={!employments?.length}
+            >
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue placeholder="Select company" />
+              </SelectTrigger>
+              <SelectContent>
+                {employments?.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {employmentLabel(e)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -220,7 +236,13 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
 
         <div className="mt-4">
           {!employmentId ? (
-            <p className="text-sm text-muted-foreground">Add a company above to start logging work reports.</p>
+            <p className="text-sm text-muted-foreground">
+              No company yet —{" "}
+              <Link href="/companies" className="underline underline-offset-2 hover:text-foreground">
+                add one on the Companies page
+              </Link>{" "}
+              to start logging work reports.
+            </p>
           ) : isLoading ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : reports.length === 0 ? (

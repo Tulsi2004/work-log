@@ -57,6 +57,7 @@ function toEmploymentData(data: EmploymentInput) {
     since: data.since ? new Date(data.since) : null,
     until: data.until ? new Date(data.until) : null,
     paymentType: data.paymentType,
+    payDay: data.payDay ? Number(data.payDay) : null,
     payHistory,
   };
 }

@@ -12,7 +12,10 @@ import {
   FileText,
   Home,
   ListTodo,
+  Banknote,
+  Landmark,
   Plane,
+  Receipt,
   Settings2,
   SunMedium,
   Timer,
@@ -27,11 +30,14 @@ import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { useEmployments } from "@/hooks/use-employments";
 import { usePreference } from "@/hooks/use-preference";
-import { employmentLabel, formatMonths, formatTenure } from "@/utils/format";
+import { employmentLabel, formatMoney, formatMonths, formatTenure } from "@/utils/format";
 import { currentPayRate, type EmploymentListItem } from "@/types";
 import {
   DASHBOARD_CARDS_PREFERENCE_KEY,
+  DASHBOARD_CARD_IDS,
   DASHBOARD_CARD_META,
+  DASHBOARD_CARD_OPTIONS,
+  DEFAULT_DASHBOARD_CARDS,
   readDashboardCards,
   type DashboardCardId,
 } from "@/lib/dashboard-cards";
@@ -44,6 +50,10 @@ const CARD_ICONS: Record<DashboardCardId, LucideIcon> = {
   experienceMonths: CalendarClock,
   openTodos: ListTodo,
   doneTodos: CheckCircle2,
+  moneyReceived: Banknote,
+  moneySpent: Receipt,
+  moneySaved: Landmark,
+  employmentMoneyReceived: Banknote,
   employmentWorkReports: FileText,
   employmentTenure: Timer,
   employmentInHand: Wallet,
@@ -67,6 +77,11 @@ function cardValue(
   switch (id) {
     case "experienceMonths":
       return formatMonths(stats?.experienceMonths ?? 0);
+    case "moneyReceived":
+    case "moneySpent":
+    case "moneySaved":
+    case "employmentMoneyReceived":
+      return formatMoney(stats?.[id] ?? 0);
     case "employmentTenure":
       return selected ? formatTenure(selected.since, selected.until) ?? "—" : "—";
     case "employmentInHand": {
@@ -135,7 +150,16 @@ export function StatsStrip({ employmentId }: StatsStripProps) {
         </div>
       )}
 
-      <StatsCustomizeDialog open={customizeOpen} onOpenChange={setCustomizeOpen} cards={cards} />
+      <StatsCustomizeDialog
+        open={customizeOpen}
+        onOpenChange={setCustomizeOpen}
+        cards={cards}
+        catalogue={DASHBOARD_CARD_IDS}
+        meta={DASHBOARD_CARD_OPTIONS}
+        defaults={DEFAULT_DASHBOARD_CARDS}
+        preferenceKey={DASHBOARD_CARDS_PREFERENCE_KEY}
+        emptyHint="No cards — the strip above the table will be hidden entirely."
+      />
     </div>
   );
 }

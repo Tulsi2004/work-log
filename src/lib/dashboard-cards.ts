@@ -1,3 +1,6 @@
+import type { CardOption } from "@/lib/card-preferences";
+import { readCards } from "@/lib/card-preferences";
+
 // Every card the dashboard can show. The user picks which of these appear and in
 // what order; `DEFAULT_DASHBOARD_CARDS` is what a fresh account sees, and matches
 // the four cards the strip had before it was customisable.
@@ -9,8 +12,12 @@ export const DASHBOARD_CARD_IDS = [
   "experienceMonths",
   "openTodos",
   "doneTodos",
+  "moneyReceived",
+  "moneySpent",
+  "moneySaved",
   // The company selected above
   "employmentWorkReports",
+  "employmentMoneyReceived",
   "employmentTenure",
   "employmentInHand",
   "employmentActual",
@@ -38,8 +45,12 @@ export const DASHBOARD_CARD_META: Record<DashboardCardId, DashboardCardMeta> = {
   experienceMonths: { label: "Total experience", scopedToCompany: false },
   openTodos: { label: "Open to-dos", scopedToCompany: false },
   doneTodos: { label: "Done to-dos", scopedToCompany: false },
+  moneyReceived: { label: "Money received", scopedToCompany: false },
+  moneySpent: { label: "Money spent", scopedToCompany: false },
+  moneySaved: { label: "Saved / invested", scopedToCompany: false },
 
   employmentWorkReports: { label: "Reports at this company", scopedToCompany: true },
+  employmentMoneyReceived: { label: "Money from this company", scopedToCompany: true },
   employmentTenure: { label: "Time at this company", scopedToCompany: true },
   employmentInHand: { label: "In-hand salary", scopedToCompany: true },
   employmentActual: { label: "Actual salary", scopedToCompany: true },
@@ -62,18 +73,18 @@ export const DEFAULT_DASHBOARD_CARDS: DashboardCardId[] = [
 
 export const DASHBOARD_CARDS_PREFERENCE_KEY = "dashboardCards";
 
-/** Drops ids that no longer exist and de-duplicates, so a stale preference still renders. */
 export function readDashboardCards(value: unknown): DashboardCardId[] {
-  // No stored preference yet — show the original four.
-  if (!Array.isArray(value)) return DEFAULT_DASHBOARD_CARDS;
-
-  const known = new Set<string>(DASHBOARD_CARD_IDS);
-  const cards: DashboardCardId[] = [];
-  for (const id of value) {
-    if (typeof id !== "string" || !known.has(id)) continue;
-    if (cards.includes(id as DashboardCardId)) continue;
-    cards.push(id as DashboardCardId);
-  }
-  // An empty array is a real choice (every card hidden), so it is kept as-is.
-  return cards;
+  return readCards(value, DASHBOARD_CARD_IDS, DEFAULT_DASHBOARD_CARDS);
 }
+
+// The catalogue as the customize dialog wants it: "this company" becomes the
+// badge shown beside the label.
+export const DASHBOARD_CARD_OPTIONS: Record<string, CardOption> = Object.fromEntries(
+  DASHBOARD_CARD_IDS.map((id) => [
+    id,
+    {
+      label: DASHBOARD_CARD_META[id].label,
+      badge: DASHBOARD_CARD_META[id].scopedToCompany ? "This company" : undefined,
+    },
+  ])
+);

@@ -17,6 +17,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -33,6 +34,7 @@ import { employmentSchema, EMPLOYMENT_TYPES, type EmploymentInput } from "@/lib/
 import { formatEnumLabel } from "@/utils/format";
 import { createEmployment, updateEmployment, deleteEmployment } from "@/actions/work-report-actions";
 import { useEmployments } from "@/hooks/use-employments";
+import { toSuggestions } from "@/hooks/use-suggestions";
 import { CustomFieldInputs } from "@/components/custom-fields/custom-field-inputs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { EmploymentListItem, PayRate } from "@/types";
@@ -58,6 +60,7 @@ function toDefaultValues(employment?: EmploymentListItem): EmploymentInput {
     since: employment?.since ? new Date(employment.since).toISOString().slice(0, 10) : "",
     until: employment?.until ? new Date(employment.until).toISOString().slice(0, 10) : "",
     paymentType: employment?.paymentType ?? "MONTHLY",
+    payDay: employment?.payDay ? String(employment.payDay) : "",
     payHistory: payHistory.length
       ? payHistory.map((p) => ({
           actualSalary: String(p.actualSalary),
@@ -76,6 +79,11 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
   const { data: employments } = useEmployments();
   const isEditing = !!employment;
   const companyNames = [...new Set((employments ?? []).map((e) => e.company.name))];
+  // The same handful of designations, CEOs and job boards come round again —
+  // suggest what has already been typed, without forcing a choice.
+  const designations = toSuggestions((employments ?? []).map((e) => e.designation));
+  const ceoNames = toSuggestions((employments ?? []).map((e) => e.company.ceoName));
+  const jobSources = toSuggestions((employments ?? []).map((e) => e.company.jobSource));
 
   const form = useForm<EmploymentInput>({
     resolver: zodResolver(employmentSchema),
@@ -152,8 +160,13 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
                 <FormItem>
                   <FormLabel>CEO name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Jane Doe" {...field} />
+                    <Input placeholder="e.g. Jane Doe" list="ceo-names" {...field} />
                   </FormControl>
+                  <datalist id="ceo-names">
+                    {ceoNames.map((value) => (
+                      <option key={value} value={value} />
+                    ))}
+                  </datalist>
                   <FormMessage />
                 </FormItem>
               )}
@@ -165,8 +178,13 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
                 <FormItem>
                   <FormLabel>Source of job</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. LinkedIn, referral, Naukri" {...field} />
+                    <Input placeholder="e.g. LinkedIn, referral, Naukri" list="job-sources" {...field} />
                   </FormControl>
+                  <datalist id="job-sources">
+                    {jobSources.map((value) => (
+                      <option key={value} value={value} />
+                    ))}
+                  </datalist>
                   <FormMessage />
                 </FormItem>
               )}
@@ -206,8 +224,13 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
                 <FormItem>
                   <FormLabel>Designation</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. SEO Executive" {...field} />
+                    <Input placeholder="e.g. SEO Executive" list="designations" {...field} />
                   </FormControl>
+                  <datalist id="designations">
+                    {designations.map((value) => (
+                      <option key={value} value={value} />
+                    ))}
+                  </datalist>
                   <FormMessage />
                 </FormItem>
               )}
@@ -294,6 +317,22 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
                       </div>
                     </RadioGroup>
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="payDay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pay day of the month</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="1" max="31" placeholder="e.g. 10" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Fills in the date for you when you log money from this company.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -37,6 +37,10 @@ export const employmentSchema = z
     since: optionalString,
     until: optionalString,
     paymentType: z.enum(PAYMENT_TYPES),
+    payDay: optionalString.refine(
+      (v) => !v || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 31),
+      "Enter a day between 1 and 31"
+    ),
     payHistory: z.array(payRateSchema).min(1, "Add at least one pay entry"),
     customValues: customValuesSchema,
   })

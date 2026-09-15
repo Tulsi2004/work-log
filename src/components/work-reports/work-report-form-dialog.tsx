@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
@@ -30,6 +30,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { TaskListFields } from "@/components/work-reports/task-list-fields";
+import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
+import { useSuggestions } from "@/hooks/use-suggestions";
 import { DAY_TYPES, workReportSchema, type WorkReportInput } from "@/lib/validations/work-report";
 import { createWorkReport, updateWorkReport, deleteWorkReport } from "@/actions/work-report-actions";
 import { formatEnumLabel, formatDay, formatDate } from "@/utils/format";
@@ -205,25 +207,19 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
     if (changed) replaceWfhDays(next);
   }, [isWfhRange, isLeave, dayType, wfhFromValue, wfhToValue, form, replaceWfhDays]);
 
-  const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useQuery({
-    queryKey: ["work-reports-suggestions", "projectName", employment.id],
-    queryFn: async () => {
-      const res = await fetch(`/api/work-reports/suggestions?type=projectName&employmentId=${employment.id}`);
-      if (!res.ok) throw new Error("Failed to load suggestions");
-      return (await res.json()).data as string[];
-    },
-    enabled: open,
-  });
+  const { data: projectSuggestions = [], isLoading: isLoadingProjectSuggestions } = useSuggestions(
+    `/api/work-reports/suggestions?type=projectName&employmentId=${employment.id}`,
+    open
+  );
 
-  const { data: assignedBySuggestions = [], isLoading: isLoadingAssignedBySuggestions } = useQuery({
-    queryKey: ["work-reports-suggestions", "assignedBy"],
-    queryFn: async () => {
-      const res = await fetch("/api/work-reports/suggestions?type=assignedBy");
-      if (!res.ok) throw new Error("Failed to load suggestions");
-      return (await res.json()).data as string[];
-    },
-    enabled: open,
-  });
+  const { data: assignedBySuggestions = [], isLoading: isLoadingAssignedBySuggestions } =
+    useSuggestions("/api/work-reports/suggestions?type=assignedBy", open);
+
+  // Who you sat in a meeting with is the same handful of people over and over.
+  const { data: meetingWithSuggestions = [], isLoading: isLoadingMeetingWith } = useSuggestions(
+    "/api/work-reports/suggestions?type=meetingWith",
+    open
+  );
 
   const mutation = useMutation({
     mutationFn: async (values: WorkReportInput) => {
@@ -568,7 +564,13 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
                       <FormItem>
                         <FormLabel>Who all</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Manager, client name" {...field} />
+                          <AutocompleteInput
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                            placeholder="e.g. Manager, client name"
+                            suggestions={meetingWithSuggestions}
+                            isLoadingSuggestions={isLoadingMeetingWith}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

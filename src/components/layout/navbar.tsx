@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, ClipboardList, Settings, type LucideIcon } from "lucide-react";
+import {
+  Building2,
+  CalendarCheck,
+  ClipboardList,
+  Settings,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +28,8 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Work log", icon: ClipboardList },
   { href: "/planner", label: "Planner", icon: CalendarCheck, badge: PlannerBadge },
+  { href: "/money", label: "Money", icon: Wallet },
+  { href: "/companies", label: "Companies", icon: Building2 },
 ];
 
 export function Navbar() {

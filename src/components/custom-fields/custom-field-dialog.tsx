@@ -98,6 +98,7 @@ export function CustomFieldDialog({ open, onOpenChange, entity, field }: CustomF
       queryClient.invalidateQueries({ queryKey: ["work-reports"] });
       queryClient.invalidateQueries({ queryKey: ["day-plans"] });
       queryClient.invalidateQueries({ queryKey: ["employments"] });
+      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
       onOpenChange(false);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
@@ -112,6 +113,7 @@ export function CustomFieldDialog({ open, onOpenChange, entity, field }: CustomF
       queryClient.invalidateQueries({ queryKey: ["work-reports"] });
       queryClient.invalidateQueries({ queryKey: ["day-plans"] });
       queryClient.invalidateQueries({ queryKey: ["employments"] });
+      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
       setConfirmDelete(false);
       onOpenChange(false);
     },
