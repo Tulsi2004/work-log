@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -75,7 +76,7 @@ function toDefaultValues(employment?: EmploymentListItem): EmploymentInput {
 }
 
 export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, onDeleted }: EmploymentFormDialogProps) {
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data: employments } = useEmployments();
   const isEditing = !!employment;
   const companyNames = [...new Set((employments ?? []).map((e) => e.company.name))];
@@ -104,7 +105,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
       isEditing ? updateEmployment(employment!.id, values) : createEmployment(values),
     onSuccess: (result) => {
       toast.success(isEditing ? "Saved" : "Company added");
-      queryClient.invalidateQueries({ queryKey: ["employments"] });
+      refresh("employment");
       onOpenChange(false);
       onSaved?.(result.id);
     },
@@ -116,9 +117,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
     mutationFn: () => deleteEmployment(employment!.id),
     onSuccess: () => {
       toast.success("Company removed");
-      queryClient.invalidateQueries({ queryKey: ["employments"] });
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("employment");
       setConfirmDelete(false);
       onOpenChange(false);
       onDeleted?.();

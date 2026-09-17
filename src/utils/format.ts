@@ -1,4 +1,5 @@
-import { format, differenceInMonths } from "date-fns";
+import { format } from "date-fns";
+import { spanBetween, type Span } from "@/lib/experience";
 import type { EmploymentWithCompany } from "@/types";
 
 export function formatDate(date: Date | string): string {
@@ -49,14 +50,15 @@ export function formatEnumLabel(value: string): string {
   return ENUM_LABELS[value] ?? value;
 }
 
-// A whole-month count rendered as "2 yrs 3 mos".
-export function formatMonths(months: number): string {
-  if (months < 1) return "< 1 mo";
+// A span rendered as "2 yrs 3 mos 14 days". Days are always shown, so a stint
+// that has not run a full month still reads as something.
+export function formatSpan({ months, days }: Span): string {
   const years = Math.floor(months / 12);
   const restMonths = months % 12;
   const parts: string[] = [];
   if (years) parts.push(`${years} ${years === 1 ? "yr" : "yrs"}`);
   if (restMonths) parts.push(`${restMonths} ${restMonths === 1 ? "mo" : "mos"}`);
+  if (days || !parts.length) parts.push(`${days} ${days === 1 ? "day" : "days"}`);
   return parts.join(" ");
 }
 
@@ -65,9 +67,8 @@ export function formatTenure(since?: Date | string | null, until?: Date | string
   if (!since) return undefined;
   const start = new Date(since);
   const end = until ? new Date(until) : new Date();
-  const months = differenceInMonths(end, start);
-  if (months < 0) return undefined;
-  return formatMonths(months);
+  if (end < start) return undefined;
+  return formatSpan(spanBetween(start, end));
 }
 
 export function employmentLabel(e: EmploymentWithCompany): string {

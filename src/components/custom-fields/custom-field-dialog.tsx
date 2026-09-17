@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import type { CustomField, CustomFieldEntity } from "@prisma/client";
@@ -67,7 +68,7 @@ interface CustomFieldDialogProps {
  */
 export function CustomFieldDialog({ open, onOpenChange, entity, field }: CustomFieldDialogProps) {
   const isEditing = !!field;
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
 
   const form = useForm<CustomFieldInput>({
     resolver: zodResolver(customFieldSchema),
@@ -94,11 +95,7 @@ export function CustomFieldDialog({ open, onOpenChange, entity, field }: CustomF
     },
     onSuccess: () => {
       toast.success(isEditing ? "Field updated" : "Field added");
-      queryClient.invalidateQueries({ queryKey: ["custom-fields"] });
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
-      queryClient.invalidateQueries({ queryKey: ["employments"] });
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
+      refresh("customField");
       onOpenChange(false);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
@@ -109,11 +106,7 @@ export function CustomFieldDialog({ open, onOpenChange, entity, field }: CustomF
     mutationFn: () => deleteCustomField(field!.id),
     onSuccess: () => {
       toast.success("Field removed");
-      queryClient.invalidateQueries({ queryKey: ["custom-fields"] });
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
-      queryClient.invalidateQueries({ queryKey: ["employments"] });
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
+      refresh("customField");
       setConfirmDelete(false);
       onOpenChange(false);
     },

@@ -4,7 +4,7 @@ import { startOfMonth } from "date-fns";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
-import { totalExperienceMonths } from "@/lib/experience";
+import { totalExperience } from "@/lib/experience";
 import { parseSpends, sumMoney, sumSaved, sumSpent, toMoney } from "@/lib/money";
 
 export async function getDashboardStats(employmentId?: string) {
@@ -62,10 +62,13 @@ export async function getDashboardStats(employmentId?: string) {
   const moneySpent = sumSpent(allSpends);
   const moneySaved = sumSaved(allSpends);
 
+  const experience = totalExperience(stints);
+
   return {
     totalWorkReports,
     totalCompanies,
-    experienceMonths: totalExperienceMonths(stints),
+    experienceMonths: experience.months,
+    experienceDays: experience.days,
     openTodos,
     doneTodos,
     moneyReceived,

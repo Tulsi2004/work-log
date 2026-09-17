@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
@@ -35,10 +36,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { PLAN_LABELS, PLAN_LABEL_META } from "@/lib/plan-labels";
+import { DEFAULT_PLAN_LABEL } from "@/lib/plan-labels";
 import { dayPlanSchema, type DayPlanInput } from "@/lib/validations/day-plan";
 import { createDayPlan, updateDayPlan, deleteDayPlan } from "@/actions/day-plan-actions";
 import { useEmployments } from "@/hooks/use-employments";
+import { usePlanLabelLooks } from "@/hooks/use-plan-labels";
 import { CustomFieldInputs } from "@/components/custom-fields/custom-field-inputs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { employmentLabel, formatDay } from "@/utils/format";
@@ -64,7 +66,7 @@ function toDefaultValues(
       : new Date().toISOString().slice(0, 10),
     title: plan?.title ?? "",
     detail: plan?.detail ?? "",
-    label: plan?.label ?? "GENERAL",
+    label: plan?.label ?? DEFAULT_PLAN_LABEL,
     employmentId: plan ? plan.employmentId ?? "" : defaultEmploymentId ?? "",
     isDone: plan?.isDone ?? false,
     // Blanks for fields the record has no value for are filled in by CustomFieldInputs.
@@ -79,7 +81,7 @@ export function DayPlanFormDialog({
   defaultEmploymentId,
 }: DayPlanFormDialogProps) {
   const isEditing = !!plan;
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data: employments } = useEmployments();
 
   const form = useForm<DayPlanInput>({
@@ -103,18 +105,19 @@ export function DayPlanFormDialog({
     },
     onSuccess: () => {
       toast.success(isEditing ? "To-do updated" : "To-do added");
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
+      refresh("dayPlan");
       onOpenChange(false);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const labelLooks = usePlanLabelLooks();
   const deleteMutation = useMutation({
     mutationFn: () => deleteDayPlan(plan!.id),
     onSuccess: () => {
       toast.success("To-do deleted");
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
+      refresh("dayPlan");
       setConfirmDelete(false);
       onOpenChange(false);
     },
@@ -169,26 +172,26 @@ export function DayPlanFormDialog({
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Colour</FormLabel>
+                  <FormLabel>Label</FormLabel>
                   <div className="flex flex-wrap gap-2">
-                    {PLAN_LABELS.map((value) => {
-                      const meta = PLAN_LABEL_META[value];
-                      const selected = field.value === value;
+                    {labelLooks.map((look) => {
+                      const selected = field.value === look.id;
                       return (
                         <button
-                          key={value}
+                          key={look.id}
                           type="button"
-                          onClick={() => field.onChange(value)}
+                          onClick={() => field.onChange(look.id)}
                           aria-pressed={selected}
+                          style={look.style}
                           className={cn(
                             "flex items-center gap-1.5 rounded-4xl border px-2.5 py-1 text-xs font-medium transition-colors",
                             selected
-                              ? cn(meta.badge, "border-transparent ring-2 ring-ring/50")
+                              ? cn(look.badge, "border-transparent ring-2 ring-ring/50")
                               : "border-border text-muted-foreground hover:bg-muted"
                           )}
                         >
-                          <span className={cn("size-2.5 rounded-full", meta.dot)} />
-                          {meta.name}
+                          <span className={cn("size-2.5 rounded-full", look.dot)} style={look.style} />
+                          {look.name}
                         </button>
                       );
                     })}
@@ -289,6 +292,7 @@ export function DayPlanFormDialog({
           description={plan ? `This will permanently delete “${plan.title}”.` : undefined}
           onConfirm={() => deleteMutation.mutate()}
         />
+
       </DialogContent>
     </Dialog>
   );

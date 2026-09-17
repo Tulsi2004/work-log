@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { getDay } from "date-fns";
 import Link from "next/link";
@@ -89,7 +90,7 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
     setCustomFilters({});
   };
 
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data, isLoading } = useWorkReports({
     search: debouncedSearch,
     employmentId,
@@ -110,8 +111,7 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
     mutationFn: (id: string) => deleteWorkReport(id),
     onSuccess: () => {
       toast.success("Work report deleted");
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("workReport");
       setDeletingReport(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to delete work report"),

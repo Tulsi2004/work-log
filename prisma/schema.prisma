@@ -114,8 +114,9 @@ model DayPlan {
   date   DateTime
   title  String
   detail String?
-  label  PlanLabel @default(GENERAL)
-  isDone Boolean   @default(false)
+  // A built-in label key ("URGENT") or the id of a PlanLabel the user added.
+  label  String  @default("GENERAL")
+  isDone Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,14 +126,21 @@ model DayPlan {
   @@index([employmentId])
 }
 
-enum PlanLabel {
-  URGENT
-  CLIENT
-  FOLLOW_UP
-  MEETING
-  IDEA
-  PERSONAL
-  GENERAL
+// A label the user added on top of the built-in seven. Plans point at these by
+// id, so renaming one never orphans the to-dos already wearing it.
+model PlanLabel {
+  id     String @id @default(cuid())
+  userId String
+  name   String
+  // Any colour the picker produces, as #rrggbb.
+  colour    String @default("#64748b")
+  sortOrder Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 // Money that landed — a salary credit, a freelance payment, a bonus — together

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ function isCurrent(employment: EmploymentListItem): boolean {
 }
 
 export function CompanyPanel() {
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data: employments, isLoading } = useEmployments();
 
   const [search, setSearch] = useState("");
@@ -82,10 +83,7 @@ export function CompanyPanel() {
     mutationFn: (id: string) => deleteEmployment(id),
     onSuccess: () => {
       toast.success("Company removed");
-      queryClient.invalidateQueries({ queryKey: ["employments"] });
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("employment");
       setDeleting(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to remove company"),

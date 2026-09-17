@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, X } from "lucide-react";
+import { Plus, Search, Settings2, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -17,13 +18,14 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DayPlanList } from "@/components/day-plans/day-plan-list";
 import { DayPlanFormDialog } from "@/components/day-plans/day-plan-form-dialog";
+import { PlanLabelDialog } from "@/components/day-plans/plan-label-dialog";
 import { CustomFieldFilters } from "@/components/custom-fields/custom-field-filters";
 import { useDayPlans, type DayPlanFilters } from "@/hooks/use-day-plans";
 import { useEmployments } from "@/hooks/use-employments";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { deleteDayPlan, deleteDayPlans, setDayPlanDone } from "@/actions/day-plan-actions";
 import { cn } from "@/lib/utils";
-import { PLAN_LABELS, PLAN_LABEL_META } from "@/lib/plan-labels";
+import { usePlanLabelLooks } from "@/hooks/use-plan-labels";
 import { employmentLabel } from "@/utils/format";
 import type { DayPlanWithEmployment } from "@/types";
 
@@ -32,8 +34,10 @@ const ALL = "ALL";
 type StatusFilter = "ALL" | "open" | "done";
 
 export function DayPlanPanel() {
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data: employments } = useEmployments();
+  const labelLooks = usePlanLabelLooks();
+  const [labelsOpen, setLabelsOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [label, setLabel] = useState<string>(ALL);
@@ -87,7 +91,7 @@ export function DayPlanPanel() {
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, isDone }: { id: string; isDone: boolean }) => setDayPlanDone(id, isDone),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["day-plans"] }),
+    onSuccess: () => refresh("dayPlan"),
     onError: (error: Error) => toast.error(error.message || "Failed to update to-do"),
   });
 
@@ -95,7 +99,7 @@ export function DayPlanPanel() {
     mutationFn: (id: string) => deleteDayPlan(id),
     onSuccess: () => {
       toast.success("To-do deleted");
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
+      refresh("dayPlan");
       setDeletingPlan(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to delete to-do"),
@@ -107,7 +111,7 @@ export function DayPlanPanel() {
     mutationFn: (ids: string[]) => deleteDayPlans(ids),
     onSuccess: ({ count }) => {
       toast.success(count === 1 ? "1 to-do cleared" : `${count} to-dos cleared`);
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
+      refresh("dayPlan");
       setConfirmClearDone(false);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to clear to-dos"),
@@ -196,27 +200,35 @@ export function DayPlanPanel() {
           >
             All labels
           </button>
-          {PLAN_LABELS.map((value) => {
-            const meta = PLAN_LABEL_META[value];
-            const selected = label === value;
+          {labelLooks.map((look) => {
+            const selected = label === look.id;
             return (
               <button
-                key={value}
+                key={look.id}
                 type="button"
-                onClick={() => setLabel(selected ? ALL : value)}
+                onClick={() => setLabel(selected ? ALL : look.id)}
                 aria-pressed={selected}
+                style={look.style}
                 className={cn(
                   "flex items-center gap-1.5 rounded-4xl border px-2.5 py-1 text-xs font-medium transition-colors",
                   selected
-                    ? cn(meta.badge, "border-transparent ring-2 ring-ring/50")
+                    ? cn(look.badge, "border-transparent ring-2 ring-ring/50")
                     : "border-border text-muted-foreground hover:bg-muted"
                 )}
               >
-                <span className={cn("size-2.5 rounded-full", meta.dot)} />
-                {meta.name}
+                <span className={cn("size-2.5 rounded-full", look.dot)} style={look.style} />
+                {look.name}
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setLabelsOpen(true)}
+            className="flex items-center gap-1.5 rounded-4xl border border-dashed px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <Settings2 className="size-3" />
+            Manage labels
+          </button>
         </div>
 
         <div className="mt-4">
@@ -226,7 +238,7 @@ export function DayPlanPanel() {
             <p className="text-sm text-muted-foreground">
               {hasActiveFilters
                 ? "No to-dos match the current filters."
-                : "Nothing planned yet. Add what you need to do and give it a colour."}
+                : "Nothing planned yet. Add what you need to do and give it a label."}
             </p>
           ) : (
             <DayPlanList
@@ -238,6 +250,12 @@ export function DayPlanPanel() {
           )}
         </div>
       </div>
+
+      <PlanLabelDialog
+        open={labelsOpen}
+        onOpenChange={setLabelsOpen}
+        onDeleted={(id) => setLabel((current) => (current === id ? ALL : current))}
+      />
 
       <DayPlanFormDialog
         open={formOpen}

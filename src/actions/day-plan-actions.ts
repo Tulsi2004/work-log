@@ -4,7 +4,19 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
 import { dayPlanSchema, type DayPlanInput } from "@/lib/validations/day-plan";
+import { isBuiltInPlanLabel } from "@/lib/plan-labels";
 import { saveCustomValues, deleteCustomValues } from "@/lib/custom-field-store";
+
+// Built-in labels are keys everyone shares; anything else has to be a label
+// this user defined, not an id borrowed from someone else.
+async function requireLabel(userId: string, label: string): Promise<string> {
+  if (isBuiltInPlanLabel(label)) return label;
+  const own = await prisma.planLabel.findFirst({ where: { id: label, userId }, select: { id: true } });
+  if (!own) {
+    throw new Error("Label not found");
+  }
+  return own.id;
+}
 
 // An employment is optional on a plan, but when one is given it has to be the user's own.
 async function resolveEmploymentId(userId: string, employmentId?: string): Promise<string | null> {
@@ -19,12 +31,12 @@ async function resolveEmploymentId(userId: string, employmentId?: string): Promi
   return employment.id;
 }
 
-function toDayPlanData(data: DayPlanInput, employmentId: string | null) {
+function toDayPlanData(data: DayPlanInput, employmentId: string | null, label: string) {
   return {
     date: new Date(data.date),
     title: data.title.trim(),
     detail: data.detail?.trim() || null,
-    label: data.label,
+    label,
     isDone: data.isDone,
     employmentId,
   };
@@ -34,9 +46,10 @@ export async function createDayPlan(input: DayPlanInput) {
   const userId = await requireUserId();
   const data = dayPlanSchema.parse(input);
   const employmentId = await resolveEmploymentId(userId, data.employmentId);
+  const label = await requireLabel(userId, data.label);
 
   const plan = await prisma.dayPlan.create({
-    data: { ...toDayPlanData(data, employmentId), userId },
+    data: { ...toDayPlanData(data, employmentId, label), userId },
   });
 
   await saveCustomValues(prisma, userId, "DAY_PLAN", plan.id, data.customValues);
@@ -49,10 +62,11 @@ export async function updateDayPlan(id: string, input: DayPlanInput) {
   const userId = await requireUserId();
   const data = dayPlanSchema.parse(input);
   const employmentId = await resolveEmploymentId(userId, data.employmentId);
+  const label = await requireLabel(userId, data.label);
 
   const result = await prisma.dayPlan.updateMany({
     where: { id, userId },
-    data: toDayPlanData(data, employmentId),
+    data: toDayPlanData(data, employmentId, label),
   });
 
   if (result.count === 0) {

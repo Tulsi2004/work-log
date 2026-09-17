@@ -30,7 +30,7 @@ import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { useEmployments } from "@/hooks/use-employments";
 import { usePreference } from "@/hooks/use-preference";
-import { employmentLabel, formatMoney, formatMonths, formatTenure } from "@/utils/format";
+import { employmentLabel, formatMoney, formatSpan, formatTenure } from "@/utils/format";
 import { currentPayRate, type EmploymentListItem } from "@/types";
 import {
   DASHBOARD_CARDS_PREFERENCE_KEY,
@@ -76,7 +76,10 @@ function cardValue(
 ): string {
   switch (id) {
     case "experienceMonths":
-      return formatMonths(stats?.experienceMonths ?? 0);
+      return formatSpan({
+        months: stats?.experienceMonths ?? 0,
+        days: stats?.experienceDays ?? 0,
+      });
     case "moneyReceived":
     case "moneySpent":
     case "moneySaved":
@@ -139,7 +142,7 @@ export function StatsStrip({ employmentId }: StatsStripProps) {
                     {isLoading ? (
                       <Skeleton className="mt-1 h-7 w-10" />
                     ) : (
-                      <p className="truncate text-2xl font-semibold">{cardValue(id, stats, selected)}</p>
+                      <p className="text-2xl leading-tight wrap-break-word font-semibold">{cardValue(id, stats, selected)}</p>
                     )}
                   </div>
                   <Icon className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />

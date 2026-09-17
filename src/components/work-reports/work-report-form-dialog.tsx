@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
@@ -163,7 +164,7 @@ function toDefaultValues(employment: EmploymentWithCompany, report?: WorkReportW
 }
 
 export function WorkReportFormDialog({ open, onOpenChange, employment, report }: WorkReportFormDialogProps) {
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const isEditing = !!report;
 
   const form = useForm<WorkReportInput>({
@@ -246,8 +247,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
       toast.success(
         isEditing ? "Work report updated" : count > 1 ? `${count} work reports added` : "Work report added"
       );
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("workReport");
       onOpenChange(false);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
@@ -258,8 +258,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
     mutationFn: () => deleteWorkReport(report!.id),
     onSuccess: () => {
       toast.success("Work report deleted");
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("workReport");
       setConfirmDelete(false);
       onOpenChange(false);
     },

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
 import { usePreference } from "@/hooks/use-preference";
-import { totalExperienceMonths } from "@/lib/experience";
+import { stintLength, totalExperience } from "@/lib/experience";
 import {
   COMPANY_CARDS_PREFERENCE_KEY,
   COMPANY_CARD_IDS,
@@ -27,7 +27,7 @@ import {
   readCompanyCards,
   type CompanyCardId,
 } from "@/lib/company-cards";
-import { formatDate, formatMoney, formatMonths, formatTenure } from "@/utils/format";
+import { formatDate, formatMoney, formatSpan, formatTenure } from "@/utils/format";
 import { currentEmployment, currentPayRate, type EmploymentListItem, type PayRate } from "@/types";
 
 interface CompanySummaryProps {
@@ -57,10 +57,6 @@ function payRates(employment: EmploymentListItem): PayRate[] {
 }
 
 // Months served in one stint, for comparing stints against each other.
-function stintMonths(employment: EmploymentListItem): number {
-  return totalExperienceMonths([employment]);
-}
-
 function cardValue(id: CompanyCardId, employments: EmploymentListItem[]): string {
   const selected = currentEmployment(employments);
   const pay = selected ? currentPayRate(selected.payHistory) : undefined;
@@ -74,7 +70,7 @@ function cardValue(id: CompanyCardId, employments: EmploymentListItem[]): string
     case "currentStints":
       return String(employments.filter(isCurrent).length);
     case "experienceMonths":
-      return employments.length ? formatMonths(totalExperienceMonths(employments)) : "—";
+      return employments.length ? formatSpan(totalExperience(employments)) : "—";
     case "currentInHand":
       return pay ? formatMoney(pay.inHandSalary) : "—";
     case "currentActual":
@@ -92,7 +88,7 @@ function cardValue(id: CompanyCardId, employments: EmploymentListItem[]): string
     }
     case "longestStint": {
       const longest = employments.reduce<EmploymentListItem | undefined>(
-        (best, e) => (!best || stintMonths(e) > stintMonths(best) ? e : best),
+        (best, e) => (!best || stintLength(e) > stintLength(best) ? e : best),
         undefined
       );
       return longest ? formatTenure(longest.since, longest.until) ?? "—" : "—";
@@ -134,7 +130,7 @@ export function CompanySummary({ employments, isLoading }: CompanySummaryProps) 
                     {isLoading ? (
                       <Skeleton className="mt-1 h-7 w-20" />
                     ) : (
-                      <p className="truncate text-2xl font-semibold">{cardValue(id, employments)}</p>
+                      <p className="text-2xl leading-tight wrap-break-word font-semibold">{cardValue(id, employments)}</p>
                     )}
                   </div>
                   <Icon className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />

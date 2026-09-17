@@ -7,7 +7,7 @@ import {
   recordIdsMatchingFilters,
 } from "@/lib/custom-field-store";
 import { readCustomFilters } from "@/lib/custom-field-params";
-import type { Prisma, PlanLabel } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const userId = await requireUserId();
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const where: Prisma.DayPlanWhereInput = {
     userId,
     ...(customMatchIds ? { id: { in: customMatchIds } } : {}),
-    ...(label ? { label: label as PlanLabel } : {}),
+    ...(label ? { label } : {}),
     ...(employmentId ? { employmentId } : {}),
     ...(status === "open" ? { isDone: false } : status === "done" ? { isDone: true } : {}),
     ...(dateFrom || dateTo

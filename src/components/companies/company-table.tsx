@@ -54,26 +54,26 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
       <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[9%]">Company</TableHead>
-            <TableHead className="w-[9%]">Designation</TableHead>
-            <TableHead className="w-[7%]">Type</TableHead>
-            <TableHead className="w-[7%]">Payment</TableHead>
-            <TableHead className="w-[8%]">Pay from</TableHead>
+            <TableHead className="w-[8%]">Company</TableHead>
+            <TableHead className="w-[8%]">Designation</TableHead>
+            <TableHead className="w-[6%]">Type</TableHead>
+            <TableHead className="w-[6%]">Payment</TableHead>
+            <TableHead className="w-[7%]">Pay from</TableHead>
             <TableHead className="w-[7%] text-right">Actual</TableHead>
-            <TableHead className="w-[5%] text-right">PF</TableHead>
+            <TableHead className="w-[6%] text-right">PF</TableHead>
             <TableHead className="w-[7%] text-right">In-hand</TableHead>
-            <TableHead className="w-[5%]">Pay day</TableHead>
+            <TableHead className="w-[6%]">Pay day</TableHead>
             <SortableTableHead
-              className="w-[10%]"
+              className="w-[9%]"
               direction={directionOf("period")}
               onSort={() => toggle("period")}
             >
               Period
             </SortableTableHead>
-            <TableHead className="w-[5%]">Tenure</TableHead>
-            <TableHead className="w-[8%]">Shift</TableHead>
+            <TableHead className="w-[7%]">Tenure</TableHead>
+            <TableHead className="w-[7%]">Shift</TableHead>
             <TableHead className="w-[6%]">CEO</TableHead>
-            <TableHead className="w-[6%]">Job source</TableHead>
+            <TableHead className="w-[7%]">Job source</TableHead>
             {customFields.map((field) => (
               <TableHead key={field.id} className="w-[8%]">
                 {field.name}
@@ -131,7 +131,7 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                     "—"
                   )}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums whitespace-nowrap">
                   {rates.length ? (
                     <div className="space-y-0.5">
                       {rates.map((rate) => (
@@ -147,7 +147,7 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                     "—"
                   )}
                 </TableCell>
-                <TableCell className="text-right tabular-nums text-muted-foreground">
+                <TableCell className="text-right tabular-nums whitespace-nowrap text-muted-foreground">
                   {rates.length ? (
                     <div className="space-y-0.5">
                       {rates.map((rate) => (
@@ -158,7 +158,7 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                     "—"
                   )}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums whitespace-nowrap">
                   {rates.length ? (
                     <div className="space-y-0.5">
                       {rates.map((rate) => (

@@ -6,7 +6,7 @@ export default function PlannerPage() {
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Planner</h1>
         <p className="text-sm text-muted-foreground">
-          Colour-coded to-dos for each day, grouped by date.
+          Labelled to-dos for each day, grouped by date.
         </p>
       </div>
       <DayPlanPanel />

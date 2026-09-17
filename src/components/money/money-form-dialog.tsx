@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
@@ -117,7 +118,7 @@ export function MoneyFormDialog({
   defaultEmploymentId,
 }: MoneyFormDialogProps) {
   const isEditing = !!entry;
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data: employments } = useEmployments();
 
   const form = useForm<SalaryEntryInput>({
@@ -153,10 +154,7 @@ export function MoneyFormDialog({
     },
     onSuccess: () => {
       toast.success(isEditing ? "Money entry updated" : "Money entry added");
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      // A source or a spend typed here is a suggestion for the next entry.
-      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
+      refresh("salaryEntry");
       onOpenChange(false);
     },
     onError: (error: Error) => toast.error(error.message || "Something went wrong"),
@@ -167,8 +165,7 @@ export function MoneyFormDialog({
     mutationFn: () => deleteSalaryEntry(entry!.id),
     onSuccess: () => {
       toast.success("Money entry deleted");
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("salaryEntry");
       setConfirmDelete(false);
       onOpenChange(false);
     },

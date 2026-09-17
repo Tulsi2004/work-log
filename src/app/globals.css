@@ -130,3 +130,21 @@
     @apply font-sans;
   }
 }
+/* A user-defined plan label carries its colour as an inline --plan-label, so any
+   colour picked works without Tailwind having to know about it up front. The
+   tint and the text are mixed off that one value, the way the built-in labels
+   pair a 50/500 fill with a 700/300 text. */
+.plan-label-badge {
+  background-color: color-mix(in oklab, var(--plan-label) 14%, transparent);
+  color: color-mix(in oklab, var(--plan-label) 72%, black);
+}
+.dark .plan-label-badge {
+  background-color: color-mix(in oklab, var(--plan-label) 18%, transparent);
+  color: color-mix(in oklab, var(--plan-label) 80%, white);
+}
+.plan-label-dot {
+  background-color: var(--plan-label);
+}
+.plan-label-accent {
+  border-left-color: var(--plan-label);
+}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useFormContext, type FieldValues } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { CustomField, CustomFieldEntity } from "@prisma/client";
@@ -89,7 +90,7 @@ function CustomFieldControl({ field, value, onChange }: CustomFieldControlProps)
 export function CustomFieldInputs({ entity }: { entity: CustomFieldEntity }) {
   const { data: fields = [] } = useCustomFields(entity);
   const { control, getValues, setValue } = useFormContext<FieldValues>();
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
 
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | undefined>(undefined);
@@ -110,11 +111,7 @@ export function CustomFieldInputs({ entity }: { entity: CustomFieldEntity }) {
     mutationFn: (id: string) => deleteCustomField(id),
     onSuccess: () => {
       toast.success("Field removed");
-      queryClient.invalidateQueries({ queryKey: ["custom-fields"] });
-      queryClient.invalidateQueries({ queryKey: ["work-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["day-plans"] });
-      queryClient.invalidateQueries({ queryKey: ["employments"] });
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
+      refresh("customField");
       setDeletingField(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to remove field"),

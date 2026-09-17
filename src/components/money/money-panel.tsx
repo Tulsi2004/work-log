@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRefresh } from "@/hooks/use-refresh";
 import { toast } from "sonner";
 import {
   endOfMonth,
@@ -63,7 +64,7 @@ const PERIODS = [
 ] as const;
 
 export function MoneyPanel() {
-  const queryClient = useQueryClient();
+  const refresh = useRefresh();
   const { data: employments } = useEmployments();
 
   const [search, setSearch] = useState("");
@@ -123,8 +124,7 @@ export function MoneyPanel() {
     mutationFn: (id: string) => deleteSalaryEntry(id),
     onSuccess: () => {
       toast.success("Money entry deleted");
-      queryClient.invalidateQueries({ queryKey: ["salary-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      refresh("salaryEntry");
       setDeletingEntry(undefined);
     },
     onError: (error: Error) => toast.error(error.message || "Failed to delete money entry"),

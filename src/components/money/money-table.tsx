@@ -82,7 +82,7 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                   <div className="font-medium">{formatDate(entry.date)}</div>
                   <div className="text-xs text-muted-foreground">{formatDay(entry.date)}</div>
                 </TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">
+                <TableCell className="text-right font-semibold tabular-nums whitespace-nowrap">
                   {formatMoney(entry.amount)}
                 </TableCell>
                 <TableCell>
@@ -139,7 +139,7 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums whitespace-nowrap">
                   {hasSpends ? (
                     <div className="space-y-0.5">
                       {entry.spends.map((spend, index) => (
@@ -151,10 +151,10 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                   )}
                 </TableCell>
 
-                <TableCell className="text-right tabular-nums text-muted-foreground">
+                <TableCell className="text-right tabular-nums whitespace-nowrap text-muted-foreground">
                   {formatMoney(spent)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums text-muted-foreground">
+                <TableCell className="text-right tabular-nums whitespace-nowrap text-muted-foreground">
                   {formatMoney(saved)}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{entry.note || "—"}</TableCell>

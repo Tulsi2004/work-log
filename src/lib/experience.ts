@@ -1,15 +1,38 @@
-import { differenceInMonths } from "date-fns";
+import { addMonths, differenceInDays, differenceInMonths } from "date-fns";
 
 interface Stint {
   since: Date | string | null;
   until: Date | string | null;
 }
 
+/** Whole months, plus the days left over that never added up to another month. */
+export interface Span {
+  months: number;
+  days: number;
+}
+
+export function spanBetween(start: Date, end: Date): Span {
+  const months = Math.max(0, differenceInMonths(end, start));
+  return { months, days: Math.max(0, differenceInDays(end, addMonths(start, months))) };
+}
+
+/** How long a stint ran, in milliseconds — only good for comparing two of them. */
+export function stintLength(stint: Stint): number {
+  if (!stint.since) return 0;
+  const start = new Date(stint.since);
+  const end = stint.until ? new Date(stint.until) : new Date();
+  return Math.max(0, end.getTime() - start.getTime());
+}
+
 /**
- * Total months worked across every stint. Overlapping stints (two jobs at once)
+ * Total time worked across every stint. Overlapping stints (two jobs at once)
  * are merged so the same calendar time is only counted once.
+ *
+ * Stints with gaps between them have no single exact answer in months and days,
+ * so the merged time is laid end to end from the first start date — which is
+ * how "I have N years of experience" is meant anyway.
  */
-export function totalExperienceMonths(stints: Stint[]): number {
+export function totalExperience(stints: Stint[]): Span {
   const now = new Date();
   const ranges = stints
     .filter((s) => Boolean(s.since))
@@ -17,7 +40,9 @@ export function totalExperienceMonths(stints: Stint[]): number {
     .filter((r) => r.end > r.start)
     .sort((a, b) => a.start.getTime() - b.start.getTime());
 
-  let months = 0;
+  if (!ranges.length) return { months: 0, days: 0 };
+
+  let elapsed = 0;
   let current: { start: Date; end: Date } | undefined;
 
   for (const range of ranges) {
@@ -25,10 +50,11 @@ export function totalExperienceMonths(stints: Stint[]): number {
       if (range.end > current.end) current.end = range.end;
       continue;
     }
-    if (current) months += differenceInMonths(current.end, current.start);
+    if (current) elapsed += current.end.getTime() - current.start.getTime();
     current = { ...range };
   }
-  if (current) months += differenceInMonths(current.end, current.start);
+  if (current) elapsed += current.end.getTime() - current.start.getTime();
 
-  return months;
+  const start = ranges[0].start;
+  return spanBetween(start, new Date(start.getTime() + elapsed));
 }
