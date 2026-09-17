@@ -130,7 +130,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit company" : "Add company"}</DialogTitle>
-          <DialogDescription>Company, designation, and pay for this stint.</DialogDescription>
+          <DialogDescription>Company, designation, and pay for this job.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4">

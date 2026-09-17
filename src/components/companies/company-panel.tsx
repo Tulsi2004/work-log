@@ -111,7 +111,7 @@ export function CompanyPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All stints</SelectItem>
+                <SelectItem value="ALL">All jobs</SelectItem>
                 <SelectItem value="current">Current</SelectItem>
                 <SelectItem value="past">Past</SelectItem>
               </SelectContent>
