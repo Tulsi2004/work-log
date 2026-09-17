@@ -9,6 +9,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,10 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { formatDate, formatDay, formatEnumLabel, formatTime } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
+import { customSortValue } from "@/lib/table-sort";
 import { useCustomFields } from "@/hooks/use-custom-fields";
+import { useTableSort, type SortAccessors } from "@/hooks/use-table-sort";
 import type { WorkReportWithEmployment, WorkReportTask } from "@/types";
 
 interface WorkReportTableProps {
@@ -39,9 +41,6 @@ const LEAVE_BADGE_CLASS = "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:tex
 const COMPANY_LEAVE_BADGE_CLASS = "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300";
 const MEETING_BADGE_CLASS = "bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300";
 
-/** The row menu is pinned to the right edge so it stays reachable however wide the table gets. */
-const STICKY_ACTIONS = "sticky right-0 border-l";
-
 /** Same project can be repeated on several tasks of one day - show each name once. */
 function uniqueValues(values: Array<string | undefined | null>) {
   const seen = new Set<string>();
@@ -55,34 +54,82 @@ function uniqueValues(values: Array<string | undefined | null>) {
   return result;
 }
 
+function reportTasks(report: WorkReportWithEmployment): WorkReportTask[] {
+  return (report.tasks as WorkReportTask[] | null) ?? [];
+}
+
 export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTableProps) {
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("WORK_REPORT");
+
+  // The task columns list one line per task, so they sort on the first line —
+  // the same thing the eye lands on when scanning the column.
+  const accessors: SortAccessors<WorkReportWithEmployment, string> = {
+    date: (r) => new Date(r.date).getTime(),
+    company: (r) => r.employment.company.name,
+    type: (r) => (r.isLeave ? (r.isCompanyGranted ? "Company Leave" : "Leave") : r.dayType),
+    time: (r) => (r.isLeave ? null : r.timeFrom),
+    tasks: (r) => (r.isLeave ? r.leaveReason : r.hasNoTask ? r.noTaskNote : reportTasks(r)[0]?.task),
+    project: (r) => (r.hasNoTask ? null : uniqueValues(reportTasks(r).map((t) => t.projectName))[0]),
+    assignedBy: (r) => (r.hasNoTask ? null : reportTasks(r)[0]?.assignedBy),
+    notes: (r) => r.notes,
+    ...Object.fromEntries(
+      customFields.map((field) => [
+        field.id,
+        (r: WorkReportWithEmployment) => customSortValue(field, r.customValues[field.id]),
+      ])
+    ),
+  };
+
+  const { sorted, toggle, directionOf } = useTableSort(reports, accessors);
 
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Company</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead className="min-w-64">Tasks</TableHead>
-            <TableHead className="min-w-32">Project</TableHead>
-            <TableHead className="min-w-32">Assigned By</TableHead>
-            <TableHead className="w-40 min-w-32">Notes</TableHead>
+            <SortableTableHead direction={directionOf("date")} onSort={() => toggle("date")}>
+              Date
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("company")} onSort={() => toggle("company")}>
+              Company
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("type")} onSort={() => toggle("type")}>
+              Type
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("time")} onSort={() => toggle("time")}>
+              Time
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("tasks")} onSort={() => toggle("tasks")}>
+              Tasks
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("project")} onSort={() => toggle("project")}>
+              Project
+            </SortableTableHead>
+            <SortableTableHead
+              direction={directionOf("assignedBy")}
+              onSort={() => toggle("assignedBy")}
+            >
+              Assigned By
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("notes")} onSort={() => toggle("notes")}>
+              Notes
+            </SortableTableHead>
             {customFields.map((field) => (
-              <TableHead key={field.id} className="min-w-32">
+              <SortableTableHead
+                key={field.id}
+                direction={directionOf(field.id)}
+                onSort={() => toggle(field.id)}
+              >
                 {field.name}
-              </TableHead>
+              </SortableTableHead>
             ))}
-            <TableHead className={cn(STICKY_ACTIONS, "w-10 bg-background")} />
+            <TableHead className="w-10 border-l" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {reports.map((report) => {
-            const tasks = (report.tasks as WorkReportTask[] | null) ?? [];
+          {sorted.map((report) => {
+            const tasks = reportTasks(report);
             const isLongVacation =
               report.isLeave &&
               !!report.leaveFrom &&
@@ -102,7 +149,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                   <div className="font-medium">{formatDate(report.date)}</div>
                   <div className="text-xs text-muted-foreground">{formatDay(report.date)}</div>
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {report.employment.company.name}
                   {report.employment.designation && (
                     <span className="text-muted-foreground"> — {report.employment.designation}</span>
@@ -138,7 +185,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                     ? `${formatTime(report.timeFrom) || "—"} to ${formatTime(report.timeTo) || "—"}`
                     : "—"}
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {report.isLeave ? (
                     <span className="text-muted-foreground">{report.leaveReason || "—"}</span>
                   ) : report.hasNoTask ? (
@@ -155,7 +202,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {projectNames.length > 0 ? (
                     <div className="space-y-0.5">
                       {projectNames.map((name) => (
@@ -166,7 +213,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                     "—"
                   )}
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {!report.hasNoTask && tasks.length > 0 ? (
                     <div className="space-y-0.5">
                       {tasks.map((t, i) => (
@@ -177,7 +224,7 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                     "—"
                   )}
                 </TableCell>
-                <TableCell className="w-40 max-w-40 break-words whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   <div className="space-y-1">
                     {report.hasMeeting && (
                       <div className="flex items-start gap-1 text-xs">
@@ -208,13 +255,11 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
                   </div>
                 </TableCell>
                 {customFields.map((field) => (
-                  <TableCell key={field.id} className="whitespace-normal text-muted-foreground">
+                  <TableCell key={field.id} className="text-muted-foreground">
                     {formatCustomValue(field, report.customValues[field.id])}
                   </TableCell>
                 ))}
-                <TableCell
-                  className={cn(STICKY_ACTIONS, "bg-background group-hover/row:bg-muted/50")}
-                >
+                <TableCell className="border-l">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">

@@ -49,7 +49,7 @@ export function CompanyPanel() {
 
   // A handful of rows at most, so the filtering happens here rather than as a request.
   const term = search.trim().toLowerCase();
-  const visible = (employments ?? []).filter((employment) => {
+  const matching = (employments ?? []).filter((employment) => {
     if (status === "current" && !isCurrent(employment)) return false;
     if (status === "past" && isCurrent(employment)) return false;
     if (employmentType !== ALL && employment.employmentType !== employmentType) return false;
@@ -60,6 +60,13 @@ export function CompanyPanel() {
       employment.company.ceoName ?? "",
       employment.company.jobSource ?? "",
     ].some((value) => value.toLowerCase().includes(term));
+  });
+
+  // Where you work now leads, then the rest newest first. Sorting a column in
+  // the table takes over from here.
+  const visible = [...matching].sort((a, b) => {
+    if (isCurrent(a) !== isCurrent(b)) return isCurrent(a) ? -1 : 1;
+    return new Date(b.since ?? 0).getTime() - new Date(a.since ?? 0).getTime();
   });
 
   const [formOpen, setFormOpen] = useState(false);

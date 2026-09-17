@@ -9,6 +9,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,11 +18,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { spendCategoryMeta, sumSaved, sumSpent } from "@/lib/money";
 import { formatDate, formatDay, formatMoney } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
+import { customSortValue } from "@/lib/table-sort";
 import { useCustomFields } from "@/hooks/use-custom-fields";
+import { useTableSort, type SortAccessors } from "@/hooks/use-table-sort";
 import type { SalaryEntryWithEmployment } from "@/types";
 
 interface MoneyTableProps {
@@ -30,38 +32,101 @@ interface MoneyTableProps {
   onDelete: (entry: SalaryEntryWithEmployment) => void;
 }
 
-/** The row menu is pinned to the right edge so it stays reachable however wide the table gets. */
-const STICKY_ACTIONS = "sticky right-0 border-l";
-
 export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("SALARY_ENTRY");
+
+  // The three spend columns list one line per spend, so they sort on the first
+  // line — the same thing the eye lands on when scanning the column.
+  const accessors: SortAccessors<SalaryEntryWithEmployment, string> = {
+    date: (e) => new Date(e.date).getTime(),
+    received: (e) => e.amount,
+    source: (e) => e.source,
+    company: (e) => e.employment?.company.name ?? "Personal",
+    what: (e) => e.spends[0]?.what,
+    category: (e) => e.spends[0] && spendCategoryMeta(e.spends[0].category).name,
+    amount: (e) => e.spends[0]?.amount,
+    spent: (e) => sumSpent(e.spends),
+    saved: (e) => sumSaved(e.spends),
+    note: (e) => e.note,
+    ...Object.fromEntries(
+      customFields.map((field) => [
+        field.id,
+        (e: SalaryEntryWithEmployment) => customSortValue(field, e.customValues[field.id]),
+      ])
+    ),
+  };
+
+  const { sorted, toggle, directionOf } = useTableSort(entries, accessors);
 
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead className="text-right">Received</TableHead>
-            <TableHead>Source</TableHead>
-            <TableHead className="min-w-32">Company</TableHead>
-            <TableHead className="min-w-48">What you did with it</TableHead>
-            <TableHead className="min-w-28">Category</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-right">Spent</TableHead>
-            <TableHead className="text-right">Saved</TableHead>
-            <TableHead className="w-40 min-w-32">Notes</TableHead>
+            <SortableTableHead direction={directionOf("date")} onSort={() => toggle("date")}>
+              Date
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("received")}
+              onSort={() => toggle("received")}
+            >
+              Received
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("source")} onSort={() => toggle("source")}>
+              Source
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("company")} onSort={() => toggle("company")}>
+              Company
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("what")} onSort={() => toggle("what")}>
+              What you did with it
+            </SortableTableHead>
+            <SortableTableHead
+              direction={directionOf("category")}
+              onSort={() => toggle("category")}
+            >
+              Category
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("amount")}
+              onSort={() => toggle("amount")}
+            >
+              Amount
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("spent")}
+              onSort={() => toggle("spent")}
+            >
+              Spent
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("saved")}
+              onSort={() => toggle("saved")}
+            >
+              Saved
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("note")} onSort={() => toggle("note")}>
+              Notes
+            </SortableTableHead>
             {customFields.map((field) => (
-              <TableHead key={field.id} className="min-w-32">
+              <SortableTableHead
+                key={field.id}
+                direction={directionOf(field.id)}
+                onSort={() => toggle(field.id)}
+              >
                 {field.name}
-              </TableHead>
+              </SortableTableHead>
             ))}
-            <TableHead className={cn(STICKY_ACTIONS, "w-10 bg-background")} />
+            <TableHead className="w-10 border-l" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {entries.map((entry) => {
+          {sorted.map((entry) => {
             const spent = sumSpent(entry.spends);
             const saved = sumSaved(entry.spends);
             const hasSpends = entry.spends.length > 0;
@@ -75,14 +140,14 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                 <TableCell className="text-right font-semibold tabular-nums">
                   {formatMoney(entry.amount)}
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {entry.source ? (
                     <Badge variant="secondary">{entry.source}</Badge>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {entry.employment ? (
                     <>
                       {entry.employment.company.name}
@@ -100,7 +165,7 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
 
                 {/* These three columns line up row for row, the way tasks line up
                     with their project and who assigned them. */}
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {hasSpends ? (
                     <ol className="list-decimal space-y-0.5 pl-4">
                       {entry.spends.map((spend, index) => (
@@ -111,7 +176,7 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {hasSpends ? (
                     <div className="space-y-0.5">
                       {entry.spends.map((spend, index) => {
@@ -147,15 +212,13 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                 <TableCell className="text-right tabular-nums text-muted-foreground">
                   {formatMoney(saved)}
                 </TableCell>
-                <TableCell className="w-40 max-w-40 break-words whitespace-normal text-muted-foreground">
-                  {entry.note || "—"}
-                </TableCell>
+                <TableCell className="text-muted-foreground">{entry.note || "—"}</TableCell>
                 {customFields.map((field) => (
-                  <TableCell key={field.id} className="whitespace-normal text-muted-foreground">
+                  <TableCell key={field.id} className="text-muted-foreground">
                     {formatCustomValue(field, entry.customValues[field.id])}
                   </TableCell>
                 ))}
-                <TableCell className={cn(STICKY_ACTIONS, "bg-background group-hover/row:bg-muted/50")}>
+                <TableCell className="border-l">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">

@@ -1,5 +1,6 @@
 "use client";
 
+import { differenceInMonths } from "date-fns";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
@@ -9,6 +10,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,7 +22,9 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDate, formatEnumLabel, formatMoney, formatTenure, formatTime } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
+import { customSortValue } from "@/lib/table-sort";
 import { useCustomFields } from "@/hooks/use-custom-fields";
+import { useTableSort, type SortAccessors, type SortValue } from "@/hooks/use-table-sort";
 import { currentPayRate, type EmploymentListItem, type PayRate } from "@/types";
 
 interface CompanyTableProps {
@@ -29,9 +33,6 @@ interface CompanyTableProps {
   onDelete: (employment: EmploymentListItem) => void;
 }
 
-/** The row menu is pinned to the right edge so it stays reachable however wide the table gets. */
-const STICKY_ACTIONS = "sticky right-0 border-l";
-
 // "10th", "1st", "22nd" — how a pay day reads in a sentence.
 function ordinal(day: number): string {
   const rest = day % 100;
@@ -39,39 +40,125 @@ function ordinal(day: number): string {
   return `${day}${["th", "st", "nd", "rd"][day % 10] ?? "th"}`;
 }
 
+/** Months served, so the Tenure column sorts by length rather than by its label. */
+function tenureMonths(employment: EmploymentListItem): SortValue {
+  if (!employment.since) return null;
+  return differenceInMonths(
+    employment.until ? new Date(employment.until) : new Date(),
+    new Date(employment.since)
+  );
+}
+
 export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProps) {
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("EMPLOYMENT");
+
+  // Pay columns sort on the rate in force — the cell lists the history newest
+  // first, so the column orders by the line it leads with.
+  const accessors: SortAccessors<EmploymentListItem, string> = {
+    company: (e) => e.company.name,
+    designation: (e) => e.designation,
+    type: (e) => e.employmentType,
+    payment: (e) => e.paymentType,
+    payFrom: (e) => currentPayRate(e.payHistory)?.effectiveFrom,
+    actual: (e) => currentPayRate(e.payHistory)?.actualSalary,
+    pf: (e) => currentPayRate(e.payHistory)?.pf,
+    inHand: (e) => currentPayRate(e.payHistory)?.inHandSalary,
+    payDay: (e) => e.payDay,
+    period: (e) => (e.since ? new Date(e.since).getTime() : null),
+    tenure: tenureMonths,
+    shift: (e) => e.company.defaultTimeFrom,
+    ceo: (e) => e.company.ceoName,
+    jobSource: (e) => e.company.jobSource,
+    ...Object.fromEntries(
+      customFields.map((field) => [
+        field.id,
+        (e: EmploymentListItem) => customSortValue(field, e.customValues[field.id]),
+      ])
+    ),
+  };
+
+  const { sorted, toggle, directionOf } = useTableSort(employments, accessors);
 
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-32">Company</TableHead>
-            <TableHead className="min-w-32">Designation</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Payment</TableHead>
-            <TableHead className="min-w-28">Pay from</TableHead>
-            <TableHead className="text-right">Actual</TableHead>
-            <TableHead className="text-right">PF</TableHead>
-            <TableHead className="text-right">In-hand</TableHead>
-            <TableHead>Pay day</TableHead>
-            <TableHead className="min-w-40">Period</TableHead>
-            <TableHead>Tenure</TableHead>
-            <TableHead className="min-w-32">Shift</TableHead>
-            <TableHead className="min-w-28">CEO</TableHead>
-            <TableHead className="min-w-28">Job source</TableHead>
+            <SortableTableHead direction={directionOf("company")} onSort={() => toggle("company")}>
+              Company
+            </SortableTableHead>
+            <SortableTableHead
+              direction={directionOf("designation")}
+              onSort={() => toggle("designation")}
+            >
+              Designation
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("type")} onSort={() => toggle("type")}>
+              Type
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("payment")} onSort={() => toggle("payment")}>
+              Payment
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("payFrom")} onSort={() => toggle("payFrom")}>
+              Pay from
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("actual")}
+              onSort={() => toggle("actual")}
+            >
+              Actual
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("pf")}
+              onSort={() => toggle("pf")}
+            >
+              PF
+            </SortableTableHead>
+            <SortableTableHead
+              align="right"
+              direction={directionOf("inHand")}
+              onSort={() => toggle("inHand")}
+            >
+              In-hand
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("payDay")} onSort={() => toggle("payDay")}>
+              Pay day
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("period")} onSort={() => toggle("period")}>
+              Period
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("tenure")} onSort={() => toggle("tenure")}>
+              Tenure
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("shift")} onSort={() => toggle("shift")}>
+              Shift
+            </SortableTableHead>
+            <SortableTableHead direction={directionOf("ceo")} onSort={() => toggle("ceo")}>
+              CEO
+            </SortableTableHead>
+            <SortableTableHead
+              direction={directionOf("jobSource")}
+              onSort={() => toggle("jobSource")}
+            >
+              Job source
+            </SortableTableHead>
             {customFields.map((field) => (
-              <TableHead key={field.id} className="min-w-32">
+              <SortableTableHead
+                key={field.id}
+                direction={directionOf(field.id)}
+                onSort={() => toggle(field.id)}
+              >
                 {field.name}
-              </TableHead>
+              </SortableTableHead>
             ))}
-            <TableHead className={cn(STICKY_ACTIONS, "w-10 bg-background")} />
+            <TableHead className="w-10 border-l" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employments.map((employment) => {
+          {sorted.map((employment) => {
             const pay = currentPayRate(employment.payHistory);
             // Newest revision first, so the rate in force reads at the top.
             const rates = [...((employment.payHistory as PayRate[] | null) ?? [])].sort((a, b) =>
@@ -86,7 +173,7 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
 
             return (
               <TableRow key={employment.id} className="group/row">
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   <div className="font-medium">{employment.company.name}</div>
                   {isCurrent && (
                     <Badge variant="secondary" className="mt-1 bg-primary/10 text-primary">
@@ -94,7 +181,7 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell>
                   {employment.designation || <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
@@ -103,11 +190,14 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                 <TableCell>
                   <Badge variant="secondary">{formatEnumLabel(employment.paymentType)}</Badge>
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {rates.length ? (
                     <div className="space-y-0.5">
                       {rates.map((rate) => (
-                        <div key={rate.effectiveFrom} className={cn(isInForce(rate) && "text-foreground")}>
+                        <div
+                          key={rate.effectiveFrom}
+                          className={cn(isInForce(rate) && "text-foreground")}
+                        >
                           {formatDate(rate.effectiveFrom)}
                         </div>
                       ))}
@@ -120,7 +210,10 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                   {rates.length ? (
                     <div className="space-y-0.5">
                       {rates.map((rate) => (
-                        <div key={rate.effectiveFrom} className={cn(!isInForce(rate) && "text-muted-foreground")}>
+                        <div
+                          key={rate.effectiveFrom}
+                          className={cn(!isInForce(rate) && "text-muted-foreground")}
+                        >
                           {formatMoney(rate.actualSalary)}
                         </div>
                       ))}
@@ -161,7 +254,7 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                 <TableCell className="text-muted-foreground">
                   {employment.payDay ? ordinal(employment.payDay) : "—"}
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {employment.since || employment.until
                     ? `${employment.since ? formatDate(employment.since) : "—"} – ${
                         employment.until ? formatDate(employment.until) : "Present"
@@ -169,21 +262,21 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                     : "—"}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{tenure || "—"}</TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {shiftFrom || shiftTo ? `${shiftFrom || "—"} to ${shiftTo || "—"}` : "—"}
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {employment.company.ceoName || "—"}
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   {employment.company.jobSource || "—"}
                 </TableCell>
                 {customFields.map((field) => (
-                  <TableCell key={field.id} className="whitespace-normal text-muted-foreground">
+                  <TableCell key={field.id} className="text-muted-foreground">
                     {formatCustomValue(field, employment.customValues[field.id])}
                   </TableCell>
                 ))}
-                <TableCell className={cn(STICKY_ACTIONS, "bg-background group-hover/row:bg-muted/50")}>
+                <TableCell className="border-l">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
