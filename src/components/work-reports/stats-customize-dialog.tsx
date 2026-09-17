@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Plus, RotateCcw, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, RotateCcw, Sparkles, Trash2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { setPreference } from "@/actions/preference-actions";
+import { deleteCustomCard } from "@/actions/custom-card-actions";
+import { useCustomCards } from "@/hooks/use-custom-cards";
+import { useRefresh } from "@/hooks/use-refresh";
+import { customCardId, type CustomCardValue } from "@/lib/custom-cards";
 import type { CardOption } from "@/lib/card-preferences";
 
 // Shared by every card strip in the app — the dashboard and the money page each
@@ -47,9 +53,27 @@ function CustomizeBody({
   emptyHint = "No cards — the strip above will be hidden entirely.",
 }: BodyProps) {
   const queryClient = useQueryClient();
+  const refresh = useRefresh();
+  const { data: customCards = [] } = useCustomCards();
   const [draft, setDraft] = useState<string[]>(cards);
+  const [building, setBuilding] = useState(false);
+  const [editing, setEditing] = useState<CustomCardValue | undefined>(undefined);
+  const [removing, setRemoving] = useState<CustomCardValue | undefined>(undefined);
 
   const available = catalogue.filter((id) => !draft.includes(id));
+  const ownById = new Map(customCards.map((card) => [customCardId(card.id), card]));
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => deleteCustomCard(id),
+    onSuccess: (_result, id) => {
+      toast.success("Card deleted");
+      refresh("customCard");
+      // The strip would otherwise keep showing a card that no longer exists.
+      setDraft((current) => current.filter((cardId) => cardId !== customCardId(id)));
+      setRemoving(undefined);
+    },
+    onError: (error: Error) => toast.error(error.message || "Could not delete the card"),
+  });
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
@@ -113,6 +137,28 @@ function CustomizeBody({
                     <ArrowDown className="size-4" />
                     <span className="sr-only">Move down</span>
                   </Button>
+                  {ownById.has(id) && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setEditing(ownById.get(id))}
+                      >
+                        <Pencil className="size-4" />
+                        <span className="sr-only">Edit this card</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setRemoving(ownById.get(id))}
+                      >
+                        <Trash2 className="size-4" />
+                        <span className="sr-only">Delete this card</span>
+                      </Button>
+                    </>
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
@@ -153,7 +199,32 @@ function CustomizeBody({
             </ul>
           )}
         </div>
+
+        <Button type="button" variant="outline" size="sm" onClick={() => setBuilding(true)}>
+          <Sparkles className="size-4" />
+          Build a card
+        </Button>
       </div>
+
+      <CustomCardDialog
+        open={building}
+        onOpenChange={setBuilding}
+        // Something just built is something you wanted to see.
+        onSaved={(id) => setDraft((current) => [...current, customCardId(id)])}
+      />
+      <CustomCardDialog
+        key={editing?.id}
+        open={!!editing}
+        onOpenChange={(next) => !next && setEditing(undefined)}
+        card={editing}
+      />
+      <ConfirmDialog
+        open={!!removing}
+        onOpenChange={(next) => !next && setRemoving(undefined)}
+        title="Delete card?"
+        description={removing ? `"${removing.title}" will be gone for good.` : undefined}
+        onConfirm={() => removing && removeMutation.mutate(removing.id)}
+      />
 
       <DialogFooter className="sm:justify-between">
         <Button type="button" variant="outline" onClick={() => setDraft(defaults)}>

@@ -13,16 +13,18 @@ import { useQueryClient } from "@tanstack/react-query";
 const REFRESHES: Record<string, string[]> = {
   // Name, dates and pay history all show up on the work report and money rows
   // (each names its company) and behind every dashboard card.
-  employment: ["employments", "work-reports", "salary-entries", "dashboard-stats"],
+  employment: ["employments", "work-reports", "salary-entries", "dashboard-stats", "custom-cards"],
   // Day counts, meetings and leave are all counted server-side.
-  workReport: ["work-reports", "dashboard-stats", "suggestions"],
-  salaryEntry: ["salary-entries", "dashboard-stats", "suggestions"],
+  workReport: ["work-reports", "dashboard-stats", "suggestions", "custom-cards"],
+  salaryEntry: ["salary-entries", "dashboard-stats", "suggestions", "custom-cards"],
   // The navbar badge's summary is keyed under "day-plans", so it comes along;
   // the open/done counts on the dashboard do not.
-  dayPlan: ["day-plans", "dashboard-stats"],
-  planLabel: ["plan-labels", "day-plans"],
+  dayPlan: ["day-plans", "dashboard-stats", "custom-cards"],
+  planLabel: ["plan-labels", "day-plans", "custom-cards"],
+  // The definition changed, so the number and the catalogue both move.
+  customCard: ["custom-cards"],
   // A field added or removed changes the columns of every table that offers it.
-  customField: ["custom-fields", "work-reports", "day-plans", "employments", "salary-entries"],
+  customField: ["custom-fields", "work-reports", "day-plans", "employments", "salary-entries", "custom-cards"],
 };
 
 export type Change = keyof typeof REFRESHES;

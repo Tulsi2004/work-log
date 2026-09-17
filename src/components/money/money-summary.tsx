@@ -17,7 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
-import { usePreference } from "@/hooks/use-preference";
+import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
+import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { cn } from "@/lib/utils";
 import { isKeptCategory, spendCategoryMeta, sumMoney } from "@/lib/money";
 import {
@@ -25,7 +26,6 @@ import {
   MONEY_CARDS_PREFERENCE_KEY,
   MONEY_CARD_IDS,
   MONEY_CARD_META,
-  readMoneyCards,
   type MoneyCardId,
 } from "@/lib/money-cards";
 import { formatDate, formatMoney } from "@/utils/format";
@@ -103,10 +103,10 @@ export function MoneySummary({
   activeCategory,
   onCategoryClick,
 }: MoneySummaryProps) {
-  const { data: preference } = usePreference(MONEY_CARDS_PREFERENCE_KEY);
+  const strip = useCardStrip(MONEY_CARDS_PREFERENCE_KEY, MONEY_CARD_IDS, MONEY_CARD_META, DEFAULT_MONEY_CARDS);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
-  const cards = readMoneyCards(preference);
+  const cards = strip.cards;
   const byCategory = totals?.byCategory ?? [];
   // Every bar is drawn against the biggest category, so the largest fills the row.
   const biggest = byCategory[0]?.amount ?? 0;
@@ -125,19 +125,21 @@ export function MoneySummary({
       {cards.length > 0 && (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           {cards.map((id) => {
-            const Icon = CARD_ICONS[id];
+            // A card the user built carries its own title and its own number.
+            const own = strip.customCard(id);
+            const Icon = own ? CUSTOM_CARD_ICON : CARD_ICONS[id as MoneyCardId];
             return (
               <Card key={id}>
                 <CardContent className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="truncate text-sm text-muted-foreground">
-                      {MONEY_CARD_META[id].label}
+                      {own ? own.title : MONEY_CARD_META[id as MoneyCardId].label}
                     </p>
                     {isLoading ? (
                       <Skeleton className="mt-1 h-7 w-20" />
                     ) : (
-                      <p className="truncate text-2xl font-semibold">
-                        {cardValue(id, totals, entries)}
+                      <p className="text-2xl leading-tight wrap-break-word font-semibold">
+                        {own ? own.display : cardValue(id as MoneyCardId, totals, entries)}
                       </p>
                     )}
                   </div>
@@ -201,8 +203,8 @@ export function MoneySummary({
         open={customizeOpen}
         onOpenChange={setCustomizeOpen}
         cards={cards}
-        catalogue={MONEY_CARD_IDS}
-        meta={MONEY_CARD_META}
+        catalogue={strip.catalogue}
+        meta={strip.meta}
         defaults={DEFAULT_MONEY_CARDS}
         preferenceKey={MONEY_CARDS_PREFERENCE_KEY}
         emptyHint="No cards — the totals strip will be hidden entirely."

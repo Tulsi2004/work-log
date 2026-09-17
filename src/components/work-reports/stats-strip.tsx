@@ -29,7 +29,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { useEmployments } from "@/hooks/use-employments";
-import { usePreference } from "@/hooks/use-preference";
+import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
+import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { employmentLabel, formatMoney, formatSpan, formatTenure } from "@/utils/format";
 import { currentPayRate, type EmploymentListItem } from "@/types";
 import {
@@ -38,7 +39,6 @@ import {
   DASHBOARD_CARD_META,
   DASHBOARD_CARD_OPTIONS,
   DEFAULT_DASHBOARD_CARDS,
-  readDashboardCards,
   type DashboardCardId,
 } from "@/lib/dashboard-cards";
 
@@ -115,11 +115,11 @@ interface StatsStripProps {
 export function StatsStrip({ employmentId }: StatsStripProps) {
   const { data: stats, isLoading } = useDashboardStats(employmentId);
   const { data: employments } = useEmployments();
-  const { data: preference } = usePreference(DASHBOARD_CARDS_PREFERENCE_KEY);
+  const strip = useCardStrip(DASHBOARD_CARDS_PREFERENCE_KEY, DASHBOARD_CARD_IDS, DASHBOARD_CARD_META, DEFAULT_DASHBOARD_CARDS);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const selected = employments?.find((e) => e.id === employmentId);
-  const cards = readDashboardCards(preference);
+  const cards = strip.cards;
 
   return (
     <div className="space-y-2">
@@ -133,16 +133,22 @@ export function StatsStrip({ employmentId }: StatsStripProps) {
       {cards.length > 0 && (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {cards.map((id) => {
-            const Icon = CARD_ICONS[id];
+            // A card the user built carries its own title and its own number.
+            const own = strip.customCard(id);
+            const Icon = own ? CUSTOM_CARD_ICON : CARD_ICONS[id as DashboardCardId];
             return (
               <Card key={id}>
                 <CardContent className="flex items-center justify-between">
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-muted-foreground">{cardLabel(id, selected)}</p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {own ? own.title : cardLabel(id as DashboardCardId, selected)}
+                    </p>
                     {isLoading ? (
                       <Skeleton className="mt-1 h-7 w-10" />
                     ) : (
-                      <p className="text-2xl leading-tight wrap-break-word font-semibold">{cardValue(id, stats, selected)}</p>
+                      <p className="text-2xl leading-tight wrap-break-word font-semibold">
+                        {own ? own.display : cardValue(id as DashboardCardId, stats, selected)}
+                      </p>
                     )}
                   </div>
                   <Icon className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />

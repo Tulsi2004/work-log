@@ -242,3 +242,31 @@ model UserPreference {
   @@unique([userId, key])
   @@index([userId])
 }
+
+// A card the user built for themselves: one number pulled out of their own
+// records, shown alongside the built-in cards. The shape of a definition — what
+// counts as a source, a measure or a filter — lives in lib/custom-cards.ts; the
+// row only has to survive that vocabulary changing.
+model CustomCard {
+  id     String @id @default(cuid())
+  userId String
+
+  title String
+  // Which records to read: workReport | employment | salaryEntry | dayPlan.
+  source String
+  // count | sum | average | highest | lowest.
+  measure String
+  // What to measure: a built-in key, or a NUMBER custom field's id. Null for a count.
+  field  String?
+  // ALL | THIS_MONTH | THIS_YEAR | LAST_30_DAYS.
+  period String @default("ALL")
+  // A Json array of { field, value } a record has to match, all of them.
+  filters Json
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

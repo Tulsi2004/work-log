@@ -17,14 +17,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
-import { usePreference } from "@/hooks/use-preference";
+import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
+import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { stintLength, totalExperience } from "@/lib/experience";
 import {
   COMPANY_CARDS_PREFERENCE_KEY,
   COMPANY_CARD_IDS,
   COMPANY_CARD_META,
   DEFAULT_COMPANY_CARDS,
-  readCompanyCards,
   type CompanyCardId,
 } from "@/lib/company-cards";
 import { formatDate, formatMoney, formatSpan, formatTenure } from "@/utils/format";
@@ -102,10 +102,10 @@ function cardValue(id: CompanyCardId, employments: EmploymentListItem[]): string
 }
 
 export function CompanySummary({ employments, isLoading }: CompanySummaryProps) {
-  const { data: preference } = usePreference(COMPANY_CARDS_PREFERENCE_KEY);
+  const strip = useCardStrip(COMPANY_CARDS_PREFERENCE_KEY, COMPANY_CARD_IDS, COMPANY_CARD_META, DEFAULT_COMPANY_CARDS);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
-  const cards = readCompanyCards(preference);
+  const cards = strip.cards;
 
   return (
     <div className="space-y-2">
@@ -119,18 +119,22 @@ export function CompanySummary({ employments, isLoading }: CompanySummaryProps) 
       {cards.length > 0 && (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {cards.map((id) => {
-            const Icon = CARD_ICONS[id];
+            // A card the user built carries its own title and its own number.
+            const own = strip.customCard(id);
+            const Icon = own ? CUSTOM_CARD_ICON : CARD_ICONS[id as CompanyCardId];
             return (
               <Card key={id}>
                 <CardContent className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="truncate text-sm text-muted-foreground">
-                      {COMPANY_CARD_META[id].label}
+                      {own ? own.title : COMPANY_CARD_META[id as CompanyCardId].label}
                     </p>
                     {isLoading ? (
                       <Skeleton className="mt-1 h-7 w-20" />
                     ) : (
-                      <p className="text-2xl leading-tight wrap-break-word font-semibold">{cardValue(id, employments)}</p>
+                      <p className="text-2xl leading-tight wrap-break-word font-semibold">
+                        {own ? own.display : cardValue(id as CompanyCardId, employments)}
+                      </p>
                     )}
                   </div>
                   <Icon className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />
@@ -145,8 +149,8 @@ export function CompanySummary({ employments, isLoading }: CompanySummaryProps) 
         open={customizeOpen}
         onOpenChange={setCustomizeOpen}
         cards={cards}
-        catalogue={COMPANY_CARD_IDS}
-        meta={COMPANY_CARD_META}
+        catalogue={strip.catalogue}
+        meta={strip.meta}
         defaults={DEFAULT_COMPANY_CARDS}
         preferenceKey={COMPANY_CARDS_PREFERENCE_KEY}
         emptyHint="No cards — the strip above the table will be hidden entirely."
