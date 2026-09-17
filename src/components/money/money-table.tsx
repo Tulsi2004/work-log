@@ -21,9 +21,8 @@ import {
 import { spendCategoryMeta, sumSaved, sumSpent } from "@/lib/money";
 import { formatDate, formatDay, formatMoney } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
-import { customSortValue } from "@/lib/table-sort";
 import { useCustomFields } from "@/hooks/use-custom-fields";
-import { useTableSort, type SortAccessors } from "@/hooks/use-table-sort";
+import { useTableSort } from "@/hooks/use-table-sort";
 import type { SalaryEntryWithEmployment } from "@/types";
 
 interface MoneyTableProps {
@@ -36,93 +35,39 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("SALARY_ENTRY");
 
-  // The three spend columns list one line per spend, so they sort on the first
-  // line — the same thing the eye lands on when scanning the column.
-  const accessors: SortAccessors<SalaryEntryWithEmployment, string> = {
-    date: (e) => new Date(e.date).getTime(),
-    received: (e) => e.amount,
-    source: (e) => e.source,
-    company: (e) => e.employment?.company.name ?? "Personal",
-    what: (e) => e.spends[0]?.what,
-    category: (e) => e.spends[0] && spendCategoryMeta(e.spends[0].category).name,
-    amount: (e) => e.spends[0]?.amount,
-    spent: (e) => sumSpent(e.spends),
-    saved: (e) => sumSaved(e.spends),
-    note: (e) => e.note,
-    ...Object.fromEntries(
-      customFields.map((field) => [
-        field.id,
-        (e: SalaryEntryWithEmployment) => customSortValue(field, e.customValues[field.id]),
-      ])
-    ),
-  };
-
-  const { sorted, toggle, directionOf } = useTableSort(entries, accessors);
+  // Date is the only column worth reordering by — everything else reads down
+  // the page in the order the money came in.
+  const { sorted, toggle, directionOf } = useTableSort(entries, {
+    date: (entry: SalaryEntryWithEmployment) => new Date(entry.date).getTime(),
+  });
 
   return (
     <div className="rounded-md border">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <SortableTableHead direction={directionOf("date")} onSort={() => toggle("date")}>
+            <SortableTableHead
+              className="w-[8%]"
+              direction={directionOf("date")}
+              onSort={() => toggle("date")}
+            >
               Date
             </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("received")}
-              onSort={() => toggle("received")}
-            >
-              Received
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("source")} onSort={() => toggle("source")}>
-              Source
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("company")} onSort={() => toggle("company")}>
-              Company
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("what")} onSort={() => toggle("what")}>
-              What you did with it
-            </SortableTableHead>
-            <SortableTableHead
-              direction={directionOf("category")}
-              onSort={() => toggle("category")}
-            >
-              Category
-            </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("amount")}
-              onSort={() => toggle("amount")}
-            >
-              Amount
-            </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("spent")}
-              onSort={() => toggle("spent")}
-            >
-              Spent
-            </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("saved")}
-              onSort={() => toggle("saved")}
-            >
-              Saved
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("note")} onSort={() => toggle("note")}>
-              Notes
-            </SortableTableHead>
+            <TableHead className="w-[8%] text-right">Received</TableHead>
+            <TableHead className="w-[8%]">Source</TableHead>
+            <TableHead className="w-[11%]">Company</TableHead>
+            <TableHead className="w-[19%]">What you did with it</TableHead>
+            <TableHead className="w-[10%]">Category</TableHead>
+            <TableHead className="w-[8%] text-right">Amount</TableHead>
+            <TableHead className="w-[8%] text-right">Spent</TableHead>
+            <TableHead className="w-[8%] text-right">Saved</TableHead>
+            <TableHead className="w-[8%]">Notes</TableHead>
             {customFields.map((field) => (
-              <SortableTableHead
-                key={field.id}
-                direction={directionOf(field.id)}
-                onSort={() => toggle(field.id)}
-              >
+              <TableHead key={field.id} className="w-[10%]">
                 {field.name}
-              </SortableTableHead>
+              </TableHead>
             ))}
-            <TableHead className="w-10 border-l" />
+            <TableHead className="w-[4%] border-l" />
           </TableRow>
         </TableHeader>
         <TableBody>

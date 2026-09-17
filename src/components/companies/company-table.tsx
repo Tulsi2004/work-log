@@ -1,6 +1,5 @@
 "use client";
 
-import { differenceInMonths } from "date-fns";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
@@ -22,9 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDate, formatEnumLabel, formatMoney, formatTenure, formatTime } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
-import { customSortValue } from "@/lib/table-sort";
 import { useCustomFields } from "@/hooks/use-custom-fields";
-import { useTableSort, type SortAccessors, type SortValue } from "@/hooks/use-table-sort";
+import { useTableSort } from "@/hooks/use-table-sort";
 import { currentPayRate, type EmploymentListItem, type PayRate } from "@/types";
 
 interface CompanyTableProps {
@@ -40,121 +38,48 @@ function ordinal(day: number): string {
   return `${day}${["th", "st", "nd", "rd"][day % 10] ?? "th"}`;
 }
 
-/** Months served, so the Tenure column sorts by length rather than by its label. */
-function tenureMonths(employment: EmploymentListItem): SortValue {
-  if (!employment.since) return null;
-  return differenceInMonths(
-    employment.until ? new Date(employment.until) : new Date(),
-    new Date(employment.since)
-  );
-}
-
 export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProps) {
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("EMPLOYMENT");
 
-  // Pay columns sort on the rate in force — the cell lists the history newest
-  // first, so the column orders by the line it leads with.
-  const accessors: SortAccessors<EmploymentListItem, string> = {
-    company: (e) => e.company.name,
-    designation: (e) => e.designation,
-    type: (e) => e.employmentType,
-    payment: (e) => e.paymentType,
-    payFrom: (e) => currentPayRate(e.payHistory)?.effectiveFrom,
-    actual: (e) => currentPayRate(e.payHistory)?.actualSalary,
-    pf: (e) => currentPayRate(e.payHistory)?.pf,
-    inHand: (e) => currentPayRate(e.payHistory)?.inHandSalary,
-    payDay: (e) => e.payDay,
-    period: (e) => (e.since ? new Date(e.since).getTime() : null),
-    tenure: tenureMonths,
-    shift: (e) => e.company.defaultTimeFrom,
-    ceo: (e) => e.company.ceoName,
-    jobSource: (e) => e.company.jobSource,
-    ...Object.fromEntries(
-      customFields.map((field) => [
-        field.id,
-        (e: EmploymentListItem) => customSortValue(field, e.customValues[field.id]),
-      ])
-    ),
-  };
-
-  const { sorted, toggle, directionOf } = useTableSort(employments, accessors);
+  // Period is the date a stint ran over, and the only column worth reordering
+  // by — the rest read down the page in the order the panel hands them over.
+  const { sorted, toggle, directionOf } = useTableSort(employments, {
+    period: (employment: EmploymentListItem) =>
+      employment.since ? new Date(employment.since).getTime() : null,
+  });
 
   return (
     <div className="rounded-md border">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <SortableTableHead direction={directionOf("company")} onSort={() => toggle("company")}>
-              Company
-            </SortableTableHead>
+            <TableHead className="w-[9%]">Company</TableHead>
+            <TableHead className="w-[9%]">Designation</TableHead>
+            <TableHead className="w-[7%]">Type</TableHead>
+            <TableHead className="w-[7%]">Payment</TableHead>
+            <TableHead className="w-[8%]">Pay from</TableHead>
+            <TableHead className="w-[7%] text-right">Actual</TableHead>
+            <TableHead className="w-[5%] text-right">PF</TableHead>
+            <TableHead className="w-[7%] text-right">In-hand</TableHead>
+            <TableHead className="w-[5%]">Pay day</TableHead>
             <SortableTableHead
-              direction={directionOf("designation")}
-              onSort={() => toggle("designation")}
+              className="w-[10%]"
+              direction={directionOf("period")}
+              onSort={() => toggle("period")}
             >
-              Designation
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("type")} onSort={() => toggle("type")}>
-              Type
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("payment")} onSort={() => toggle("payment")}>
-              Payment
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("payFrom")} onSort={() => toggle("payFrom")}>
-              Pay from
-            </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("actual")}
-              onSort={() => toggle("actual")}
-            >
-              Actual
-            </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("pf")}
-              onSort={() => toggle("pf")}
-            >
-              PF
-            </SortableTableHead>
-            <SortableTableHead
-              align="right"
-              direction={directionOf("inHand")}
-              onSort={() => toggle("inHand")}
-            >
-              In-hand
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("payDay")} onSort={() => toggle("payDay")}>
-              Pay day
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("period")} onSort={() => toggle("period")}>
               Period
             </SortableTableHead>
-            <SortableTableHead direction={directionOf("tenure")} onSort={() => toggle("tenure")}>
-              Tenure
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("shift")} onSort={() => toggle("shift")}>
-              Shift
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("ceo")} onSort={() => toggle("ceo")}>
-              CEO
-            </SortableTableHead>
-            <SortableTableHead
-              direction={directionOf("jobSource")}
-              onSort={() => toggle("jobSource")}
-            >
-              Job source
-            </SortableTableHead>
+            <TableHead className="w-[5%]">Tenure</TableHead>
+            <TableHead className="w-[8%]">Shift</TableHead>
+            <TableHead className="w-[6%]">CEO</TableHead>
+            <TableHead className="w-[6%]">Job source</TableHead>
             {customFields.map((field) => (
-              <SortableTableHead
-                key={field.id}
-                direction={directionOf(field.id)}
-                onSort={() => toggle(field.id)}
-              >
+              <TableHead key={field.id} className="w-[8%]">
                 {field.name}
-              </SortableTableHead>
+              </TableHead>
             ))}
-            <TableHead className="w-10 border-l" />
+            <TableHead className="w-[3%] border-l" />
           </TableRow>
         </TableHeader>
         <TableBody>

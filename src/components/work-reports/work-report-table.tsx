@@ -20,9 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDate, formatDay, formatEnumLabel, formatTime } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
-import { customSortValue } from "@/lib/table-sort";
 import { useCustomFields } from "@/hooks/use-custom-fields";
-import { useTableSort, type SortAccessors } from "@/hooks/use-table-sort";
+import { useTableSort } from "@/hooks/use-table-sort";
 import type { WorkReportWithEmployment, WorkReportTask } from "@/types";
 
 interface WorkReportTableProps {
@@ -62,69 +61,37 @@ export function WorkReportTable({ reports, onEdit, onDelete }: WorkReportTablePr
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("WORK_REPORT");
 
-  // The task columns list one line per task, so they sort on the first line —
-  // the same thing the eye lands on when scanning the column.
-  const accessors: SortAccessors<WorkReportWithEmployment, string> = {
-    date: (r) => new Date(r.date).getTime(),
-    company: (r) => r.employment.company.name,
-    type: (r) => (r.isLeave ? (r.isCompanyGranted ? "Company Leave" : "Leave") : r.dayType),
-    time: (r) => (r.isLeave ? null : r.timeFrom),
-    tasks: (r) => (r.isLeave ? r.leaveReason : r.hasNoTask ? r.noTaskNote : reportTasks(r)[0]?.task),
-    project: (r) => (r.hasNoTask ? null : uniqueValues(reportTasks(r).map((t) => t.projectName))[0]),
-    assignedBy: (r) => (r.hasNoTask ? null : reportTasks(r)[0]?.assignedBy),
-    notes: (r) => r.notes,
-    ...Object.fromEntries(
-      customFields.map((field) => [
-        field.id,
-        (r: WorkReportWithEmployment) => customSortValue(field, r.customValues[field.id]),
-      ])
-    ),
-  };
-
-  const { sorted, toggle, directionOf } = useTableSort(reports, accessors);
+  // Date is the only column worth reordering by — the rest read down the page
+  // in the order the days happened.
+  const { sorted, toggle, directionOf } = useTableSort(reports, {
+    date: (report: WorkReportWithEmployment) => new Date(report.date).getTime(),
+  });
 
   return (
     <div className="rounded-md border">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <SortableTableHead direction={directionOf("date")} onSort={() => toggle("date")}>
+            <SortableTableHead
+              className="w-[8%]"
+              direction={directionOf("date")}
+              onSort={() => toggle("date")}
+            >
               Date
             </SortableTableHead>
-            <SortableTableHead direction={directionOf("company")} onSort={() => toggle("company")}>
-              Company
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("type")} onSort={() => toggle("type")}>
-              Type
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("time")} onSort={() => toggle("time")}>
-              Time
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("tasks")} onSort={() => toggle("tasks")}>
-              Tasks
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("project")} onSort={() => toggle("project")}>
-              Project
-            </SortableTableHead>
-            <SortableTableHead
-              direction={directionOf("assignedBy")}
-              onSort={() => toggle("assignedBy")}
-            >
-              Assigned By
-            </SortableTableHead>
-            <SortableTableHead direction={directionOf("notes")} onSort={() => toggle("notes")}>
-              Notes
-            </SortableTableHead>
+            <TableHead className="w-[12%]">Company</TableHead>
+            <TableHead className="w-[9%]">Type</TableHead>
+            <TableHead className="w-[8%]">Time</TableHead>
+            <TableHead className="w-[24%]">Tasks</TableHead>
+            <TableHead className="w-[10%]">Project</TableHead>
+            <TableHead className="w-[10%]">Assigned By</TableHead>
+            <TableHead className="w-[15%]">Notes</TableHead>
             {customFields.map((field) => (
-              <SortableTableHead
-                key={field.id}
-                direction={directionOf(field.id)}
-                onSort={() => toggle(field.id)}
-              >
+              <TableHead key={field.id} className="w-[10%]">
                 {field.name}
-              </SortableTableHead>
+              </TableHead>
             ))}
-            <TableHead className="w-10 border-l" />
+            <TableHead className="w-[4%] border-l" />
           </TableRow>
         </TableHeader>
         <TableBody>
