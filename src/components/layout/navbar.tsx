@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  Calculator,
   CalendarCheck,
   ClipboardList,
   Settings,
@@ -30,6 +31,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/planner", label: "Planner", icon: CalendarCheck, badge: PlannerBadge },
   { href: "/money", label: "Money", icon: Wallet },
   { href: "/companies", label: "Companies", icon: Building2 },
+  { href: "/salary", label: "Salary", icon: Calculator },
 ];
 
 export function Navbar() {
