@@ -25,7 +25,10 @@ import {
   MINUTES_PER_DAY,
   buildCycle,
   calculateSalary,
+  explainDuration,
   formatDuration,
+  formatMinutes,
+  parseDuration,
   monthKey,
   payDateFor,
   rateForCycle,
@@ -197,7 +200,7 @@ export function SalaryPanel() {
               title={`Hours for ${cycle.label}`}
               hint="Straight off your attendance page. Typed as h:mm — 217:45 is 217 hours and 45 minutes."
             >
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
                 <DurationField label="Total hours" value={totalHours} onChange={setTotalHours} />
                 <DurationField label="Break" value={breakHours} onChange={setBreakHours} sign="−" />
               </div>
@@ -211,25 +214,29 @@ export function SalaryPanel() {
               title="Paid leave"
               hint="Credited at your average daily hours — the portal's Avg Daily Hours for the cycle."
             >
-              <div className="flex flex-wrap items-end gap-3">
-                <DurationField
-                  label="Avg daily hours"
-                  value={avgDailyHours}
-                  onChange={setAvgDailyHours}
-                  className="w-28"
-                />
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Days</Label>
-                  <Input
-                    value={paidLeaveDays}
-                    onChange={(e) => setPaidLeaveDays(e.target.value)}
-                    inputMode="numeric"
-                    className="w-16 text-right tabular-nums"
+              <div className="space-y-2.5">
+                <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+                  <DurationField
+                    label="Avg daily hours"
+                    value={avgDailyHours}
+                    onChange={setAvgDailyHours}
                   />
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Days</Label>
+                    <Input
+                      value={paidLeaveDays}
+                      onChange={(e) => setPaidLeaveDays(e.target.value)}
+                      inputMode="numeric"
+                      className="w-16 text-right tabular-nums"
+                    />
+                  </div>
                 </div>
-                <p className="pb-2 text-sm text-muted-foreground">
-                  = {formatDuration(result.paidLeaveMinutes)} credited
-                </p>
+                <Working>
+                  {avgDailyHours.trim() &&
+                    `${formatMinutes(parseDuration(avgDailyHours))} × ${Number(paidLeaveDays) || 0} = `}
+                  {formatDuration(result.paidLeaveMinutes)} ={" "}
+                  {formatMinutes(result.paidLeaveMinutes)} credited
+                </Working>
               </div>
             </Section>
 
@@ -287,6 +294,10 @@ export function SalaryPanel() {
                         inputMode="numeric"
                         className="w-20 text-right tabular-nums"
                       />
+                      <span className="w-20 shrink-0 text-xs text-muted-foreground tabular-nums">
+                        {adjustment.duration.trim() &&
+                          formatMinutes(parseDuration(adjustment.duration))}
+                      </span>
                       <Button
                         type="button"
                         variant="ghost"
@@ -311,16 +322,17 @@ export function SalaryPanel() {
                 title="Goal days"
                 hint={`${cycle.totalDays} days in the cycle, less ${cycle.sundays} Sundays.`}
               >
-                <div className="flex items-center gap-2">
+                <div className="space-y-2">
                   <Input
                     value={goalDays}
                     onChange={(e) => setGoalEdit({ key: cycleKey, value: e.target.value })}
                     inputMode="numeric"
                     className="w-20 text-right tabular-nums"
                   />
-                  <span className="text-sm text-muted-foreground">
-                    = {formatDuration(result.expectedMinutes)} expected
-                  </span>
+                  <Working>
+                    × {MINUTES_PER_DAY} min = {formatDuration(result.expectedMinutes)} ={" "}
+                    {formatMinutes(result.expectedMinutes)} expected
+                  </Working>
                 </div>
               </Section>
 
@@ -393,19 +405,19 @@ function Ledger({ result, cycle }: { result: SalaryCalcResult; cycle: Cycle }) {
           <Row
             key={`${line.label}-${index}`}
             label={line.label}
-            value={`${line.sign < 0 ? "−" : "+"} ${formatDuration(Math.abs(line.minutes))}`}
+            value={`${line.sign < 0 ? "−" : "+"} ${formatDuration(Math.abs(line.minutes))} · ${Math.abs(line.minutes).toLocaleString("en-IN")}`}
             muted={line.minutes === 0}
           />
         ))}
         <Row
           label="Calculated"
-          value={formatDuration(result.calculatedMinutes)}
+          value={`${formatDuration(result.calculatedMinutes)} · ${formatMinutes(result.calculatedMinutes)}`}
           strong
           className="border-t pt-1"
         />
         <Row
           label={`Against ${formatDuration(result.expectedMinutes)} expected`}
-          value={`${difference > 0 ? "+" : difference < 0 ? "−" : ""} ${formatDuration(Math.abs(difference))}`}
+          value={`${difference > 0 ? "+" : difference < 0 ? "−" : ""} ${formatDuration(Math.abs(difference))} · ${formatMinutes(Math.abs(difference))}`}
           muted
         />
       </div>
@@ -535,15 +547,28 @@ function DurationField({
         {label}
         {sign && <span className="tabular-nums">({sign})</span>}
       </Label>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="h:mm"
-        inputMode="numeric"
-        className={cn("text-right tabular-nums", className)}
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="h:mm"
+          inputMode="numeric"
+          className={cn("w-28 text-right tabular-nums", className)}
+        />
+        {/* The box keeps its width, so the reading appearing beside it moves
+            nothing else on the row. */}
+        <span className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+          {explainDuration(value)}
+        </span>
+      </div>
     </div>
   );
+}
+
+// Arithmetic shown under a field: the same size and colour wherever it appears,
+// so it reads as the working rather than as another thing to fill in.
+function Working({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs text-muted-foreground tabular-nums">{children}</p>;
 }
 
 function EmptyNote({ children }: { children: React.ReactNode }) {

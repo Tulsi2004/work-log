@@ -112,6 +112,20 @@ export function formatDuration(minutes: number): string {
   return `${sign}${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
 
+// The same duration said the way the money is worked out. Every rupee here is
+// bought per minute, so a typed "217:45" is worth seeing as the 13,065 it is.
+export function formatMinutes(minutes: number): string {
+  const total = Math.round(minutes);
+  return `${total.toLocaleString("en-IN")} min`;
+}
+
+// "217:45 = 13,065 min" — the conversion spelled out, for a field being typed.
+export function explainDuration(value: string): string | undefined {
+  if (!value.trim()) return undefined;
+  const minutes = parseDuration(value);
+  return `${formatDuration(minutes)} = ${formatMinutes(minutes)}`;
+}
+
 // A penalty taken off, or festival hours handed to you. Each one is typed as a
 // duration and carries its own direction, so the breakdown reads as arithmetic.
 export interface MinuteAdjustment {
