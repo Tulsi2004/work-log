@@ -217,7 +217,8 @@ export function CompanyTable({
                         <span className="sr-only">Open menu</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    {/* Wide enough for the salary row and its switch, not just the trigger. */}
+                    <DropdownMenuContent align="end" className="w-auto min-w-44">
                       <DropdownMenuItem onSelect={() => onEdit(employment)}>
                         <Pencil className="size-4" />
                         Edit
