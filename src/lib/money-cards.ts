@@ -34,12 +34,13 @@ export const MONEY_CARD_META: Record<MoneyCardId, CardOption> = {
   accountBalance: { label: "Account balance" },
 };
 
-// What the page showed before the cards became a choice.
+// What the page shows until someone arranges the cards themselves.
 export const DEFAULT_MONEY_CARDS: MoneyCardId[] = [
-  "received",
   "spent",
+  "received",
   "saved",
-  "entries",
+  "savingsRate",
+  "accountBalance",
 ];
 
 export const MONEY_CARDS_PREFERENCE_KEY = "moneyCards";

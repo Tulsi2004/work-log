@@ -2,8 +2,7 @@ import type { CardOption } from "@/lib/card-preferences";
 import { readCards } from "@/lib/card-preferences";
 
 // Every card the dashboard can show. The user picks which of these appear and in
-// what order; `DEFAULT_DASHBOARD_CARDS` is what a fresh account sees, and matches
-// the four cards the strip had before it was customisable.
+// what order; `DEFAULT_DASHBOARD_CARDS` is what a fresh account sees.
 
 export const DASHBOARD_CARD_IDS = [
   // Across every company
@@ -66,8 +65,8 @@ export const DASHBOARD_CARD_META: Record<DashboardCardId, DashboardCardMeta> = {
 
 export const DEFAULT_DASHBOARD_CARDS: DashboardCardId[] = [
   "totalWorkReports",
-  "totalCompanies",
   "employmentWorkReports",
+  "employmentTenure",
   "experienceMonths",
 ];
 

@@ -3,16 +3,26 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Pencil,
+  Plus,
+  Timer,
+  Trash2,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -74,6 +84,10 @@ function cycleBounds(employment: EmploymentWithCompany): { min: string; max: str
   return { min, max: max < min ? min : max };
 }
 
+// Picked in the company list to type a salary instead of reading one from a pay
+// history — for working out a colleague's pay, or a job that is not in the app.
+const CUSTOM = "CUSTOM";
+
 let adjustmentSeq = 0;
 const newAdjustment = (): MinuteAdjustment => ({
   id: `adj-${(adjustmentSeq += 1)}`,
@@ -103,13 +117,19 @@ export function SalaryPanel() {
   const [goalEdit, setGoalEdit] = useState<{ key: string; value: string } | null>(null);
   const [pfEdit, setPfEdit] = useState<{ key: string; value: string } | null>(null);
 
+  const [salaryEdit, setSalaryEdit] = useState<{ key: string; value: number } | null>(null);
+  // The custom salary is not tied to a cycle — a colleague's pay holds month to month.
+  const [customSalary, setCustomSalary] = useState<number | undefined>(undefined);
+
   const startDay = readCycleStartDay(storedStartDay);
+  const isCustom = employmentId === CUSTOM;
 
   // Nothing picked yet means the job you are in now — the one you are most
   // likely to be working a number out for.
-  const selected =
-    (employmentId ? employments?.find((e) => e.id === employmentId) : undefined) ??
-    currentEmployment(employments ?? []);
+  const selected = isCustom
+    ? undefined
+    : ((employmentId ? employments?.find((e) => e.id === employmentId) : undefined) ??
+      currentEmployment(employments ?? []));
 
   // Switching to a job that ran over different years would leave the picker on a
   // cycle that job never had, so the choice is pulled back into its range.
@@ -123,10 +143,18 @@ export function SalaryPanel() {
         : pickedMonth;
 
   const cycle = buildCycle(month, startDay);
-  const rate = selected ? rateForCycle(selected.payHistory, cycle) : undefined;
-  const payDate = selected ? payDateFor(cycle, selected.payDay) : undefined;
+  const cycleKey = `${isCustom ? CUSTOM : (selected?.id ?? "")}:${month}`;
 
-  const cycleKey = `${selected?.id ?? ""}:${month}`;
+  // The pay history's figure, unless one was typed over it on a card for this
+  // cycle. A custom salary stands in for a pay history; its PF is typed below.
+  const recorded = selected ? rateForCycle(selected.payHistory, cycle) : undefined;
+  const salaryEdited = !isCustom && !!recorded && salaryEdit?.key === cycleKey;
+  const rate: PayRate | undefined = isCustom
+    ? { actualSalary: customSalary ?? 0, pf: 0, inHandSalary: 0, effectiveFrom: "" }
+    : recorded && salaryEdit?.key === cycleKey
+      ? { ...recorded, actualSalary: salaryEdit.value }
+      : recorded;
+  const payDate = selected ? payDateFor(cycle, selected.payDay) : undefined;
   const ratePf = rate?.pf ?? 0;
   const goalDays = goalEdit?.key === cycleKey ? goalEdit.value : String(cycle.goalDays);
   const pf = pfEdit?.key === cycleKey ? pfEdit.value : ratePf ? String(ratePf) : "";
@@ -144,15 +172,29 @@ export function SalaryPanel() {
   const updateAdjustment = (id: string, patch: Partial<MinuteAdjustment>) =>
     setAdjustments((rows) => rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
+  // Every money card writes back to the one figure the rest is worked out from:
+  // a day's pay of ₹1,000 over 25 goal days is a ₹25,000 salary.
+  const setSalary = (amount: number) => {
+    const rounded = Math.round(amount * 100) / 100;
+    if (isCustom) setCustomSalary(rounded);
+    else setSalaryEdit({ key: cycleKey, value: rounded });
+  };
+  const saveSalaryVia = (perUnit: number) => (raw: string) => {
+    const amount = readAmount(raw);
+    if (amount === undefined || perUnit <= 0) return false;
+    setSalary(amount * perUnit);
+    return true;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start gap-3 rounded-xl border p-3">
         <div className="min-w-56 flex-1 space-y-1.5 sm:max-w-72">
           <Label className="text-xs text-muted-foreground">Company</Label>
           <Select
-            value={selected?.id ?? ""}
+            value={isCustom ? CUSTOM : (selected?.id ?? "")}
             onValueChange={setEmploymentId}
-            disabled={isLoading || !employments?.length}
+            disabled={isLoading}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Pick a company" />
@@ -163,6 +205,8 @@ export function SalaryPanel() {
                   {employmentLabel(employment)}
                 </SelectItem>
               ))}
+              {!!employments?.length && <SelectSeparator />}
+              <SelectItem value={CUSTOM}>Custom — type a salary</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -187,193 +231,254 @@ export function SalaryPanel() {
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
         </div>
-      ) : !selected ? (
+      ) : !selected && !isCustom ? (
         <EmptyNote>
           No companies yet — add one on the Companies page and its pay history will show up here.
         </EmptyNote>
       ) : !rate ? (
         <EmptyNote>
-          No pay rate recorded for {selected.company.name} over {cycle.label}.
+          No pay rate recorded for {selected?.company.name} over {cycle.label}.
         </EmptyNote>
       ) : (
-        <div className="grid items-start gap-4 lg:grid-cols-[1fr_24rem]">
-          <div className="space-y-5 rounded-xl border p-4">
-            <Section
-              title={`Hours for ${cycle.label}`}
-              hint="Straight off your attendance page. Typed as h:mm — 217:45 is 217 hours and 45 minutes."
-            >
-              <div className="flex flex-wrap gap-x-8 gap-y-3">
-                <DurationField label="Total hours" value={totalHours} onChange={setTotalHours} />
-                <DurationField label="Break" value={breakHours} onChange={setBreakHours} sign="−" />
-              </div>
-            </Section>
-
-            <Separator />
-
-            {/* A paid leave is never clocked, so it is paid at what a day of
-                yours averages rather than at the 8h 20m a goal day assumes. */}
-            <Section
-              title="Paid leave"
-              hint="Credited at your average daily hours — the portal's Avg Daily Hours for the cycle."
-            >
-              <div className="space-y-2.5">
-                <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
-                  <DurationField
-                    label="Avg daily hours"
-                    value={avgDailyHours}
-                    onChange={setAvgDailyHours}
-                  />
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Days</Label>
-                    <Input
-                      value={paidLeaveDays}
-                      onChange={(e) => setPaidLeaveDays(e.target.value)}
-                      inputMode="numeric"
-                      className="w-16 text-right tabular-nums"
-                    />
-                  </div>
-                </div>
-                <Working>
-                  {avgDailyHours.trim() &&
-                    `${formatMinutes(parseDuration(avgDailyHours))} × ${Number(paidLeaveDays) || 0} = `}
-                  {formatDuration(result.paidLeaveMinutes)} ={" "}
-                  {formatMinutes(result.paidLeaveMinutes)} credited
-                </Working>
-              </div>
-            </Section>
-
-            <Separator />
-
-            <Section
-              title="Penalties and extra hours"
-              hint="A late-mark taken off, or the hours credited for a festival."
-              action={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAdjustments((rows) => [...rows, newAdjustment()])}
-                >
-                  <Plus className="size-4" />
-                  Add
-                </Button>
-              }
-            >
-              {adjustments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nothing added for this cycle.</p>
-              ) : (
-                <div className="space-y-2">
-                  {adjustments.map((adjustment) => (
-                    <div key={adjustment.id} className="flex items-center gap-2">
-                      <Input
-                        value={adjustment.label}
-                        onChange={(e) => updateAdjustment(adjustment.id, { label: e.target.value })}
-                        placeholder="What for"
-                        className="flex-1"
-                      />
-                      <Select
-                        value={adjustment.direction}
-                        onValueChange={(value) =>
-                          updateAdjustment(adjustment.id, {
-                            direction: value as MinuteAdjustment["direction"],
-                          })
-                        }
-                      >
-                        <SelectTrigger className="w-26">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="add">Add</SelectItem>
-                          <SelectItem value="deduct">Deduct</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        value={adjustment.duration}
-                        onChange={(e) =>
-                          updateAdjustment(adjustment.id, { duration: e.target.value })
-                        }
-                        placeholder="h:mm"
-                        inputMode="numeric"
-                        className="w-20 text-right tabular-nums"
-                      />
-                      <span className="w-20 shrink-0 text-xs text-muted-foreground tabular-nums">
-                        {adjustment.duration.trim() &&
-                          formatMinutes(parseDuration(adjustment.duration))}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          setAdjustments((rows) => rows.filter((row) => row.id !== adjustment.id))
-                        }
-                      >
-                        <Trash2 className="size-4" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Section>
-
-            <Separator />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Section
-                title="Goal days"
-                hint={`${cycle.totalDays} days in the cycle, less ${cycle.sundays} Sundays.`}
-              >
-                <div className="space-y-2">
-                  <Input
-                    value={goalDays}
-                    onChange={(e) => setGoalEdit({ key: cycleKey, value: e.target.value })}
-                    inputMode="numeric"
-                    className="w-20 text-right tabular-nums"
-                  />
-                  <Working>
-                    × {MINUTES_PER_DAY} min = {formatDuration(result.expectedMinutes)} ={" "}
-                    {formatMinutes(result.expectedMinutes)} expected
-                  </Working>
-                </div>
-              </Section>
-
-              <Section
-                title="PF"
-                hint={
-                  ratePf
-                    ? `${formatMoney(ratePf)} on the rate in force.`
-                    : "No PF on this rate. Type one in if the cycle had any."
+        // The cards and the inputs share the left column and the ledger runs the
+        // full height of the right, so every edge on the page lines up.
+        <div className="grid gap-4 lg:grid-cols-[1fr_24rem]">
+          <div className="space-y-4">
+            {/* The rate this cycle is worked out from. It is background to the
+                answer, so it opens the page as cards, the way every other page does. */}
+            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+              <Stat
+                label="Actual salary"
+                value={
+                  isCustom && customSalary === undefined
+                    ? "Click to set"
+                    : formatMoney(result.actualSalary)
                 }
-              >
-                <Input
-                  value={pf}
-                  onChange={(e) => setPfEdit({ key: cycleKey, value: e.target.value })}
-                  inputMode="decimal"
-                  placeholder="0"
-                  className="w-28 text-right tabular-nums"
-                />
-              </Section>
+                hint={
+                  salaryEdited && recorded ? (
+                    <>
+                      Changed from {formatMoney(recorded.actualSalary)} ·{" "}
+                      <button
+                        type="button"
+                        onClick={() => setSalaryEdit(null)}
+                        className="underline underline-offset-2 hover:text-foreground"
+                      >
+                        Reset
+                      </button>
+                    </>
+                  ) : isCustom ? (
+                    "Click the amount to change it"
+                  ) : rate.effectiveFrom ? (
+                    `From ${formatDate(rate.effectiveFrom)}`
+                  ) : undefined
+                }
+                icon={Wallet}
+                edit={{
+                  initial: isCustom && customSalary === undefined ? "" : String(result.actualSalary),
+                  onSave: saveSalaryVia(1),
+                }}
+              />
+              <Stat
+                label="One day"
+                value={formatMoney(result.oneDaySalary)}
+                hint={`÷ ${result.goalDays} goal days`}
+                icon={CalendarDays}
+                edit={{
+                  initial: String(Math.round(result.oneDaySalary * 100) / 100),
+                  onSave: saveSalaryVia(result.goalDays),
+                }}
+              />
+              <Stat
+                label="Per minute"
+                value={`₹${result.perMinute.toFixed(4)}`}
+                hint={`÷ ${MINUTES_PER_DAY} min a day`}
+                icon={Timer}
+                edit={{
+                  initial: result.perMinute.toFixed(4),
+                  onSave: saveSalaryVia(MINUTES_PER_DAY * result.goalDays),
+                }}
+              />
+              {/* A full cycle is the goal days in hours, so changing it changes them. */}
+              <Stat
+                label="A full cycle"
+                value={formatDuration(result.expectedMinutes)}
+                hint={formatMinutes(result.expectedMinutes)}
+                icon={Clock}
+                edit={{
+                  initial: formatDuration(result.expectedMinutes),
+                  onSave: (raw) => {
+                    if (!/^\d+(:\d{1,2})?$/.test(raw)) return false;
+                    const minutes = parseDuration(raw);
+                    if (minutes <= 0) return false;
+                    const days = Math.round((minutes / MINUTES_PER_DAY) * 100) / 100;
+                    setGoalEdit({ key: cycleKey, value: String(days) });
+                    return true;
+                  },
+                }}
+              />
             </div>
 
-            {/* The rate is background, not an answer — it belongs at the foot of
-                the inputs rather than competing with the figure on the right. */}
-            <Separator />
-            <dl className="grid gap-x-6 gap-y-1 text-xs text-muted-foreground sm:grid-cols-2">
-              <Row
-                label={`Actual salary${rate.effectiveFrom ? `, from ${formatDate(rate.effectiveFrom)}` : ""}`}
-                value={formatMoney(result.actualSalary)}
-              />
-              <Row
-                label={`One day, ÷ ${result.goalDays} days`}
-                value={formatMoney(result.oneDaySalary)}
-              />
-              <Row
-                label={`Per minute, ÷ ${MINUTES_PER_DAY} min`}
-                value={`₹${result.perMinute.toFixed(4)}`}
-              />
-              <Row label="A full cycle" value={formatDuration(result.expectedMinutes)} />
-            </dl>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Panel>
+                <Section
+                  title={`Hours for ${cycle.label}`}
+                  hint="Straight off your attendance page. Typed as h:mm — 217:45 is 217 hours and 45 minutes."
+                >
+                  <div className="flex flex-wrap gap-x-8 gap-y-3">
+                    <DurationField label="Total hours" value={totalHours} onChange={setTotalHours} />
+                    <DurationField label="Break" value={breakHours} onChange={setBreakHours} sign="−" />
+                  </div>
+                </Section>
+              </Panel>
+
+              {/* A paid leave is never clocked, so it is paid at what a day of
+                  yours averages rather than at the 8h 20m a goal day assumes. */}
+              <Panel>
+                <Section
+                  title="Paid leave"
+                  hint="Credited at your average daily hours — the portal's Avg Daily Hours for the cycle."
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+                      <DurationField
+                        label="Avg daily hours"
+                        value={avgDailyHours}
+                        onChange={setAvgDailyHours}
+                      />
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Days</Label>
+                        <Input
+                          value={paidLeaveDays}
+                          onChange={(e) => setPaidLeaveDays(e.target.value)}
+                          inputMode="numeric"
+                          className="w-16 text-right tabular-nums"
+                        />
+                      </div>
+                    </div>
+                    <Working>
+                      {avgDailyHours.trim() &&
+                        `${formatMinutes(parseDuration(avgDailyHours))} × ${Number(paidLeaveDays) || 0} = `}
+                      {formatDuration(result.paidLeaveMinutes)} ={" "}
+                      {formatMinutes(result.paidLeaveMinutes)} credited
+                    </Working>
+                  </div>
+                </Section>
+              </Panel>
+
+              <Panel>
+                <Section
+                  title="Goal days"
+                  hint={`${cycle.totalDays} days in the cycle, less ${cycle.sundays} Sundays.`}
+                >
+                  <div className="space-y-2">
+                    <Input
+                      value={goalDays}
+                      onChange={(e) => setGoalEdit({ key: cycleKey, value: e.target.value })}
+                      inputMode="numeric"
+                      className="w-20 text-right tabular-nums"
+                    />
+                    <Working>
+                      × {MINUTES_PER_DAY} min = {formatDuration(result.expectedMinutes)} ={" "}
+                      {formatMinutes(result.expectedMinutes)} expected
+                    </Working>
+                  </div>
+                </Section>
+              </Panel>
+
+              <Panel>
+                <Section
+                  title="PF"
+                  hint={
+                    ratePf
+                      ? `${formatMoney(ratePf)} on the rate in force.`
+                      : "No PF on this rate. Type one in if the cycle had any."
+                  }
+                >
+                  <Input
+                    value={pf}
+                    onChange={(e) => setPfEdit({ key: cycleKey, value: e.target.value })}
+                    inputMode="decimal"
+                    placeholder="0"
+                    className="w-28 text-right tabular-nums"
+                  />
+                </Section>
+              </Panel>
+
+              <Panel className="md:col-span-2">
+                <Section
+                  title="Penalties and extra hours"
+                  hint="A late-mark taken off, or the hours credited for a festival."
+                  action={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAdjustments((rows) => [...rows, newAdjustment()])}
+                    >
+                      <Plus className="size-4" />
+                      Add
+                    </Button>
+                  }
+                >
+                  {adjustments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nothing added for this cycle.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {adjustments.map((adjustment) => (
+                        <div key={adjustment.id} className="flex items-center gap-2">
+                          <Input
+                            value={adjustment.label}
+                            onChange={(e) => updateAdjustment(adjustment.id, { label: e.target.value })}
+                            placeholder="What for"
+                            className="flex-1"
+                          />
+                          <Select
+                            value={adjustment.direction}
+                            onValueChange={(value) =>
+                              updateAdjustment(adjustment.id, {
+                                direction: value as MinuteAdjustment["direction"],
+                              })
+                            }
+                          >
+                            <SelectTrigger className="w-26">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="add">Add</SelectItem>
+                              <SelectItem value="deduct">Deduct</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            value={adjustment.duration}
+                            onChange={(e) =>
+                              updateAdjustment(adjustment.id, { duration: e.target.value })
+                            }
+                            placeholder="h:mm"
+                            inputMode="numeric"
+                            className="w-20 text-right tabular-nums"
+                          />
+                          <span className="w-20 shrink-0 text-xs text-muted-foreground tabular-nums">
+                            {adjustment.duration.trim() &&
+                              formatMinutes(parseDuration(adjustment.duration))}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              setAdjustments((rows) => rows.filter((row) => row.id !== adjustment.id))
+                            }
+                          >
+                            <Trash2 className="size-4" />
+                            <span className="sr-only">Remove</span>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Section>
+              </Panel>
+            </div>
           </div>
 
           <Ledger result={result} cycle={cycle} />
@@ -389,19 +494,26 @@ function Ledger({ result, cycle }: { result: SalaryCalcResult; cycle: Cycle }) {
   const difference = result.calculatedMinutes - result.expectedMinutes;
 
   return (
-    <div className="divide-y rounded-xl border lg:sticky lg:top-18">
-      <div className="p-4">
+    // Stretches to the height of the left column; the minutes take up the slack,
+    // so "In hand" always sits on the same bottom edge as the last input card.
+    <div className="flex flex-col divide-y overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+      <div className="bg-muted/40 p-4">
         <p className="text-xs text-muted-foreground">Salary for {cycle.label}</p>
         {result.hasInput ? (
           <p className="text-3xl leading-tight font-semibold tabular-nums">
             {formatMoney(result.net)}
           </p>
         ) : (
-          <p className="text-3xl leading-tight font-semibold text-muted-foreground/40">—</p>
+          <>
+            <p className="text-3xl leading-tight font-semibold text-muted-foreground/40">—</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Fill in your hours to see what lands in hand.
+            </p>
+          </>
         )}
       </div>
 
-      <div className="space-y-1 p-4 text-sm">
+      <div className="flex-1 space-y-1 p-4 text-sm">
         <p className="text-xs font-medium text-muted-foreground">Minutes</p>
         {result.minuteLines.map((line, index) => (
           <Row
@@ -474,6 +586,93 @@ function CycleStartDayField({ startDay }: { startDay: number }) {
         className="w-16 text-right tabular-nums"
       />
     </div>
+  );
+}
+
+// "₹25,000" and "25000" both read as 25000; anything else is no amount at all.
+function readAmount(raw: string): number | undefined {
+  const value = Number(raw.replace(/[₹,\s]/g, ""));
+  return raw.trim() && Number.isFinite(value) && value >= 0 ? value : undefined;
+}
+
+// The same card the other pages open with: a label, the figure, a faint icon.
+// With `edit`, clicking the figure turns it into a box: Enter or clicking away
+// saves, Escape puts it back. `onSave` says whether it could read what was typed.
+function Stat({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  edit,
+}: {
+  label: string;
+  value: string;
+  hint?: React.ReactNode;
+  icon: LucideIcon;
+  edit?: { initial: string; onSave: (raw: string) => boolean };
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+
+  const save = () => {
+    if (draft === null || !edit) return;
+    const raw = draft.trim();
+    setDraft(null);
+    if (raw === "" || raw === edit.initial) return;
+    if (!edit.onSave(raw)) toast.error(`That doesn't read as a ${label.toLowerCase()}`);
+  };
+
+  return (
+    <Card>
+      <CardContent className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm text-muted-foreground">{label}</p>
+          {draft !== null ? (
+            <Input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onBlur={save}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") save();
+                if (e.key === "Escape") setDraft(null);
+              }}
+              inputMode="decimal"
+              aria-label={label}
+              className="my-0.5 h-8 w-36 text-lg font-semibold tabular-nums"
+            />
+          ) : edit ? (
+            <button
+              type="button"
+              onClick={() => setDraft(edit.initial)}
+              title={`Click to change the ${label.toLowerCase()}`}
+              className={cn(
+                "group flex items-center gap-1.5 text-left leading-tight font-semibold tabular-nums",
+                edit.initial === "" ? "py-1 text-base text-muted-foreground" : "text-2xl"
+              )}
+            >
+              <span className="decoration-muted-foreground/50 decoration-dashed underline-offset-4 group-hover:underline">
+                {value}
+              </span>
+              <Pencil className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+            </button>
+          ) : (
+            <p className="text-2xl leading-tight font-semibold tabular-nums">{value}</p>
+          )}
+          {hint && <p className="mt-0.5 truncate text-xs text-muted-foreground">{hint}</p>}
+        </div>
+        <Icon className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// One group of inputs, in its own card.
+function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <Card className={className}>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }
 

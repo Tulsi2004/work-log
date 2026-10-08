@@ -36,8 +36,8 @@ export const COMPANY_CARD_META: Record<CompanyCardId, CardOption> = {
 
 export const DEFAULT_COMPANY_CARDS: CompanyCardId[] = [
   "companies",
-  "stints",
   "experienceMonths",
+  "lastHike",
   "currentInHand",
 ];
 
