@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { TulsiLogo } from "./tulsi-logo";
 import { ThemeToggle } from "./theme-toggle";
 import { PlannerBadge } from "./planner-badge";
+import { CalculatorPopover } from "./calculator-popover";
+import { useEmployments } from "@/hooks/use-employments";
 
 interface NavLink {
   href: string;
@@ -36,6 +38,10 @@ const NAV_LINKS: NavLink[] = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { data: employments } = useEmployments();
+  // Salary only shows once it has been switched on for one of your companies.
+  const showSalary = !!employments?.some((employment) => employment.company.salaryCalculator);
+  const links = NAV_LINKS.filter((link) => link.href !== "/salary" || showSalary);
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -45,7 +51,7 @@ export function Navbar() {
       </Link>
 
       <nav className="ml-3 flex items-center gap-1">
-        {NAV_LINKS.map(({ href, label, icon: Icon, badge: Badge }) => (
+        {links.map(({ href, label, icon: Icon, badge: Badge }) => (
           <Button
             key={href}
             variant="ghost"
@@ -64,6 +70,7 @@ export function Navbar() {
 
       <div className="flex-1" />
 
+      <CalculatorPopover />
       <ThemeToggle />
 
       <Button variant="ghost" size="icon" asChild>

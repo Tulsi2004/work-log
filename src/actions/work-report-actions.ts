@@ -34,6 +34,18 @@ async function findOrCreateCompany(
   return client.company.create({ data: { userId, name, ...details } });
 }
 
+export async function setSalaryCalculator(companyId: string, enabled: boolean) {
+  const userId = await requireUserId();
+  const { count } = await prisma.company.updateMany({
+    where: { id: companyId, userId },
+    data: { salaryCalculator: enabled === true },
+  });
+  if (count === 0) {
+    throw new Error("Company not found");
+  }
+  return { companyId };
+}
+
 async function deleteCompanyIfOrphaned(client: Prisma.TransactionClient, companyId: string) {
   const remainingEmployments = await client.employment.count({ where: { companyId } });
   if (remainingEmployments === 0) {

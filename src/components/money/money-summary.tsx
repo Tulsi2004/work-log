@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -11,17 +13,22 @@ import {
   Receipt,
   Settings2,
   Trophy,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
 import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
+import { usePreference } from "@/hooks/use-preference";
+import { setPreference } from "@/actions/preference-actions";
 import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { cn } from "@/lib/utils";
 import { isKeptCategory, spendCategoryMeta, sumMoney } from "@/lib/money";
 import {
+  ACCOUNT_BALANCE_PREFERENCE_KEY,
   DEFAULT_MONEY_CARDS,
   MONEY_CARDS_PREFERENCE_KEY,
   MONEY_CARD_IDS,
@@ -52,6 +59,7 @@ const CARD_ICONS: Record<MoneyCardId, LucideIcon> = {
   spendRate: PieChart,
   topCategory: PieChart,
   lastReceived: CalendarDays,
+  accountBalance: Wallet,
 };
 
 // A share of what came in — meaningless until something has.
@@ -59,8 +67,66 @@ function rate(part: number, whole: number): string {
   return whole > 0 ? `${Math.round((part / whole) * 100)}%` : "—";
 }
 
+// Click the number to type a new one; Enter or clicking away saves, Escape cancels.
+function AccountBalanceValue() {
+  const queryClient = useQueryClient();
+  const { data } = usePreference(ACCOUNT_BALANCE_PREFERENCE_KEY);
+  const balance = typeof data === "number" ? data : undefined;
+  // null while just showing the number.
+  const [draft, setDraft] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (value: number) => setPreference(ACCOUNT_BALANCE_PREFERENCE_KEY, value),
+    onSuccess: () => {
+      toast.success("Balance saved");
+      queryClient.invalidateQueries({ queryKey: ["preference", ACCOUNT_BALANCE_PREFERENCE_KEY] });
+      setDraft(null);
+    },
+    onError: (error: Error) => toast.error(error.message || "Failed to save balance"),
+  });
+
+  const save = () => {
+    if (draft === null || mutation.isPending) return;
+    const value = Number(draft);
+    // Blank, junk or unchanged just closes the box.
+    if (draft.trim() === "" || !Number.isFinite(value) || value === balance) return setDraft(null);
+    mutation.mutate(value);
+  };
+
+  if (draft !== null) {
+    return (
+      <Input
+        autoFocus
+        type="number"
+        step="0.01"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setDraft(null);
+        }}
+        disabled={mutation.isPending}
+        aria-label="Current account balance"
+        className="mt-1 h-8 w-36"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setDraft(balance?.toString() ?? "")}
+      title="Click to update"
+      className={cn("hover:underline", balance === undefined && "text-base text-muted-foreground")}
+    >
+      {balance === undefined ? "Click to set" : formatMoney(balance)}
+    </button>
+  );
+}
+
 function cardValue(
-  id: MoneyCardId,
+  id: Exclude<MoneyCardId, "accountBalance">,
   totals: SalaryTotals | undefined,
   entries: SalaryEntryWithEmployment[]
 ): string {
@@ -139,7 +205,13 @@ export function MoneySummary({
                       <Skeleton className="mt-1 h-7 w-20" />
                     ) : (
                       <p className="text-2xl leading-tight wrap-break-word font-semibold">
-                        {own ? own.display : cardValue(id as MoneyCardId, totals, entries)}
+                        {own ? (
+                          own.display
+                        ) : id === "accountBalance" ? (
+                          <AccountBalanceValue />
+                        ) : (
+                          cardValue(id as Exclude<MoneyCardId, "accountBalance">, totals, entries)
+                        )}
                       </p>
                     )}
                   </div>

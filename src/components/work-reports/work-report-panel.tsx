@@ -252,14 +252,21 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
           ) : visibleReports.length === 0 ? (
             <p className="text-sm text-muted-foreground">No work reports match the current filters.</p>
           ) : (
-            <WorkReportTable
-              reports={visibleReports}
-              onEdit={(r) => {
-                setEditingReport(r);
-                setFormOpen(true);
-              }}
-              onDelete={(r) => setDeletingReport(r)}
-            />
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground tabular-nums">{visibleReports.length}</span>{" "}
+                {visibleReports.length === 1 ? "entry" : "entries"}
+                {hasActiveFilters && " matching the filters"}
+              </p>
+              <WorkReportTable
+                reports={visibleReports}
+                onEdit={(r) => {
+                  setEditingReport(r);
+                  setFormOpen(true);
+                }}
+                onDelete={(r) => setDeletingReport(r)}
+              />
+            </div>
           )}
         </div>
       </div>

@@ -58,7 +58,8 @@ interface DayPlanFormDialogProps {
 
 function toDefaultValues(
   plan?: DayPlanWithEmployment,
-  defaultEmploymentId?: string
+  defaultEmploymentId?: string,
+  defaultLabel: string = DEFAULT_PLAN_LABEL
 ): DayPlanInput {
   return {
     date: plan?.date
@@ -66,7 +67,7 @@ function toDefaultValues(
       : new Date().toISOString().slice(0, 10),
     title: plan?.title ?? "",
     detail: plan?.detail ?? "",
-    label: plan?.label ?? DEFAULT_PLAN_LABEL,
+    label: plan?.label ?? defaultLabel,
     employmentId: plan ? plan.employmentId ?? "" : defaultEmploymentId ?? "",
     isDone: plan?.isDone ?? false,
     // Blanks for fields the record has no value for are filled in by CustomFieldInputs.
@@ -83,15 +84,19 @@ export function DayPlanFormDialog({
   const isEditing = !!plan;
   const refresh = useRefresh();
   const { data: employments } = useEmployments();
+  const labelLooks = usePlanLabelLooks();
+  // A new to-do starts as your "Task" label when you have one, General otherwise.
+  const defaultLabel =
+    labelLooks.find((look) => look.name.trim().toLowerCase() === "task")?.id ?? DEFAULT_PLAN_LABEL;
 
   const form = useForm<DayPlanInput>({
     resolver: zodResolver(dayPlanSchema),
-    defaultValues: toDefaultValues(plan, defaultEmploymentId),
+    defaultValues: toDefaultValues(plan, defaultEmploymentId, defaultLabel),
   });
 
   useEffect(() => {
-    if (open) form.reset(toDefaultValues(plan, defaultEmploymentId));
-  }, [open, plan, defaultEmploymentId, form]);
+    if (open) form.reset(toDefaultValues(plan, defaultEmploymentId, defaultLabel));
+  }, [open, plan, defaultEmploymentId, defaultLabel, form]);
 
   const dateValue = form.watch("date");
 
@@ -112,7 +117,6 @@ export function DayPlanFormDialog({
   });
 
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const labelLooks = usePlanLabelLooks();
   const deleteMutation = useMutation({
     mutationFn: () => deleteDayPlan(plan!.id),
     onSuccess: () => {

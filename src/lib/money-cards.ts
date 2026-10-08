@@ -15,6 +15,7 @@ export const MONEY_CARD_IDS = [
   "spendRate",
   "topCategory",
   "lastReceived",
+  "accountBalance",
 ] as const;
 
 export type MoneyCardId = (typeof MONEY_CARD_IDS)[number];
@@ -30,6 +31,7 @@ export const MONEY_CARD_META: Record<MoneyCardId, CardOption> = {
   spendRate: { label: "Spend rate" },
   topCategory: { label: "Biggest category" },
   lastReceived: { label: "Last received" },
+  accountBalance: { label: "Account balance" },
 };
 
 // What the page showed before the cards became a choice.
@@ -41,6 +43,10 @@ export const DEFAULT_MONEY_CARDS: MoneyCardId[] = [
 ];
 
 export const MONEY_CARDS_PREFERENCE_KEY = "moneyCards";
+
+// The one card typed in by hand — the bank knows the balance, the entries don't —
+// so it ignores the filters and keeps its number under its own preference.
+export const ACCOUNT_BALANCE_PREFERENCE_KEY = "accountBalance";
 
 export function readMoneyCards(value: unknown): MoneyCardId[] {
   return readCards(value, MONEY_CARD_IDS, DEFAULT_MONEY_CARDS);

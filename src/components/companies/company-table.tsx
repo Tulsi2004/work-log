@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Calculator, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -12,10 +12,12 @@ import {
 import { SortableTableHead } from "@/components/ui/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -29,6 +31,7 @@ interface CompanyTableProps {
   employments: EmploymentListItem[];
   onEdit: (employment: EmploymentListItem) => void;
   onDelete: (employment: EmploymentListItem) => void;
+  onToggleSalaryCalculator: (employment: EmploymentListItem) => void;
 }
 
 // "10th", "1st", "22nd" — how a pay day reads in a sentence.
@@ -38,7 +41,12 @@ function ordinal(day: number): string {
   return `${day}${["th", "st", "nd", "rd"][day % 10] ?? "th"}`;
 }
 
-export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProps) {
+export function CompanyTable({
+  employments,
+  onEdit,
+  onDelete,
+  onToggleSalaryCalculator,
+}: CompanyTableProps) {
   // Empty by default, so the table keeps exactly the columns it always had.
   const { data: customFields = [] } = useCustomFields("EMPLOYMENT");
 
@@ -214,6 +222,22 @@ export function CompanyTable({ employments, onEdit, onDelete }: CompanyTableProp
                         <Pencil className="size-4" />
                         Edit
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="whitespace-nowrap"
+                        onSelect={() => onToggleSalaryCalculator(employment)}
+                      >
+                        <Calculator className="size-4" />
+                        Salary calculator
+                        {/* Only shows the state; the whole row is what toggles it. */}
+                        <Switch
+                          size="sm"
+                          checked={employment.company.salaryCalculator}
+                          tabIndex={-1}
+                          aria-hidden
+                          className="pointer-events-none ml-auto"
+                        />
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem variant="destructive" onSelect={() => onDelete(employment)}>
                         <Trash2 className="size-4" />
                         Delete

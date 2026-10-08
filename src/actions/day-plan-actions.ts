@@ -49,7 +49,7 @@ export async function createDayPlan(input: DayPlanInput) {
   const label = await requireLabel(userId, data.label);
 
   const plan = await prisma.dayPlan.create({
-    data: { ...toDayPlanData(data, employmentId, label), userId },
+    data: { ...toDayPlanData(data, employmentId, label), userId, doneAt: data.isDone ? new Date() : null },
   });
 
   await saveCustomValues(prisma, userId, "DAY_PLAN", plan.id, data.customValues);
@@ -66,11 +66,16 @@ export async function updateDayPlan(id: string, input: DayPlanInput) {
 
   const result = await prisma.dayPlan.updateMany({
     where: { id, userId },
-    data: toDayPlanData(data, employmentId, label),
+    data: { ...toDayPlanData(data, employmentId, label), ...(data.isDone ? {} : { doneAt: null }) },
   });
 
   if (result.count === 0) {
     throw new Error("To-do not found");
+  }
+
+  // Ticked in the edit form: stamp it now, unless it was already done earlier.
+  if (data.isDone) {
+    await prisma.dayPlan.updateMany({ where: { id, userId, doneAt: null }, data: { doneAt: new Date() } });
   }
 
   await saveCustomValues(prisma, userId, "DAY_PLAN", id, data.customValues);
@@ -84,7 +89,7 @@ export async function setDayPlanDone(id: string, isDone: boolean) {
 
   const result = await prisma.dayPlan.updateMany({
     where: { id, userId },
-    data: { isDone },
+    data: { isDone, doneAt: isDone ? new Date() : null },
   });
 
   if (result.count === 0) {

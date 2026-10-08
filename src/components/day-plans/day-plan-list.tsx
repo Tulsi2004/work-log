@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { planLabelLook } from "@/lib/plan-labels";
 import { usePlanLabelLooks } from "@/hooks/use-plan-labels";
-import { formatDate, formatDay } from "@/utils/format";
+import { formatDate, formatDateTime, formatDay } from "@/utils/format";
 import { CustomFieldValueList } from "@/components/custom-fields/custom-field-values";
 import type { DayPlanWithEmployment } from "@/types";
 
@@ -159,6 +159,11 @@ export function DayPlanList({ plans, onEdit, onDelete, onToggle }: DayPlanListPr
                         {plan.employment && (
                           <span className="text-xs text-muted-foreground">
                             {plan.employment.company.name}
+                          </span>
+                        )}
+                        {plan.isDone && plan.doneAt && (
+                          <span className="text-xs text-muted-foreground">
+                            · Done {formatDateTime(plan.doneAt)}
                           </span>
                         )}
                       </div>

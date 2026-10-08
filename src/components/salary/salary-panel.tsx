@@ -83,7 +83,9 @@ const newAdjustment = (): MinuteAdjustment => ({
 });
 
 export function SalaryPanel() {
-  const { data: employments, isLoading } = useEmployments();
+  const { data: allEmployments, isLoading } = useEmployments();
+  // Only the companies the calculator was switched on for.
+  const employments = allEmployments?.filter((employment) => employment.company.salaryCalculator);
   const { data: storedStartDay } = usePreference(CYCLE_START_DAY_PREFERENCE_KEY);
 
   const [employmentId, setEmploymentId] = useState<string | undefined>(undefined);
@@ -144,7 +146,7 @@ export function SalaryPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3">
+      <div className="flex flex-wrap items-start gap-3 rounded-xl border p-3">
         <div className="min-w-56 flex-1 space-y-1.5 sm:max-w-72">
           <Label className="text-xs text-muted-foreground">Company</Label>
           <Select
@@ -181,7 +183,7 @@ export function SalaryPanel() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+        <div className="grid gap-4 lg:grid-cols-[1fr_24rem]">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
         </div>
@@ -194,7 +196,7 @@ export function SalaryPanel() {
           No pay rate recorded for {selected.company.name} over {cycle.label}.
         </EmptyNote>
       ) : (
-        <div className="grid items-start gap-4 lg:grid-cols-[1fr_22rem]">
+        <div className="grid items-start gap-4 lg:grid-cols-[1fr_24rem]">
           <div className="space-y-5 rounded-xl border p-4">
             <Section
               title={`Hours for ${cycle.label}`}

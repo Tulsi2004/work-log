@@ -19,7 +19,7 @@ import { CompanyTable } from "@/components/companies/company-table";
 import { CompanySummary } from "@/components/companies/company-summary";
 import { EmploymentFormDialog } from "@/components/work-reports/employment-form-dialog";
 import { useEmployments } from "@/hooks/use-employments";
-import { deleteEmployment } from "@/actions/work-report-actions";
+import { deleteEmployment, setSalaryCalculator } from "@/actions/work-report-actions";
 import { EMPLOYMENT_TYPES } from "@/lib/validations/work-report";
 import { formatEnumLabel } from "@/utils/format";
 import type { EmploymentListItem } from "@/types";
@@ -89,6 +89,16 @@ export function CompanyPanel() {
     onError: (error: Error) => toast.error(error.message || "Failed to remove company"),
   });
 
+  const salaryCalculatorMutation = useMutation({
+    mutationFn: (company: { id: string; enabled: boolean }) =>
+      setSalaryCalculator(company.id, company.enabled),
+    onSuccess: (_result, { enabled }) => {
+      toast.success(enabled ? "Salary calculator turned on" : "Salary calculator turned off");
+      refresh("employment");
+    },
+    onError: (error: Error) => toast.error(error.message || "Failed to update the salary calculator"),
+  });
+
   return (
     <div className="space-y-4">
       {/* The cards read off the filtered rows, so narrowing the table narrows them too. */}
@@ -156,6 +166,12 @@ export function CompanyPanel() {
               employments={visible}
               onEdit={(employment) => openForm(employment)}
               onDelete={(employment) => setDeleting(employment)}
+              onToggleSalaryCalculator={(employment) =>
+                salaryCalculatorMutation.mutate({
+                  id: employment.company.id,
+                  enabled: !employment.company.salaryCalculator,
+                })
+              }
             />
           )}
         </div>
