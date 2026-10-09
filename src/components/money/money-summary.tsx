@@ -10,6 +10,7 @@ import {
   Coins,
   Landmark,
   PieChart,
+  PiggyBank,
   Receipt,
   Settings2,
   Trophy,
@@ -60,6 +61,7 @@ const CARD_ICONS: Record<MoneyCardId, LucideIcon> = {
   topCategory: PieChart,
   lastReceived: CalendarDays,
   accountBalance: Wallet,
+  pf: PiggyBank,
 };
 
 // A share of what came in — meaningless until something has.
@@ -159,6 +161,8 @@ function cardValue(
     // Entries come back newest first.
     case "lastReceived":
       return entries.length ? formatDate(entries[0].date) : "—";
+    case "pf":
+      return formatMoney(totals?.pf ?? 0);
   }
 }
 

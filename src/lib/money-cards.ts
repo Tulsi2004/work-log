@@ -16,6 +16,7 @@ export const MONEY_CARD_IDS = [
   "topCategory",
   "lastReceived",
   "accountBalance",
+  "pf",
 ] as const;
 
 export type MoneyCardId = (typeof MONEY_CARD_IDS)[number];
@@ -32,6 +33,7 @@ export const MONEY_CARD_META: Record<MoneyCardId, CardOption> = {
   topCategory: { label: "Biggest category" },
   lastReceived: { label: "Last received" },
   accountBalance: { label: "Account balance" },
+  pf: { label: "Total PF" },
 };
 
 // What the page shows until someone arranges the cards themselves.

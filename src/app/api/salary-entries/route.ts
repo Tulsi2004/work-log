@@ -9,7 +9,7 @@ import {
 import { readCustomFilters } from "@/lib/custom-field-params";
 import { parseSpends, sumMoney, sumSaved, sumSpent, toMoney, type SalarySpend } from "@/lib/money";
 import type { Prisma } from "@prisma/client";
-import type { SalaryEntryWithEmployment } from "@/types";
+import { payRateOn, type SalaryEntryWithEmployment } from "@/types";
 
 export interface SalaryTotals {
   received: number;
@@ -18,6 +18,8 @@ export interface SalaryTotals {
   spent: number;
   saved: number;
   count: number;
+  // PF the paying companies kept back — never received, so it is not in `received`.
+  pf: number;
   // Every category the filtered entries actually spent on, biggest first.
   byCategory: { category: string; amount: number }[];
 }
@@ -98,11 +100,22 @@ export async function GET(request: NextRequest) {
   const spent = sumSpent(spends);
   const saved = sumSaved(spends);
 
+  // PF never reaches your hands, so no entry records it — it is read off the
+  // company's pay history: the rate in force for each month that company paid.
+  // ponytail: one PF per company per month, so a bonus-only month still counts one.
+  const pfByMonth = new Map<string, number>();
+  for (const entry of matching) {
+    if (!entry.employment) continue;
+    const day = entry.date.toISOString().slice(0, 10);
+    pfByMonth.set(`${entry.employmentId}:${day.slice(0, 7)}`, toMoney(payRateOn(entry.employment.payHistory, day)?.pf));
+  }
+
   const totals: SalaryTotals = {
     received,
     spent,
     saved,
     count: matching.length,
+    pf: sumMoney([...pfByMonth.values()]),
     byCategory: categoryTotals(spends),
   };
 
