@@ -101,13 +101,25 @@ export async function GET(request: NextRequest) {
   const saved = sumSaved(spends);
 
   // PF never reaches your hands, so no entry records it — it is read off the
-  // company's pay history: the rate in force for each month that company paid.
+  // company's pay history. Pay lands a month in arrears (February's comes in
+  // March), so a salary's PF is the rate in force over the month before it was
+  // paid, and the company deposits it by the 15th of the month it was paid —
+  // until then it is left out, so the card matches the EPF passbook rather than
+  // running a month ahead of it.
   // ponytail: one PF per company per month, so a bonus-only month still counts one.
+  // ponytail: assumes the company deposits by the due date; a late one reads early.
+  const today = new Date().toISOString().slice(0, 10);
   const pfByMonth = new Map<string, number>();
   for (const entry of matching) {
     if (!entry.employment) continue;
-    const day = entry.date.toISOString().slice(0, 10);
-    pfByMonth.set(`${entry.employmentId}:${day.slice(0, 7)}`, toMoney(payRateOn(entry.employment.payHistory, day)?.pf));
+    const paidMonth = entry.date.toISOString().slice(0, 7);
+    if (`${paidMonth}-15` > today) continue;
+    // Day 0 of the paid month is the last day of the month the pay is for.
+    const workedUntil = new Date(Date.UTC(entry.date.getUTCFullYear(), entry.date.getUTCMonth(), 0));
+    pfByMonth.set(
+      `${entry.employmentId}:${paidMonth}`,
+      toMoney(payRateOn(entry.employment.payHistory, workedUntil.toISOString().slice(0, 10))?.pf)
+    );
   }
 
   const totals: SalaryTotals = {
