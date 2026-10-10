@@ -32,11 +32,13 @@ function isCurrent(employment: EmploymentListItem): boolean {
   return !employment.until || new Date(employment.until) >= new Date();
 }
 
-export function CompanyPanel() {
+// `initialSearch` comes from the URL (?q=), where the search box in the navbar
+// sends you — the page opens already narrowed to what you searched for.
+export function CompanyPanel({ initialSearch = "" }: { initialSearch?: string }) {
   const refresh = useRefresh();
   const { data: employments, isLoading } = useEmployments();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [employmentType, setEmploymentType] = useState(ALL);
 

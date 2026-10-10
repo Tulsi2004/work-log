@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
@@ -19,6 +19,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TULSI",
   description: "Daily work reports, right on your dashboard.",
+  // iPhones ignore most of the manifest; this is what makes "Add to Home
+  // Screen" open full screen under the TULSI name there.
+  appleWebApp: { capable: true, title: "TULSI", statusBarStyle: "default" },
+};
+
+// The phone's status bar while the installed app is open.
+export const viewport: Viewport = {
+  themeColor: "#2c3a75",
 };
 
 export default function RootLayout({

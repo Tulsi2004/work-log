@@ -120,6 +120,32 @@ export function toMoney(value: unknown): number {
   return Number.isFinite(amount) ? roundMoney(amount) : 0;
 }
 
+// What an investment spend actually is. Only the INVESTMENT category carries
+// one — it is what turns "₹50,000 Investment" into "₹50,000 FD, matures in May".
+export const INVESTMENT_TYPES = [
+  "FD",
+  "RD",
+  "MUTUAL_FUND",
+  "SIP",
+  "STOCKS",
+  "GOLD",
+  "PPF",
+  "OTHER",
+] as const;
+
+export type InvestmentType = (typeof INVESTMENT_TYPES)[number];
+
+export const INVESTMENT_TYPE_NAMES: Record<InvestmentType, string> = {
+  FD: "Fixed deposit",
+  RD: "Recurring deposit",
+  MUTUAL_FUND: "Mutual fund",
+  SIP: "SIP",
+  STOCKS: "Stocks",
+  GOLD: "Gold",
+  PPF: "PPF",
+  OTHER: "Other",
+};
+
 // One line of "what I did with that money", stored inside `SalaryEntry.spends`.
 // A type alias rather than an interface, so Prisma accepts an array of these
 // straight into the Json column.
@@ -127,10 +153,19 @@ export type SalarySpend = {
   what: string;
   amount: number;
   category: SpendCategoryValue;
+  // Investments only, both optional: what kind it is and the day it pays back
+  // (yyyy-MM-dd) — an FD has one, a mutual fund usually does not.
+  investmentType?: InvestmentType;
+  maturesOn?: string;
 };
 
 const isCategory = (value: unknown): value is SpendCategoryValue =>
   typeof value === "string" && (SPEND_CATEGORIES as readonly string[]).includes(value);
+
+const isInvestmentType = (value: unknown): value is InvestmentType =>
+  typeof value === "string" && (INVESTMENT_TYPES as readonly string[]).includes(value);
+
+const isDay = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 
 // `spends` is a Json column, so nothing about its shape is guaranteed — an entry
 // written before a category existed still has to read back cleanly.
@@ -141,14 +176,27 @@ export function parseSpends(value: unknown): SalarySpend[] {
     const spend = raw as Record<string, unknown>;
     const what = typeof spend.what === "string" ? spend.what : "";
     if (!what.trim()) return [];
+    const category = isCategory(spend.category) ? spend.category : "OTHER";
     return [
       {
         what,
         amount: toMoney(spend.amount),
-        category: isCategory(spend.category) ? spend.category : "OTHER",
+        category,
+        // Details left over from when a spend was an investment are dropped
+        // once it is recategorised, so they never surface somewhere odd.
+        ...(category === "INVESTMENT" && isInvestmentType(spend.investmentType)
+          ? { investmentType: spend.investmentType }
+          : {}),
+        ...(category === "INVESTMENT" && isDay(spend.maturesOn) ? { maturesOn: spend.maturesOn } : {}),
       },
     ];
   });
+}
+
+// An investment with a maturity date that has passed has paid back — into a
+// bank account, whose typed-in balance already holds it.
+export function hasMatured(spend: SalarySpend, today: string): boolean {
+  return !!spend.maturesOn && spend.maturesOn <= today;
 }
 
 // Everything the entry accounts for, spent or kept.

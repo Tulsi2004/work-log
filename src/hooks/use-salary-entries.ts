@@ -15,6 +15,10 @@ export interface SalaryEntryFilters {
   customFilters?: Record<string, string>;
 }
 
+// No filters at all — the same query key the money page starts on, so a card or
+// tab that needs everything shares that fetch rather than making its own.
+export const ALL_ENTRIES: SalaryEntryFilters = { search: "", customFilters: {} };
+
 export function useSalaryEntries(filters: SalaryEntryFilters) {
   return useQuery({
     queryKey: ["salary-entries", filters],

@@ -31,6 +31,10 @@ function toSpends(input: SalaryEntryInput["spends"]): SalarySpend[] {
       what: spend.what.trim(),
       amount: roundMoney(Number(spend.amount)),
       category: spend.category,
+      ...(spend.category === "INVESTMENT" && spend.investmentType
+        ? { investmentType: spend.investmentType }
+        : {}),
+      ...(spend.category === "INVESTMENT" && spend.maturesOn ? { maturesOn: spend.maturesOn } : {}),
     }));
 }
 

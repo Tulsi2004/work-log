@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { useHiddenSuggestions } from "@/hooks/use-suggestions";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -20,17 +21,23 @@ interface AutocompleteInputProps {
   placeholder?: string;
   suggestions: string[];
   isLoadingSuggestions?: boolean;
+  // Names the list so each suggestion gets a × that hides it for good (past
+  // records keep the value). Without it the list is read-only.
+  removableAs?: string;
 }
 
 export function AutocompleteInput({
   value,
   onChange,
   placeholder = "Type to search…",
-  suggestions,
+  suggestions: allSuggestions,
   isLoadingSuggestions = false,
+  removableAs,
 }: AutocompleteInputProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+  const { hidden, hide } = useHiddenSuggestions(removableAs);
+  const suggestions = allSuggestions.filter((item) => !hidden.includes(item));
 
   useEffect(() => {
     setInputValue(value);
@@ -94,7 +101,23 @@ export function AutocompleteInput({
                         value === item ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {item}
+                    <span className="flex-1 truncate">{item}</span>
+                    {removableAs && (
+                      <button
+                        type="button"
+                        // Its own click, not the row's: removing must not also pick it.
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          hide(item);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        aria-label={`Remove ${item} from suggestions`}
+                        title="Remove from suggestions"
+                        className="-mr-1 rounded-sm p-0.5 text-muted-foreground opacity-60 hover:bg-muted-foreground/15 hover:text-foreground hover:opacity-100"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>

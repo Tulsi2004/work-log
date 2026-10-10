@@ -17,7 +17,15 @@ import {
 import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { cn } from "@/lib/utils";
-import { SPEND_CATEGORIES, SPEND_CATEGORY_META, isKeptCategory, sumMoney } from "@/lib/money";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  INVESTMENT_TYPES,
+  INVESTMENT_TYPE_NAMES,
+  SPEND_CATEGORIES,
+  SPEND_CATEGORY_META,
+  isKeptCategory,
+  sumMoney,
+} from "@/lib/money";
 import { formatMoney } from "@/utils/format";
 import type { SalaryEntryInput } from "@/lib/validations/salary-entry";
 
@@ -50,7 +58,13 @@ export function SpendListFields() {
   const saved = sumMoney(spends.filter((s) => isKeptCategory(s?.category)).map(amountOf));
 
   const addSpend = () => {
-    append({ what: "", amount: "", category: spends[spends.length - 1]?.category ?? DEFAULT_CATEGORY });
+    append({
+      what: "",
+      amount: "",
+      category: spends[spends.length - 1]?.category ?? DEFAULT_CATEGORY,
+      investmentType: "",
+      maturesOn: "",
+    });
   };
 
   return (
@@ -106,63 +120,108 @@ export function SpendListFields() {
             <GripVertical className="size-4" />
           </button>
 
-          <div className="flex flex-1 flex-col gap-2 sm:flex-row">
-            <FormField
-              control={form.control}
-              name={`spends.${index}.what`}
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <AutocompleteInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="e.g. Rent"
-                      suggestions={whatSuggestions}
-                      isLoadingSuggestions={isLoadingWhat}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`spends.${index}.amount`}
-              render={({ field }) => (
-                <FormItem className="sm:w-28">
-                  <FormControl>
-                    <Input type="number" min="0" step="0.01" placeholder="Amount" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`spends.${index}.category`}
-              render={({ field }) => (
-                <FormItem className="sm:w-40">
-                  <Select value={field.value} onValueChange={field.onChange}>
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <FormField
+                control={form.control}
+                name={`spends.${index}.what`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
                     <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <AutocompleteInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="e.g. Rent"
+                        suggestions={whatSuggestions}
+                        removableAs="spend"
+                        isLoadingSuggestions={isLoadingWhat}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {SPEND_CATEGORIES.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          <span className="flex items-center gap-2">
-                            <span className={cn("size-2.5 rounded-full", SPEND_CATEGORY_META[value].dot)} />
-                            {SPEND_CATEGORY_META[value].name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`spends.${index}.amount`}
+                render={({ field }) => (
+                  <FormItem className="sm:w-28">
+                    <FormControl>
+                      <Input type="number" min="0" step="0.01" placeholder="Amount" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`spends.${index}.category`}
+                render={({ field }) => (
+                  <FormItem className="sm:w-40">
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SPEND_CATEGORIES.map((value) => (
+                          <SelectItem key={value} value={value}>
+                            <span className="flex items-center gap-2">
+                              <span className={cn("size-2.5 rounded-full", SPEND_CATEGORY_META[value].dot)} />
+                              {SPEND_CATEGORY_META[value].name}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* An investment says what it is and when it pays back — both optional. */}
+            {spends[index]?.category === "INVESTMENT" && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <FormField
+                  control={form.control}
+                  name={`spends.${index}.investmentType`}
+                  render={({ field }) => (
+                    <FormItem className="sm:w-48">
+                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="w-full" aria-label="Type of investment">
+                            <SelectValue placeholder="Type of investment" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {INVESTMENT_TYPES.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {INVESTMENT_TYPE_NAMES[value]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`spends.${index}.maturesOn`}
+                  render={({ field }) => (
+                    <FormItem className="sm:w-48">
+                      <DatePicker
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Matures on (optional)"
+                        className="w-full"
+                      />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
           </div>
 
           <div className="mt-0.5 flex shrink-0 items-center">

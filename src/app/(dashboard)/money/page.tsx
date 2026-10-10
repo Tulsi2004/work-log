@@ -1,6 +1,15 @@
 import { MoneyPanel } from "@/components/money/money-panel";
 
-export default function MoneyPage() {
+export default async function MoneyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  // What the navbar search was looking for; the panel opens already filtered to it,
+  // and remounts (key) when a new search lands on the page it is already on.
+  const { q } = await searchParams;
+  const search = typeof q === "string" ? q : "";
+
   return (
     <div className="space-y-4">
       <div>
@@ -9,7 +18,7 @@ export default function MoneyPage() {
           Salary and any other money you received, and where each rupee of it went.
         </p>
       </div>
-      <MoneyPanel />
+      <MoneyPanel key={search} initialSearch={search} />
     </div>
   );
 }

@@ -106,6 +106,7 @@ export function TaskListFields({
               onChange={(v) => applyToAll("projectName", v)}
               placeholder="Project name — all tasks"
               suggestions={projectSuggestions}
+              removableAs="projectName"
               isLoadingSuggestions={isLoadingProjectSuggestions}
             />
           </div>
@@ -115,6 +116,7 @@ export function TaskListFields({
               onChange={(v) => applyToAll("assignedBy", v)}
               placeholder="Assigned by — all tasks"
               suggestions={assignedBySuggestions}
+              removableAs="assignedBy"
               isLoadingSuggestions={isLoadingAssignedBySuggestions}
             />
           </div>
@@ -181,6 +183,7 @@ export function TaskListFields({
                           onChange={field.onChange}
                           placeholder="Project name"
                           suggestions={projectSuggestions}
+                          removableAs="projectName"
                           isLoadingSuggestions={isLoadingProjectSuggestions}
                         />
                       </FormControl>
@@ -198,6 +201,7 @@ export function TaskListFields({
                           onChange={field.onChange}
                           placeholder="Assigned by"
                           suggestions={assignedBySuggestions}
+                          removableAs="assignedBy"
                           isLoadingSuggestions={isLoadingAssignedBySuggestions}
                         />
                       </FormControl>

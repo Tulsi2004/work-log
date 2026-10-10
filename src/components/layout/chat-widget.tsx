@@ -6,6 +6,7 @@ import { RotateCcw, SendHorizontal, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useRefresh } from "@/hooks/use-refresh";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -20,15 +21,21 @@ const STARTERS = [
   "What's still open on my planner?",
 ];
 
+// These write to your data, so a click fills the box for you to finish and send.
+const ACTION_STARTERS = ["Add ₹500 food spend today", "Add a to-do for tomorrow: "];
+
 // The assistant in the corner of every page: a round button that opens a small
-// chat card above it. It answers from everything in your account; the
-// conversation lives only in this tab and clears on reload.
+// chat card above it. It answers from everything in your account and can add
+// money entries, spends and to-dos; the conversation lives only in this tab and
+// clears on reload.
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const refresh = useRefresh();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -74,6 +81,8 @@ export function ChatWidget() {
       append("Couldn't reach the AI — check your connection and try again.");
     } finally {
       setBusy(false);
+      // The reply may have added something, so the pages behind refetch what it can touch.
+      refresh("salaryEntry", "dayPlan");
     }
   };
 
@@ -116,7 +125,7 @@ export function ChatWidget() {
             {messages.length === 0 ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Ask about your work log, planner, companies or money.
+                  Ask about your work log, planner, companies or money — or have it add a money entry, a spend or a to-do.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {STARTERS.map((starter) => (
@@ -125,6 +134,19 @@ export function ChatWidget() {
                       type="button"
                       onClick={() => ask(starter)}
                       className="rounded-full border px-3 py-1.5 text-left text-xs transition-colors hover:bg-muted"
+                    >
+                      {starter}
+                    </button>
+                  ))}
+                  {ACTION_STARTERS.map((starter) => (
+                    <button
+                      key={starter}
+                      type="button"
+                      onClick={() => {
+                        setDraft(starter);
+                        inputRef.current?.focus();
+                      }}
+                      className="rounded-full border border-dashed px-3 py-1.5 text-left text-xs transition-colors hover:bg-muted"
                     >
                       {starter}
                     </button>
@@ -160,10 +182,11 @@ export function ChatWidget() {
             }}
           >
             <Input
+              ref={inputRef}
               autoFocus
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Ask about your data…"
+              placeholder="Ask, or add something…"
               maxLength={8000}
               aria-label="Your question"
               className="h-10 flex-1 rounded-full px-4"

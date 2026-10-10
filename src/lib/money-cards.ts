@@ -18,6 +18,7 @@ export const MONEY_CARD_IDS = [
   "lastReceived",
   "accountBalance",
   "pf",
+  "netWorth",
 ] as const;
 
 export type MoneyCardId = (typeof MONEY_CARD_IDS)[number];
@@ -36,6 +37,7 @@ export const MONEY_CARD_META: Record<MoneyCardId, CardOption> = {
   lastReceived: { label: "Last received" },
   accountBalance: { label: "Account balance" },
   pf: { label: "Total PF" },
+  netWorth: { label: "Net worth" },
 };
 
 // What the page shows until someone arranges the cards themselves.

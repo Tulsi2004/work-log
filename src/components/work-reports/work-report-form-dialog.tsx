@@ -568,6 +568,7 @@ export function WorkReportFormDialog({ open, onOpenChange, employment, report }:
                             onChange={field.onChange}
                             placeholder="e.g. Manager, client name"
                             suggestions={meetingWithSuggestions}
+                            removableAs="meetingWith"
                             isLoadingSuggestions={isLoadingMeetingWith}
                           />
                         </FormControl>

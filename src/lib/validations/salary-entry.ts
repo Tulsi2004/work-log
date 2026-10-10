@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SPEND_CATEGORIES } from "@/lib/money";
+import { INVESTMENT_TYPES, SPEND_CATEGORIES } from "@/lib/money";
 import { customValuesSchema } from "@/lib/validations/custom-field";
 
 const optionalString = z.string().optional().or(z.literal(""));
@@ -12,6 +12,9 @@ const spendSchema = z.object({
   what: z.string().max(200),
   amount: optionalString.refine((v) => !v || isAmount(v), "Enter a valid amount"),
   category: z.enum(SPEND_CATEGORIES),
+  // Investments only; the action drops both for any other category.
+  investmentType: z.enum(INVESTMENT_TYPES).optional().or(z.literal("")),
+  maturesOn: optionalString,
 });
 
 export const salaryEntrySchema = z

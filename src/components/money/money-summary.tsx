@@ -11,6 +11,7 @@ import {
   PieChart,
   PiggyBank,
   Receipt,
+  Scale,
   Settings2,
   TrendingUp,
   Trophy,
@@ -26,7 +27,8 @@ import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
 import { usePreference } from "@/hooks/use-preference";
 import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { cn } from "@/lib/utils";
-import { isKeptCategory, spendCategoryMeta, sumMoney, type SpendCategoryValue } from "@/lib/money";
+import { hasMatured, isKeptCategory, spendCategoryMeta, sumMoney, type SpendCategoryValue } from "@/lib/money";
+import { ALL_ENTRIES, useSalaryEntries } from "@/hooks/use-salary-entries";
 import {
   ACCOUNT_BALANCE_PREFERENCE_KEY,
   DEFAULT_MONEY_CARDS,
@@ -62,6 +64,7 @@ const CARD_ICONS: Record<MoneyCardId, LucideIcon> = {
   topCategory: PieChart,
   lastReceived: CalendarDays,
   accountBalance: Wallet,
+  netWorth: Scale,
   pf: PiggyBank,
 };
 
@@ -70,15 +73,26 @@ function rate(part: number, whole: number): string {
   return whole > 0 ? `${Math.round((part / whole) * 100)}%` : "—";
 }
 
-// The total across every bank account. The accounts behind it fold away under
-// the arrow, so the card sits at the same height as the rest of the strip until
-// asked for — then the list runs the full width under a divider. Balances are
-// typed in, so they are managed in a dialog.
-function AccountBalanceCard({ label }: { label: string }) {
-  const { data, isLoading } = usePreference(ACCOUNT_BALANCE_PREFERENCE_KEY);
-  const accounts = readBankAccounts(data);
+// A card whose number is made of parts. The parts fold away under the arrow, so
+// the card sits at the same height as the rest of the strip until asked for —
+// then they run the full width under a divider.
+function ExpandableCard({
+  label,
+  icon: Icon,
+  value,
+  isLoading,
+  rows,
+  footer,
+}: {
+  label: string;
+  icon: LucideIcon;
+  value: React.ReactNode;
+  isLoading: boolean;
+  // The parts behind the number; with none there is no arrow.
+  rows: { label: string; amount: number }[];
+  footer?: React.ReactNode;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const [open, setOpen] = useState(false);
 
   return (
     <Card>
@@ -88,56 +102,119 @@ function AccountBalanceCard({ label }: { label: string }) {
             <p className="truncate text-sm text-muted-foreground">{label}</p>
             {isLoading ? (
               <Skeleton className="mt-1 h-7 w-20" />
-            ) : accounts.length > 0 ? (
-              <div className="flex items-center gap-1">
-                <p className="text-2xl leading-tight wrap-break-word font-semibold">
-                  {formatMoney(sumMoney(accounts.map((a) => a.balance)))}
-                </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => setExpanded((v) => !v)}
-                  aria-expanded={expanded}
-                  aria-label={expanded ? "Hide accounts" : "Show accounts"}
-                  title={expanded ? "Hide accounts" : "Show accounts"}
-                >
-                  <ChevronDown className={cn("transition-transform", expanded && "rotate-180")} />
-                </Button>
-              </div>
             ) : (
-              // Nothing to fold away yet, so the way in is shown straight off.
-              <Button type="button" variant="link" onClick={() => setOpen(true)} className="h-auto px-0 text-base">
-                Add bank accounts
-              </Button>
+              <div className="flex items-center gap-1">
+                <div className="text-2xl leading-tight wrap-break-word font-semibold">{value}</div>
+                {rows.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => setExpanded((v) => !v)}
+                    aria-expanded={expanded}
+                    aria-label={expanded ? "Hide breakdown" : "Show breakdown"}
+                    title={expanded ? "Hide breakdown" : "Show breakdown"}
+                  >
+                    <ChevronDown className={cn("transition-transform", expanded && "rotate-180")} />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
-          <Wallet className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />
+          <Icon className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />
         </div>
 
-        {expanded && accounts.length > 0 && (
+        {expanded && rows.length > 0 && (
           <div className="space-y-2 border-t pt-3">
             <ul className="space-y-1.5 text-sm">
-              {accounts.map((account, index) => (
+              {rows.map((row, index) => (
                 <li key={index} className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-muted-foreground">{account.name}</span>
-                  <span className="shrink-0 font-medium tabular-nums">{formatMoney(account.balance)}</span>
+                  <span className="truncate text-muted-foreground">{row.label}</span>
+                  <span className="shrink-0 font-medium tabular-nums">{formatMoney(row.amount)}</span>
                 </li>
               ))}
             </ul>
-            <Button type="button" variant="link" size="sm" onClick={() => setOpen(true)} className="h-auto px-0">
-              Manage accounts
-            </Button>
+            {footer}
           </div>
         )}
-        <BankAccountsDialog open={open} onOpenChange={setOpen} accounts={accounts} />
       </CardContent>
     </Card>
   );
 }
 
+// The total across every bank account. Balances are typed in, so they are
+// managed in a dialog.
+function AccountBalanceCard({ label }: { label: string }) {
+  const { data, isLoading } = usePreference(ACCOUNT_BALANCE_PREFERENCE_KEY);
+  const accounts = readBankAccounts(data);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <ExpandableCard
+        label={label}
+        icon={Wallet}
+        isLoading={isLoading}
+        value={
+          accounts.length > 0 ? (
+            formatMoney(sumMoney(accounts.map((a) => a.balance)))
+          ) : (
+            // Nothing to fold away yet, so the way in is shown straight off.
+            <Button type="button" variant="link" onClick={() => setOpen(true)} className="h-auto px-0 text-base">
+              Add bank accounts
+            </Button>
+          )
+        }
+        rows={accounts.map((a) => ({ label: a.name, amount: a.balance }))}
+        footer={
+          <Button type="button" variant="link" size="sm" onClick={() => setOpen(true)} className="h-auto px-0">
+            Manage accounts
+          </Button>
+        }
+      />
+      <BankAccountsDialog open={open} onOpenChange={setOpen} accounts={accounts} />
+    </>
+  );
+}
+
+// Everything you own: the bank balances, the PF in the passbook, and investments
+// still running. Savings are not added on top — money moved to savings sits in
+// a bank account whose balance already counts it. Ignores the page filters, like
+// the account balance: what you own does not change with the month you look at.
+// ponytail: investments count at what was put in, not market value; ones with
+// no maturity date count until deleted. A current-value field fixes both.
+function NetWorthCard({ label }: { label: string }) {
+  const { data: balances, isLoading: balancesLoading } = usePreference(ACCOUNT_BALANCE_PREFERENCE_KEY);
+  const { data: all, isLoading: entriesLoading } = useSalaryEntries(ALL_ENTRIES);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const bank = sumMoney(readBankAccounts(balances).map((a) => a.balance));
+  const pf = all?.totals.pf ?? 0;
+  const invested = sumMoney(
+    (all?.data ?? [])
+      .flatMap((entry) => entry.spends)
+      .filter((spend) => spend.category === "INVESTMENT" && !hasMatured(spend, today))
+      .map((spend) => spend.amount)
+  );
+
+  return (
+    <ExpandableCard
+      label={label}
+      icon={Scale}
+      isLoading={balancesLoading || entriesLoading}
+      value={formatMoney(sumMoney([bank, pf, invested]))}
+      rows={[
+        { label: "Bank accounts", amount: bank },
+        { label: "PF", amount: pf },
+        { label: "Investments", amount: invested },
+      ]}
+      footer={<p className="text-xs text-muted-foreground">Investments at what you put in; matured ones are left out.</p>}
+    />
+  );
+}
+
 function cardValue(
-  id: Exclude<MoneyCardId, "accountBalance">,
+  id: Exclude<MoneyCardId, "accountBalance" | "netWorth">,
   totals: SalaryTotals | undefined,
   entries: SalaryEntryWithEmployment[]
 ): string {
@@ -216,6 +293,9 @@ export function MoneySummary({
             if (!own && id === "accountBalance") {
               return <AccountBalanceCard key={id} label={MONEY_CARD_META.accountBalance.label} />;
             }
+            if (!own && id === "netWorth") {
+              return <NetWorthCard key={id} label={MONEY_CARD_META.netWorth.label} />;
+            }
             const Icon = own ? CUSTOM_CARD_ICON : CARD_ICONS[id as MoneyCardId];
             return (
               <Card key={id}>
@@ -231,7 +311,7 @@ export function MoneySummary({
                         {own ? (
                           own.display
                         ) : (
-                          cardValue(id as Exclude<MoneyCardId, "accountBalance">, totals, entries)
+                          cardValue(id as Exclude<MoneyCardId, "accountBalance" | "netWorth">, totals, entries)
                         )}
                       </p>
                     )}

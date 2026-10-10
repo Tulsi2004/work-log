@@ -63,6 +63,14 @@ export function payRateOn(payHistory: unknown, day: string): PayRate | undefined
   return (due.length ? due : rates).reduce((latest, r) => (r.effectiveFrom > latest.effectiveFrom ? r : latest));
 }
 
+// Pay lands a month in arrears — February's salary arrives in March — so what a
+// payment *should* have been is the rate in force over the month before it.
+// Day 0 of the paid month is the last day of the month the pay is for.
+export function rateForPayment(payHistory: unknown, paidOn: Date): PayRate | undefined {
+  const workedUntil = new Date(Date.UTC(paidOn.getUTCFullYear(), paidOn.getUTCMonth(), 0));
+  return payRateOn(payHistory, workedUntil.toISOString().slice(0, 10));
+}
+
 export function currentPayRate(payHistory: unknown): PayRate | undefined {
   return payRateOn(payHistory, new Date().toISOString().slice(0, 10));
 }

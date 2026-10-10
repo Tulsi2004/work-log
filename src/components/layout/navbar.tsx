@@ -18,6 +18,10 @@ import { TulsiLogo } from "./tulsi-logo";
 import { ThemeToggle } from "./theme-toggle";
 import { PlannerBadge } from "./planner-badge";
 import { CalculatorPopover } from "./calculator-popover";
+import { GlobalSearch } from "./global-search";
+// Loaded on every page so the browser's one-time "can install" event is caught
+// before anyone opens Settings, where the Install button lives.
+import "@/lib/install-prompt";
 import { useEmployments } from "@/hooks/use-employments";
 
 interface NavLink {
@@ -70,6 +74,7 @@ export function Navbar() {
 
       <div className="flex-1" />
 
+      <GlobalSearch />
       <CalculatorPopover />
       <ThemeToggle />
 

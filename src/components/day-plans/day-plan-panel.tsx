@@ -33,13 +33,15 @@ const ALL = "ALL";
 
 type StatusFilter = "ALL" | "open" | "done";
 
-export function DayPlanPanel() {
+// `initialSearch` comes from the URL (?q=), where the search box in the navbar
+// sends you — the page opens already narrowed to what you searched for.
+export function DayPlanPanel({ initialSearch = "" }: { initialSearch?: string }) {
   const refresh = useRefresh();
   const { data: employments } = useEmployments();
   const labelLooks = usePlanLabelLooks();
   const [labelsOpen, setLabelsOpen] = useState(false);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [label, setLabel] = useState<string>(ALL);
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [employmentId, setEmploymentId] = useState(ALL);

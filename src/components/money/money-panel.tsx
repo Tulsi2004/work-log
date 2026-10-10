@@ -28,7 +28,11 @@ import { CustomFieldFilters } from "@/components/custom-fields/custom-field-filt
 import { MoneyTable } from "@/components/money/money-table";
 import { MoneySummary } from "@/components/money/money-summary";
 import { MoneyFormDialog } from "@/components/money/money-form-dialog";
-import { useSalaryEntries, type SalaryEntryFilters } from "@/hooks/use-salary-entries";
+import { ALL_ENTRIES, useSalaryEntries, type SalaryEntryFilters } from "@/hooks/use-salary-entries";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MoneyTrendChart } from "@/components/money/money-trend-chart";
+import { SalaryCheck } from "@/components/money/salary-check";
+import { InvestmentList, MaturityReminder } from "@/components/money/investment-list";
 import { useEmployments } from "@/hooks/use-employments";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { deleteSalaryEntry } from "@/actions/salary-entry-actions";
@@ -63,11 +67,13 @@ const PERIODS = [
   },
 ] as const;
 
-export function MoneyPanel() {
+// `initialSearch` comes from the URL (?q=), where the search box in the navbar
+// sends you — the page opens already narrowed to what you searched for.
+export function MoneyPanel({ initialSearch = "" }: { initialSearch?: string }) {
   const refresh = useRefresh();
   const { data: employments } = useEmployments();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [employmentId, setEmploymentId] = useState(ALL);
   const [category, setCategory] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -110,6 +116,10 @@ export function MoneyPanel() {
   };
   const { data, isLoading } = useSalaryEntries(filters);
   const entries = data?.data ?? [];
+  // Unfiltered — the same fetch as the page with no filters set, so usually free.
+  const { data: all } = useSalaryEntries(ALL_ENTRIES);
+  const allEntries = all?.data ?? [];
+  const [tab, setTab] = useState("entries");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<SalaryEntryWithEmployment | undefined>(undefined);
@@ -132,6 +142,8 @@ export function MoneyPanel() {
 
   return (
     <div className="space-y-4">
+      <MaturityReminder entries={allEntries} onView={() => setTab("investments")} />
+
       <MoneySummary
         entries={entries}
         totals={data?.totals}
@@ -213,23 +225,43 @@ export function MoneyPanel() {
           )}
         </div>
 
-        <div className="mt-4">
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {hasActiveFilters
-                ? "No money entries match the current filters."
-                : "Nothing here yet. Add the money you received and what you did with it."}
-            </p>
-          ) : (
-            <MoneyTable
-              entries={entries}
-              onEdit={(entry) => openForm(entry)}
-              onDelete={(entry) => setDeletingEntry(entry)}
-            />
-          )}
-        </div>
+        {/* The filters above scope every tab but Investments, which keeps every
+            maturity in view whatever month is being looked at. */}
+        <Tabs value={tab} onValueChange={setTab} className="mt-4">
+          <TabsList className="max-w-full overflow-x-auto">
+            <TabsTrigger value="entries">Entries</TabsTrigger>
+            <TabsTrigger value="trend">Trend</TabsTrigger>
+            <TabsTrigger value="salaryCheck">Salary check</TabsTrigger>
+            <TabsTrigger value="investments">Investments</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="entries">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : entries.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {hasActiveFilters
+                  ? "No money entries match the current filters."
+                  : "Nothing here yet. Add the money you received and what you did with it."}
+              </p>
+            ) : (
+              <MoneyTable
+                entries={entries}
+                onEdit={(entry) => openForm(entry)}
+                onDelete={(entry) => setDeletingEntry(entry)}
+              />
+            )}
+          </TabsContent>
+          <TabsContent value="trend">
+            <MoneyTrendChart entries={entries} />
+          </TabsContent>
+          <TabsContent value="salaryCheck">
+            <SalaryCheck entries={entries} />
+          </TabsContent>
+          <TabsContent value="investments">
+            <InvestmentList entries={allEntries} onEdit={(entry) => openForm(entry)} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <MoneyFormDialog

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { WorkReportTable } from "@/components/work-reports/work-report-table";
 import { WorkReportFormDialog } from "@/components/work-reports/work-report-form-dialog";
+import { ReportExportDialog } from "@/components/work-reports/report-export-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AutocompleteInput } from "@/components/work-reports/autocomplete-input";
 import { CustomFieldFilters } from "@/components/custom-fields/custom-field-filters";
@@ -36,12 +37,14 @@ const ALL_DAY_TYPES = "ALL";
 interface WorkReportPanelProps {
   employmentId: string;
   onEmploymentChange: (employmentId: string) => void;
+  // From the URL (?q=), where the search box in the navbar sends you.
+  initialSearch?: string;
 }
 
-export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReportPanelProps) {
+export function WorkReportPanel({ employmentId, onEmploymentChange, initialSearch = "" }: WorkReportPanelProps) {
   const { data: employments } = useEmployments();
   const employment = employments?.find((e) => e.id === employmentId);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [dayType, setDayType] = useState(ALL_DAY_TYPES);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -198,6 +201,7 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
                 onChange={setProjectName}
                 placeholder="Project name…"
                 suggestions={projectSuggestions}
+                removableAs="projectName"
                 isLoadingSuggestions={isLoadingProjectSuggestions}
               />
             </div>
@@ -207,6 +211,7 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
                 onChange={setAssignedBy}
                 placeholder="Assigned by…"
                 suggestions={assignedBySuggestions}
+                removableAs="assignedBy"
                 isLoadingSuggestions={isLoadingAssignedBySuggestions}
               />
             </div>
@@ -222,16 +227,19 @@ export function WorkReportPanel({ employmentId, onEmploymentChange }: WorkReport
               </Button>
             )}
           </div>
-          <Button
-            disabled={!employmentId}
-            onClick={() => {
-              setEditingReport(undefined);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="size-4" />
-            Add work report
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            <ReportExportDialog employment={employment} />
+            <Button
+              disabled={!employmentId}
+              onClick={() => {
+                setEditingReport(undefined);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="size-4" />
+              Add work report
+            </Button>
+          </div>
         </div>
 
         <div className="mt-4">

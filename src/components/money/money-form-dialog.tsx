@@ -105,6 +105,8 @@ function toDefaultValues(
       what: spend.what,
       amount: String(spend.amount),
       category: spend.category,
+      investmentType: spend.investmentType ?? "",
+      maturesOn: spend.maturesOn ?? "",
     })),
     // Blanks for fields the record has no value for are filled in by CustomFieldInputs.
     customValues: entry?.customValues ?? {},
@@ -251,6 +253,7 @@ export function MoneyFormDialog({
                         onChange={field.onChange}
                         placeholder="e.g. Monthly salary, bonus, freelance"
                         suggestions={sourceSuggestions}
+                        removableAs="source"
                         isLoadingSuggestions={isLoadingSources}
                       />
                     </FormControl>
