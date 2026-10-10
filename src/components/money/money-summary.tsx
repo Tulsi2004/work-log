@@ -1,39 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   ArrowDownCircle,
   ArrowUpCircle,
   CalendarDays,
+  ChevronDown,
   Coins,
   Landmark,
   PieChart,
   PiggyBank,
   Receipt,
   Settings2,
+  TrendingUp,
   Trophy,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { BankAccountsDialog } from "@/components/money/bank-accounts-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
 import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
 import { usePreference } from "@/hooks/use-preference";
-import { setPreference } from "@/actions/preference-actions";
 import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { cn } from "@/lib/utils";
-import { isKeptCategory, spendCategoryMeta, sumMoney } from "@/lib/money";
+import { isKeptCategory, spendCategoryMeta, sumMoney, type SpendCategoryValue } from "@/lib/money";
 import {
   ACCOUNT_BALANCE_PREFERENCE_KEY,
   DEFAULT_MONEY_CARDS,
   MONEY_CARDS_PREFERENCE_KEY,
   MONEY_CARD_IDS,
   MONEY_CARD_META,
+  readBankAccounts,
   type MoneyCardId,
 } from "@/lib/money-cards";
 import { formatDate, formatMoney } from "@/utils/format";
@@ -53,6 +53,7 @@ const CARD_ICONS: Record<MoneyCardId, LucideIcon> = {
   received: ArrowDownCircle,
   spent: ArrowUpCircle,
   saved: Landmark,
+  invested: TrendingUp,
   entries: Receipt,
   avgReceived: Coins,
   biggestEntry: Trophy,
@@ -69,61 +70,69 @@ function rate(part: number, whole: number): string {
   return whole > 0 ? `${Math.round((part / whole) * 100)}%` : "—";
 }
 
-// Click the number to type a new one; Enter or clicking away saves, Escape cancels.
-function AccountBalanceValue() {
-  const queryClient = useQueryClient();
-  const { data } = usePreference(ACCOUNT_BALANCE_PREFERENCE_KEY);
-  const balance = typeof data === "number" ? data : undefined;
-  // null while just showing the number.
-  const [draft, setDraft] = useState<string | null>(null);
-
-  const mutation = useMutation({
-    mutationFn: (value: number) => setPreference(ACCOUNT_BALANCE_PREFERENCE_KEY, value),
-    onSuccess: () => {
-      toast.success("Balance saved");
-      queryClient.invalidateQueries({ queryKey: ["preference", ACCOUNT_BALANCE_PREFERENCE_KEY] });
-      setDraft(null);
-    },
-    onError: (error: Error) => toast.error(error.message || "Failed to save balance"),
-  });
-
-  const save = () => {
-    if (draft === null || mutation.isPending) return;
-    const value = Number(draft);
-    // Blank, junk or unchanged just closes the box.
-    if (draft.trim() === "" || !Number.isFinite(value) || value === balance) return setDraft(null);
-    mutation.mutate(value);
-  };
-
-  if (draft !== null) {
-    return (
-      <Input
-        autoFocus
-        type="number"
-        step="0.01"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={save}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") save();
-          if (e.key === "Escape") setDraft(null);
-        }}
-        disabled={mutation.isPending}
-        aria-label="Current account balance"
-        className="mt-1 h-8 w-36"
-      />
-    );
-  }
+// The total across every bank account. The accounts behind it fold away under
+// the arrow, so the card sits at the same height as the rest of the strip until
+// asked for — then the list runs the full width under a divider. Balances are
+// typed in, so they are managed in a dialog.
+function AccountBalanceCard({ label }: { label: string }) {
+  const { data, isLoading } = usePreference(ACCOUNT_BALANCE_PREFERENCE_KEY);
+  const accounts = readBankAccounts(data);
+  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   return (
-    <button
-      type="button"
-      onClick={() => setDraft(balance?.toString() ?? "")}
-      title="Click to update"
-      className={cn("hover:underline", balance === undefined && "text-base text-muted-foreground")}
-    >
-      {balance === undefined ? "Click to set" : formatMoney(balance)}
-    </button>
+    <Card>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-sm text-muted-foreground">{label}</p>
+            {isLoading ? (
+              <Skeleton className="mt-1 h-7 w-20" />
+            ) : accounts.length > 0 ? (
+              <div className="flex items-center gap-1">
+                <p className="text-2xl leading-tight wrap-break-word font-semibold">
+                  {formatMoney(sumMoney(accounts.map((a) => a.balance)))}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => setExpanded((v) => !v)}
+                  aria-expanded={expanded}
+                  aria-label={expanded ? "Hide accounts" : "Show accounts"}
+                  title={expanded ? "Hide accounts" : "Show accounts"}
+                >
+                  <ChevronDown className={cn("transition-transform", expanded && "rotate-180")} />
+                </Button>
+              </div>
+            ) : (
+              // Nothing to fold away yet, so the way in is shown straight off.
+              <Button type="button" variant="link" onClick={() => setOpen(true)} className="h-auto px-0 text-base">
+                Add bank accounts
+              </Button>
+            )}
+          </div>
+          <Wallet className="size-7 shrink-0 text-muted-foreground/40 sm:size-8" />
+        </div>
+
+        {expanded && accounts.length > 0 && (
+          <div className="space-y-2 border-t pt-3">
+            <ul className="space-y-1.5 text-sm">
+              {accounts.map((account, index) => (
+                <li key={index} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate text-muted-foreground">{account.name}</span>
+                  <span className="shrink-0 font-medium tabular-nums">{formatMoney(account.balance)}</span>
+                </li>
+              ))}
+            </ul>
+            <Button type="button" variant="link" size="sm" onClick={() => setOpen(true)} className="h-auto px-0">
+              Manage accounts
+            </Button>
+          </div>
+        )}
+        <BankAccountsDialog open={open} onOpenChange={setOpen} accounts={accounts} />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -134,8 +143,13 @@ function cardValue(
 ): string {
   const received = totals?.received ?? 0;
   const spent = totals?.spent ?? 0;
+  // Savings and investments together — what the savings rate is measured on.
   const saved = totals?.saved ?? 0;
   const count = totals?.count ?? 0;
+  // One kept category on its own, for the cards that show savings and
+  // investments separately.
+  const keptIn = (category: SpendCategoryValue) =>
+    totals?.byCategory.find((c) => c.category === category)?.amount ?? 0;
 
   switch (id) {
     case "received":
@@ -143,7 +157,9 @@ function cardValue(
     case "spent":
       return formatMoney(spent);
     case "saved":
-      return formatMoney(saved);
+      return formatMoney(keptIn("SAVINGS"));
+    case "invested":
+      return formatMoney(keptIn("INVESTMENT"));
     case "entries":
       return String(count);
     case "avgReceived":
@@ -193,10 +209,13 @@ export function MoneySummary({
       </div>
 
       {cards.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {cards.map((id) => {
             // A card the user built carries its own title and its own number.
             const own = strip.customCard(id);
+            if (!own && id === "accountBalance") {
+              return <AccountBalanceCard key={id} label={MONEY_CARD_META.accountBalance.label} />;
+            }
             const Icon = own ? CUSTOM_CARD_ICON : CARD_ICONS[id as MoneyCardId];
             return (
               <Card key={id}>
@@ -211,8 +230,6 @@ export function MoneySummary({
                       <p className="text-2xl leading-tight wrap-break-word font-semibold">
                         {own ? (
                           own.display
-                        ) : id === "accountBalance" ? (
-                          <AccountBalanceValue />
                         ) : (
                           cardValue(id as Exclude<MoneyCardId, "accountBalance">, totals, entries)
                         )}

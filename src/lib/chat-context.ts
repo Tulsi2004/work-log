@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BUILT_IN_PLAN_LABELS } from "@/lib/plan-labels";
-import { ACCOUNT_BALANCE_PREFERENCE_KEY } from "@/lib/money-cards";
+import { ACCOUNT_BALANCE_PREFERENCE_KEY, readBankAccounts } from "@/lib/money-cards";
 import { employmentLabel } from "@/utils/format";
 
 // Bookkeeping columns that mean nothing to someone asking about their own week.
@@ -43,6 +43,7 @@ export async function loadAccountSnapshot(userId: string): Promise<string> {
       }),
     ]);
 
+  const accounts = readBankAccounts(balance?.value);
   const companyOf = new Map(employments.map((e) => [e.id, employmentLabel(e)]));
   const labelName = new Map([
     ...BUILT_IN_PLAN_LABELS.map((l) => [l.id, l.name] as const),
@@ -79,7 +80,7 @@ export async function loadAccountSnapshot(userId: string): Promise<string> {
     compact(dayPlans.map((p) => ({ ...withExtras(p), label: labelName.get(p.label) ?? p.label }))),
     "# Money received, and where it went (spends)",
     compact(moneyEntries.map((m) => ({ ...withExtras(m), amount: Number(m.amount) }))),
-    "# Current bank account balance (typed in by the user)",
-    typeof balance?.value === "number" ? String(balance.value) : "not set",
+    "# Current bank account balances (typed in by the user)",
+    accounts.length ? compact(accounts) : "not set",
   ].join("\n");
 }
