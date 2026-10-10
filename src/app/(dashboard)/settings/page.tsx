@@ -115,8 +115,9 @@ export default function SettingsPage() {
     setConfirming(true);
   };
 
+  // A reading-width column, centred so a wide screen does not leave it stranded on the left.
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="mx-auto w-full max-w-3xl space-y-4">
       <div>
         <h1 className="text-lg font-semibold">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your appearance and account preferences.</p>
