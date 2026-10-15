@@ -6,6 +6,7 @@ import {
   Building2,
   Calculator,
   CalendarCheck,
+  CalendarDays,
   ClipboardList,
   Settings,
   Wallet,
@@ -35,6 +36,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Work log", icon: ClipboardList },
   { href: "/planner", label: "Planner", icon: CalendarCheck, badge: PlannerBadge },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/money", label: "Money", icon: Wallet },
   { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/salary", label: "Salary", icon: Calculator },
@@ -61,7 +63,10 @@ export function Navbar() {
             variant="ghost"
             size="sm"
             asChild
-            className={cn(pathname === href && "bg-accent text-accent-foreground")}
+            className={cn(
+              (pathname === href || (href !== "/" && pathname.startsWith(`${href}/`))) &&
+                "bg-accent text-accent-foreground",
+            )}
           >
             <Link href={href}>
               <Icon className="size-4" />

@@ -1,0 +1,57 @@
+{
+  "_comment": "Holidays in India, 2026. Dates of lunar-calendar festivals vary by region and announcement; these dates should be verified against an official 2026 holiday list before relying on them.",
+  "holidays": [
+    {
+      "date": "2026-01-01",
+      "name": "New Year's Day"
+    },
+    {
+      "date": "2026-01-26",
+      "name": "Republic Day"
+    },
+    {
+      "date": "2026-03-04",
+      "name": "Holi"
+    },
+    {
+      "date": "2026-04-03",
+      "name": "Good Friday"
+    },
+    {
+      "date": "2026-04-14",
+      "name": "Dr. Ambedkar Jayanti"
+    },
+    {
+      "date": "2026-08-15",
+      "name": "Independence Day"
+    },
+    {
+      "date": "2026-10-02",
+      "name": "Mahatma Gandhi Jayanti"
+    },
+    {
+      "date": "2026-10-11",
+      "name": "First Day of Sharad Navratri"
+    },
+    {
+      "date": "2026-10-17",
+      "name": "First Day of Durga Puja Festivities"
+    },
+    {
+      "date": "2026-11-08",
+      "name": "Diwali/Deepavali"
+    },
+    {
+      "date": "2026-12-24",
+      "name": "Christmas Eve"
+    },
+    {
+      "date": "2026-12-25",
+      "name": "Christmas"
+    },
+    {
+      "date": "2026-12-31",
+      "name": "New Year's Eve"
+    }
+  ]
+}

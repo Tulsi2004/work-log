@@ -275,3 +275,85 @@ model CustomCard {
 
   @@index([userId])
 }
+
+// One of a user's calendars. Events live in a calendar, and hiding or recolouring
+// it applies to all of them at once. The first visit to /calendar creates the
+// user's own calendar and the read-only holidays one.
+model Calendar {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String
+  kind        CalendarKind @default(OWNED)
+  // The user's own calendar; it cannot be deleted.
+  isPrimary   Boolean      @default(false)
+  isVisible   Boolean      @default(true)
+  // "Hide from list" — also hides its events.
+  isHidden    Boolean      @default(false)
+  isReadOnly  Boolean      @default(false)
+  sortOrder   Int          @default(0)
+
+  events Event[]
+
+  @@index([userId])
+}
+
+enum CalendarKind {
+  OWNED
+  HOLIDAY
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  calendarId  String
+  calendar    Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  title       String   @default("(No title)")
+  description String?
+  location    String?
+  // Null means the calendar's colour.
+  color       String?
+  isAllDay    Boolean  @default(false)
+  // Timed events: UTC instants, plus the IANA zone the event lives in.
+  startAt     DateTime?
+  endAt       DateTime?
+  timezone    String
+  // All-day events: "YYYY-MM-DD" keys with an EXCLUSIVE end, so they never
+  // shift when the viewer's time zone changes.
+  startDate   String?
+  endDate     String?
+  // An RRULE without the "RRULE:" prefix; UNTIL is in the event's wall time.
+  rrule           String?
+  // Latest end of any occurrence (or 9999-12-31 if unbounded), so range
+  // queries can find repeating events without expanding them.
+  recurrenceEndAt DateTime?
+
+  exceptions EventException[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([calendarId, startAt])
+  @@index([calendarId, startDate])
+}
+
+// One changed or cancelled occurrence of a repeating event, keyed by the
+// occurrence's original start (midnight UTC of the date for all-day series).
+// Null overrides mean "use the event's value".
+model EventException {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  originalStart DateTime
+  isCancelled   Boolean  @default(false)
+  title         String?
+  description   String?
+  location      String?
+  color         String?
+  startAt       DateTime?
+  endAt         DateTime?
+  startDate     String?
+  endDate       String?
+
+  @@unique([eventId, originalStart])
+}
