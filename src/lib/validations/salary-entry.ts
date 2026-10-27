@@ -12,6 +12,7 @@ const spendSchema = z.object({
   what: z.string().max(200),
   amount: optionalString.refine((v) => !v || isAmount(v), "Enter a valid amount"),
   category: z.enum(SPEND_CATEGORIES),
+  spentOn: optionalString,
   // Investments only; the action drops both for any other category.
   investmentType: z.enum(INVESTMENT_TYPES).optional().or(z.literal("")),
   maturesOn: optionalString,

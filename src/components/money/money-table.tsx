@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import {
   Table,
   TableHeader,
@@ -114,7 +115,15 @@ export function MoneyTable({ entries, onEdit, onDelete }: MoneyTableProps) {
                   {hasSpends ? (
                     <ol className="list-decimal space-y-0.5 pl-4">
                       {entry.spends.map((spend, index) => (
-                        <li key={index}>{spend.what}</li>
+                        <li key={index}>
+                          {spend.what}
+                          {spend.spentOn && (
+                            <span className="text-xs text-muted-foreground">
+                              {" "}
+                              · {format(parseISO(spend.spentOn), "MMM d")}
+                            </span>
+                          )}
+                        </li>
                       ))}
                     </ol>
                   ) : (

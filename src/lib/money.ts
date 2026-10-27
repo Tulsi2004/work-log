@@ -153,6 +153,9 @@ export type SalarySpend = {
   what: string;
   amount: number;
   category: SpendCategoryValue;
+  // The day the money actually went (yyyy-MM-dd), which can be weeks after it
+  // came in. Optional — older spends never had one.
+  spentOn?: string;
   // Investments only, both optional: what kind it is and the day it pays back
   // (yyyy-MM-dd) — an FD has one, a mutual fund usually does not.
   investmentType?: InvestmentType;
@@ -182,6 +185,7 @@ export function parseSpends(value: unknown): SalarySpend[] {
         what,
         amount: toMoney(spend.amount),
         category,
+        ...(isDay(spend.spentOn) ? { spentOn: spend.spentOn } : {}),
         // Details left over from when a spend was an investment are dropped
         // once it is recategorised, so they never surface somewhere odd.
         ...(category === "INVESTMENT" && isInvestmentType(spend.investmentType)

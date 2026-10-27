@@ -105,6 +105,7 @@ function toDefaultValues(
       what: spend.what,
       amount: String(spend.amount),
       category: spend.category,
+      spentOn: spend.spentOn ?? "",
       investmentType: spend.investmentType ?? "",
       maturesOn: spend.maturesOn ?? "",
     })),

@@ -123,7 +123,7 @@ export function chatTools(userId: string) {
         if (!entry) {
           throw new Error(`Not added: there is no money entry on or before ${date} to put spends on. The user needs to add the money they received first.`);
         }
-        const all = [...parseSpends(entry.spends), ...toSpends(spends)];
+        const all = [...parseSpends(entry.spends), ...toSpends(spends).map((s) => ({ ...s, spentOn: date }))];
         await prisma.salaryEntry.updateMany({ where: { id: entry.id, userId }, data: { spends: all } });
         const amount = Number(entry.amount);
         return `Added ${formatMoney(sumSpends(toSpends(spends)))} to the money entry of ${formatMoney(amount)} received on ${isoDay(entry.date)}${

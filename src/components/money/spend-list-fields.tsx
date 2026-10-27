@@ -62,6 +62,7 @@ export function SpendListFields() {
       what: "",
       amount: "",
       category: spends[spends.length - 1]?.category ?? DEFAULT_CATEGORY,
+      spentOn: "",
       investmentType: "",
       maturesOn: "",
     });
@@ -181,47 +182,65 @@ export function SpendListFields() {
               />
             </div>
 
-            {/* An investment says what it is and when it pays back — both optional. */}
-            {spends[index]?.category === "INVESTMENT" && (
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <FormField
-                  control={form.control}
-                  name={`spends.${index}.investmentType`}
-                  render={({ field }) => (
-                    <FormItem className="sm:w-48">
-                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="w-full" aria-label="Type of investment">
-                            <SelectValue placeholder="Type of investment" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {INVESTMENT_TYPES.map((value) => (
-                            <SelectItem key={value} value={value}>
-                              {INVESTMENT_TYPE_NAMES[value]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`spends.${index}.maturesOn`}
-                  render={({ field }) => (
-                    <FormItem className="sm:w-48">
-                      <DatePicker
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        placeholder="Matures on (optional)"
-                        className="w-full"
-                      />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              {/* The money can go out long after it came in. */}
+              <FormField
+                control={form.control}
+                name={`spends.${index}.spentOn`}
+                render={({ field }) => (
+                  <FormItem className="sm:w-48">
+                    <DatePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Spent on (optional)"
+                      className="w-full"
+                    />
+                  </FormItem>
+                )}
+              />
+
+              {/* An investment says what it is and when it pays back — both optional. */}
+              {spends[index]?.category === "INVESTMENT" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name={`spends.${index}.investmentType`}
+                    render={({ field }) => (
+                      <FormItem className="sm:w-48">
+                        <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="w-full" aria-label="Type of investment">
+                              <SelectValue placeholder="Type of investment" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {INVESTMENT_TYPES.map((value) => (
+                              <SelectItem key={value} value={value}>
+                                {INVESTMENT_TYPE_NAMES[value]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`spends.${index}.maturesOn`}
+                    render={({ field }) => (
+                      <FormItem className="sm:w-48">
+                        <DatePicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Matures on (optional)"
+                          className="w-full"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="mt-0.5 flex shrink-0 items-center">
