@@ -66,10 +66,11 @@ function toDefaultValues(employment?: EmploymentListItem): EmploymentInput {
       ? payHistory.map((p) => ({
           actualSalary: String(p.actualSalary),
           pf: p.pf ? String(p.pf) : "",
+          pension: p.pension ? String(p.pension) : "",
           inHandSalary: String(p.inHandSalary),
           effectiveFrom: p.effectiveFrom,
         }))
-      : [{ actualSalary: "", pf: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) }],
+      : [{ actualSalary: "", pf: "", pension: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) }],
     // Blanks for fields the record has no value for are filled in by CustomFieldInputs.
     customValues: employment?.customValues ?? {},
   };
@@ -342,7 +343,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
               {fields.map((item, index) => (
                 <div key={item.id} className="flex items-start gap-2 rounded-md border p-2">
                   <div className="flex flex-1 flex-col gap-2">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <FormField
                         control={form.control}
                         name={`payHistory.${index}.actualSalary`}
@@ -362,6 +363,18 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
                           <FormItem>
                             <FormControl>
                               <Input type="number" step="0.01" placeholder="PF" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`payHistory.${index}.pension`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="Pension (of PF)" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -413,7 +426,7 @@ export function EmploymentFormDialog({ open, onOpenChange, employment, onSaved, 
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  append({ actualSalary: "", pf: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) })
+                  append({ actualSalary: "", pf: "", pension: "", inHandSalary: "", effectiveFrom: new Date().toISOString().slice(0, 10) })
                 }
               >
                 <Plus className="size-4" />

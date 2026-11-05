@@ -58,6 +58,7 @@ function toEmploymentData(data: EmploymentInput) {
     .map((entry) => ({
       actualSalary: Number(entry.actualSalary),
       pf: entry.pf ? Number(entry.pf) : 0,
+      pension: entry.pension ? Number(entry.pension) : 0,
       inHandSalary: Number(entry.inHandSalary),
       effectiveFrom: entry.effectiveFrom,
     }))

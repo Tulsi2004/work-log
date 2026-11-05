@@ -16,6 +16,10 @@ const payRateSchema = z.object({
     (v) => !v || (!Number.isNaN(Number(v)) && Number(v) >= 0),
     "Enter a valid amount"
   ),
+  pension: optionalString.refine(
+    (v) => !v || (!Number.isNaN(Number(v)) && Number(v) >= 0),
+    "Enter a valid amount"
+  ),
   inHandSalary: z
     .string()
     .min(1, "In-hand salary is required")

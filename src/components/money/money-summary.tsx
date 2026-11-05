@@ -21,6 +21,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BankAccountsDialog } from "@/components/money/bank-accounts-dialog";
+import { PfPassbookDialog } from "@/components/money/pf-passbook-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCustomizeDialog } from "@/components/work-reports/stats-customize-dialog";
 import { useCardStrip, CUSTOM_CARD_ICON } from "@/hooks/use-card-strip";
@@ -28,6 +29,7 @@ import { usePreference } from "@/hooks/use-preference";
 import { CustomCardDialog } from "@/components/cards/custom-card-dialog";
 import { cn } from "@/lib/utils";
 import { hasMatured, isKeptCategory, spendCategoryMeta, sumMoney, type SpendCategoryValue } from "@/lib/money";
+import { pfPassbook, pfTotals } from "@/lib/pf-passbook";
 import { ALL_ENTRIES, useSalaryEntries } from "@/hooks/use-salary-entries";
 import {
   ACCOUNT_BALANCE_PREFERENCE_KEY,
@@ -177,6 +179,48 @@ function AccountBalanceCard({ label }: { label: string }) {
   );
 }
 
+// Total PF, in the same shares as the EPFO passbook. Follows the page filters,
+// like the other cards built from the entries.
+function PfCard({
+  label,
+  entries,
+  isLoading,
+}: {
+  label: string;
+  entries: SalaryEntryWithEmployment[];
+  isLoading: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const passbook = pfPassbook(entries, new Date().toISOString().slice(0, 10));
+  const totals = pfTotals(passbook);
+
+  return (
+    <>
+      <ExpandableCard
+        label={label}
+        icon={PiggyBank}
+        isLoading={isLoading}
+        value={formatMoney(totals.total)}
+        rows={
+          passbook.length > 0
+            ? [
+                { label: "Employee share", amount: totals.employee },
+                { label: "Employer share", amount: totals.employer },
+                { label: "Pension share", amount: totals.pension },
+              ]
+            : []
+        }
+        footer={
+          <Button type="button" variant="link" size="sm" onClick={() => setOpen(true)} className="h-auto px-0">
+            View passbook
+          </Button>
+        }
+      />
+      <PfPassbookDialog open={open} onOpenChange={setOpen} rows={passbook} />
+    </>
+  );
+}
+
 // Everything you own: the bank balances, the PF in the passbook, and investments
 // still running. Savings are not added on top — money moved to savings sits in
 // a bank account whose balance already counts it. Ignores the page filters, like
@@ -214,7 +258,7 @@ function NetWorthCard({ label }: { label: string }) {
 }
 
 function cardValue(
-  id: Exclude<MoneyCardId, "accountBalance" | "netWorth">,
+  id: Exclude<MoneyCardId, "accountBalance" | "netWorth" | "pf">,
   totals: SalaryTotals | undefined,
   entries: SalaryEntryWithEmployment[]
 ): string {
@@ -254,8 +298,6 @@ function cardValue(
     // Entries come back newest first.
     case "lastReceived":
       return entries.length ? formatDate(entries[0].date) : "—";
-    case "pf":
-      return formatMoney(totals?.pf ?? 0);
   }
 }
 
@@ -296,6 +338,9 @@ export function MoneySummary({
             if (!own && id === "netWorth") {
               return <NetWorthCard key={id} label={MONEY_CARD_META.netWorth.label} />;
             }
+            if (!own && id === "pf") {
+              return <PfCard key={id} label={MONEY_CARD_META.pf.label} entries={entries} isLoading={isLoading} />;
+            }
             const Icon = own ? CUSTOM_CARD_ICON : CARD_ICONS[id as MoneyCardId];
             return (
               <Card key={id}>
@@ -311,7 +356,7 @@ export function MoneySummary({
                         {own ? (
                           own.display
                         ) : (
-                          cardValue(id as Exclude<MoneyCardId, "accountBalance" | "netWorth">, totals, entries)
+                          cardValue(id as Exclude<MoneyCardId, "accountBalance" | "netWorth" | "pf">, totals, entries)
                         )}
                       </p>
                     )}

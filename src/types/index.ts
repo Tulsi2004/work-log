@@ -29,6 +29,8 @@ export interface WorkReportTask {
 export interface PayRate {
   actualSalary: number;
   pf: number;
+  // The part of `pf` that goes to the pension scheme (EPS) rather than the balance.
+  pension?: number;
   inHandSalary: number;
   effectiveFrom: string;
 }

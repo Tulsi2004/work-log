@@ -8,8 +8,9 @@ import {
 } from "@/lib/custom-field-store";
 import { readCustomFilters } from "@/lib/custom-field-params";
 import { parseSpends, sumMoney, sumSaved, sumSpent, toMoney, type SalarySpend } from "@/lib/money";
+import { pfPassbook, pfTotals } from "@/lib/pf-passbook";
 import type { Prisma } from "@prisma/client";
-import { rateForPayment, type SalaryEntryWithEmployment } from "@/types";
+import type { SalaryEntryWithEmployment } from "@/types";
 
 export interface SalaryTotals {
   received: number;
@@ -100,31 +101,14 @@ export async function GET(request: NextRequest) {
   const spent = sumSpent(spends);
   const saved = sumSaved(spends);
 
-  // PF never reaches your hands, so no entry records it — it is read off the
-  // company's pay history, at the rate of the month the pay was for. The company
-  // deposits it by the 15th of the month the salary was paid — until then it is
-  // left out, so the card matches the EPF passbook rather than running a month
-  // ahead of it.
-  // ponytail: one PF per company per month, so a bonus-only month still counts one.
-  // ponytail: assumes the company deposits by the due date; a late one reads early.
   const today = new Date().toISOString().slice(0, 10);
-  const pfByMonth = new Map<string, number>();
-  for (const entry of matching) {
-    if (!entry.employment) continue;
-    const paidMonth = entry.date.toISOString().slice(0, 7);
-    if (`${paidMonth}-15` > today) continue;
-    pfByMonth.set(
-      `${entry.employmentId}:${paidMonth}`,
-      toMoney(rateForPayment(entry.employment.payHistory, entry.date)?.pf)
-    );
-  }
 
   const totals: SalaryTotals = {
     received,
     spent,
     saved,
     count: matching.length,
-    pf: sumMoney([...pfByMonth.values()]),
+    pf: pfTotals(pfPassbook(matching, today)).total,
     byCategory: categoryTotals(spends),
   };
 
