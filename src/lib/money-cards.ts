@@ -60,6 +60,9 @@ export const ACCOUNT_BALANCE_PREFERENCE_KEY = "accountBalance";
 export interface BankAccount {
   name: string;
   balance: number;
+  // Held in the account on top of `balance` and left out of every total, so
+  // `balance` is what is free to use. Absent when the account has no minimum.
+  minBalance?: number;
 }
 
 // The preference used to hold one bare number; that reads back as a single

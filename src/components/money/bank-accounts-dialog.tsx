@@ -29,7 +29,7 @@ interface BankAccountsDialogProps {
 export function BankAccountsDialog({ open, onOpenChange, accounts }: BankAccountsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         {/* Mounted only while open, so every opening starts from what is saved. */}
         {open && <Body accounts={accounts} onOpenChange={onOpenChange} />}
       </DialogContent>
@@ -37,14 +37,20 @@ export function BankAccountsDialog({ open, onOpenChange, accounts }: BankAccount
   );
 }
 
-type Row = { name: string; balance: string };
+type Row = { name: string; balance: string; minBalance: string };
 
-const BLANK_ROW: Row = { name: "", balance: "" };
+const BLANK_ROW: Row = { name: "", balance: "", minBalance: "" };
 
 function Body({ accounts, onOpenChange }: Omit<BankAccountsDialogProps, "open">) {
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<Row[]>(() =>
-    accounts.length ? accounts.map((a) => ({ name: a.name, balance: String(a.balance) })) : [BLANK_ROW]
+    accounts.length
+      ? accounts.map((a) => ({
+          name: a.name,
+          balance: String(a.balance),
+          minBalance: a.minBalance === undefined ? "" : String(a.minBalance),
+        }))
+      : [BLANK_ROW]
   );
 
   const mutation = useMutation({
@@ -63,13 +69,22 @@ function Body({ accounts, onOpenChange }: Omit<BankAccountsDialogProps, "open">)
   // A row left completely blank is just dropped.
   const filled = rows.filter((row) => row.name.trim() || row.balance.trim());
   const isComplete = (row: Row) =>
-    !!row.name.trim() && row.balance.trim() !== "" && Number.isFinite(Number(row.balance));
+    !!row.name.trim() &&
+    row.balance.trim() !== "" &&
+    Number.isFinite(Number(row.balance)) &&
+    !(Number(row.minBalance) < 0);
   const total = sumMoney(filled.filter(isComplete).map((row) => Number(row.balance)));
 
   const save = () => {
     if (mutation.isPending) return;
-    if (!filled.every(isComplete)) return toast.error("Each account needs a name and a balance");
-    mutation.mutate(filled.map((row) => ({ name: row.name.trim(), balance: Number(row.balance) })));
+    if (!filled.every(isComplete)) return toast.error("Each account needs a name and a balance, and a minimum can't be negative");
+    mutation.mutate(
+      filled.map((row) => ({
+        name: row.name.trim(),
+        balance: Number(row.balance),
+        ...(row.minBalance.trim() !== "" ? { minBalance: Number(row.minBalance) } : {}),
+      }))
+    );
   };
 
   return (
@@ -84,18 +99,20 @@ function Body({ accounts, onOpenChange }: Omit<BankAccountsDialogProps, "open">)
         <DialogTitle>Bank accounts</DialogTitle>
         <DialogDescription>
           Add each account you hold and the balance your bank app shows for it. The card adds them
-          up — come back and update a balance whenever you check it.
+          up — come back and update a balance whenever you check it. If you keep a minimum in an
+          account, leave it out of the balance and write it separately. It is not added to any total.
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-2">
-        <div className="grid grid-cols-[1fr_9rem_2rem] gap-2 text-xs font-medium text-muted-foreground">
+        <div className="grid grid-cols-[1.3fr_1fr_1fr_2rem] gap-2 text-xs font-medium text-muted-foreground">
           <span>Account</span>
           <span>Current balance</span>
+          <span>Minimum</span>
         </div>
 
         {rows.map((row, index) => (
-          <div key={index} className="grid grid-cols-[1fr_9rem_2rem] items-center gap-2">
+          <div key={index} className="grid grid-cols-[1.3fr_1fr_1fr_2rem] items-center gap-2">
             <Input
               autoFocus={index === rows.length - 1 && !row.name}
               value={row.name}
@@ -115,6 +132,21 @@ function Body({ accounts, onOpenChange }: Omit<BankAccountsDialogProps, "open">)
                 onChange={(e) => setRow(index, { balance: e.target.value })}
                 placeholder="0"
                 aria-label={`${row.name.trim() || "Account"} balance`}
+              />
+            </InputGroup>
+            <InputGroup>
+              <InputGroupAddon>
+                <InputGroupText>₹</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={row.minBalance}
+                onChange={(e) => setRow(index, { minBalance: e.target.value })}
+                placeholder="None"
+                aria-label={`${row.name.trim() || "Account"} minimum balance`}
               />
             </InputGroup>
             <Button

@@ -91,7 +91,7 @@ function ExpandableCard({
   value: React.ReactNode;
   isLoading: boolean;
   // The parts behind the number; with none there is no arrow.
-  rows: { label: string; amount: number }[];
+  rows: { label: string; amount: number; hint?: string }[];
   footer?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -128,10 +128,13 @@ function ExpandableCard({
 
         {expanded && rows.length > 0 && (
           <div className="space-y-2 border-t pt-3">
-            <ul className="space-y-1.5 text-sm">
+            <ul className="space-y-2.5 text-sm">
               {rows.map((row, index) => (
                 <li key={index} className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-muted-foreground">{row.label}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-muted-foreground">{row.label}</span>
+                    {row.hint && <span className="mt-0.5 block text-xs text-muted-foreground/70">{row.hint}</span>}
+                  </span>
                   <span className="shrink-0 font-medium tabular-nums">{formatMoney(row.amount)}</span>
                 </li>
               ))}
@@ -167,7 +170,11 @@ function AccountBalanceCard({ label }: { label: string }) {
             </Button>
           )
         }
-        rows={accounts.map((a) => ({ label: a.name, amount: a.balance }))}
+        rows={accounts.map((a) => ({
+          label: a.name,
+          amount: a.balance,
+          hint: a.minBalance ? `${formatMoney(a.minBalance)} minimum` : undefined,
+        }))}
         footer={
           <Button type="button" variant="link" size="sm" onClick={() => setOpen(true)} className="h-auto px-0">
             Manage accounts
