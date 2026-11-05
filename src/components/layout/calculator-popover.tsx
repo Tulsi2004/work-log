@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Calculator, GripHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,20 @@ export function CalculatorPopover() {
     } else enter(expression + key);
     inputRef.current?.focus();
   };
+
+  // Clicking the page or the title bar takes focus out of the box, so while the
+  // window is open a sum key brings it back. Focusing on keydown lets the browser
+  // type that same key into the box. A field you are typing in keeps its keys.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || !/^([\d.+\-*/()]|Backspace)$/.test(e.key)) return;
+      if ((e.target as HTMLElement).closest?.("input, textarea, select, [contenteditable='true']")) return;
+      inputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   // Dragging by the title bar, kept wholly on screen.
   const startDrag = (e: React.PointerEvent<HTMLDivElement>) => {
