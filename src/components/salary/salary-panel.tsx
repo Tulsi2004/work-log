@@ -108,8 +108,7 @@ export function SalaryPanel() {
   const [totalHours, setTotalHours] = useState("");
   const [breakHours, setBreakHours] = useState("");
   const [avgDailyHours, setAvgDailyHours] = useState("");
-  // One paid leave a month is the allowance, so that is where the field starts.
-  const [paidLeaveDays, setPaidLeaveDays] = useState("1");
+  const [leavesTaken, setLeavesTaken] = useState("1");
   const [adjustments, setAdjustments] = useState<MinuteAdjustment[]>([]);
   // Overrides, each remembered against the cycle it was typed for, so moving to
   // another cycle falls back to that cycle's own figure rather than carrying
@@ -163,7 +162,7 @@ export function SalaryPanel() {
     totalHours,
     breakHours,
     avgDailyHours,
-    paidLeaveDays: Number(paidLeaveDays) || 0,
+    leavesTaken: Number(leavesTaken) || 0,
     adjustments,
     goalDays: Number(goalDays) || 0,
     pf: Number(pf) || 0,
@@ -322,11 +321,20 @@ export function SalaryPanel() {
               <Panel>
                 <Section
                   title={`Hours for ${cycle.label}`}
-                  hint="Straight off your attendance page. Typed as h:mm — 217:45 is 217 hours and 45 minutes."
+                  hint="Straight off your attendance page, typed as h:mm. Leave it blank to estimate before the portal has it."
                 >
-                  <div className="flex flex-wrap gap-x-8 gap-y-3">
-                    <DurationField label="Total hours" value={totalHours} onChange={setTotalHours} />
-                    <DurationField label="Break" value={breakHours} onChange={setBreakHours} sign="−" />
+                  <div className="space-y-2.5">
+                    <div className="flex flex-wrap gap-x-8 gap-y-3">
+                      <DurationField label="Total hours" value={totalHours} onChange={setTotalHours} />
+                      <DurationField label="Break" value={breakHours} onChange={setBreakHours} sign="−" />
+                    </div>
+                    {result.estimate && (
+                      <Working>
+                        Estimated: {result.goalDays} goal days − {Number(leavesTaken) || 0} leaves ={" "}
+                        {result.estimate.workedDays} days × {formatDuration(result.avgDayMinutes)} ={" "}
+                        {formatDuration(result.estimate.minutes)}
+                      </Working>
+                    )}
                   </div>
                 </Section>
               </Panel>
@@ -335,8 +343,8 @@ export function SalaryPanel() {
                   yours averages rather than at the 8h 20m a goal day assumes. */}
               <Panel>
                 <Section
-                  title="Paid leave"
-                  hint="Credited at your average daily hours — the portal's Avg Daily Hours for the cycle."
+                  title="Leaves"
+                  hint="Your 1 paid leave a month is credited at your average day, taken or not. Leaves taken only change the estimate — portal hours already include them."
                 >
                   <div className="space-y-2.5">
                     <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
@@ -346,20 +354,19 @@ export function SalaryPanel() {
                         onChange={setAvgDailyHours}
                       />
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Days</Label>
+                        <Label className="text-xs text-muted-foreground">Leaves taken</Label>
                         <Input
-                          value={paidLeaveDays}
-                          onChange={(e) => setPaidLeaveDays(e.target.value)}
+                          value={leavesTaken}
+                          onChange={(e) => setLeavesTaken(e.target.value)}
                           inputMode="numeric"
                           className="w-16 text-right tabular-nums"
                         />
                       </div>
                     </div>
                     <Working>
-                      {avgDailyHours.trim() &&
-                        `${formatMinutes(parseDuration(avgDailyHours))} × ${Number(paidLeaveDays) || 0} = `}
-                      {formatDuration(result.paidLeaveMinutes)} ={" "}
+                      1 paid leave = {formatDuration(result.paidLeaveMinutes)} ={" "}
                       {formatMinutes(result.paidLeaveMinutes)} credited
+                      {!avgDailyHours.trim() && " (8:20 until you type your average)"}
                     </Working>
                   </div>
                 </Section>

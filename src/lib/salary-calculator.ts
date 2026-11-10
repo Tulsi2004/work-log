@@ -5,6 +5,8 @@ import { roundMoney } from "@/lib/money";
 // A full day's work is 8h 20m. Every rupee is earned against this — a day's pay
 // buys exactly this many minutes, so pay per minute falls out of it.
 export const MINUTES_PER_DAY = 500;
+// One paid leave a month, credited whether or not it is taken.
+export const PAID_LEAVES_PER_MONTH = 1;
 
 // Pay runs 6th to 5th rather than over a calendar month. Kept as a preference
 // so a job on a different cycle only has to be told once.
@@ -144,9 +146,9 @@ export interface SalaryInputs {
   // A paid leave is not clocked, so it is credited at whatever a day of yours
   // averages — the portal's "Avg Daily Hours" for the cycle.
   avgDailyHours: string;
-  // How many paid leaves the cycle carried. One a month is the allowance, but a
-  // cycle you did not take one in credits nothing.
-  paidLeaveDays: number;
+  // Leaves taken (or planned) in the cycle. They only shape the estimate when
+  // the total is left blank — a typed portal total already has them in it.
+  leavesTaken: number;
   adjustments: MinuteAdjustment[];
   // Days the hours goal is set over. Defaults to the cycle's own count, and is
   // editable for a cycle your company counted differently.
@@ -175,6 +177,10 @@ export interface SalaryCalcResult {
   calculatedMinutes: number;
   // What the paid leave came to, so the field can show its own working.
   paidLeaveMinutes: number;
+  // An average day: the portal's figure, or a goal day when none is typed.
+  avgDayMinutes: number;
+  // Set when the total was left blank and worked out from the days instead.
+  estimate?: { workedDays: number; minutes: number };
 
   earned: number;
   pf: number;
@@ -198,17 +204,31 @@ export function calculateSalary(
 
   // Break comes off the clocked total, paid leave goes on at an average day,
   // then whatever else the cycle threw at you.
-  const avgDayMinutes = parseDuration(inputs.avgDailyHours);
-  const paidLeaveDays = Math.max(0, inputs.paidLeaveDays);
-  const paidLeaveMinutes = Math.round(avgDayMinutes * paidLeaveDays);
+  const avgDayMinutes = parseDuration(inputs.avgDailyHours) || MINUTES_PER_DAY;
+  // The month's paid leave is paid whether it is taken or not — skip it and the
+  // day worked in its place comes on top.
+  const paidLeaveMinutes = Math.round(avgDayMinutes * PAID_LEAVES_PER_MONTH);
+
+  // No total typed means planning ahead: every goal day not taken as leave is
+  // worked at an average day, net of break.
+  const estimate = inputs.totalHours.trim()
+    ? undefined
+    : (() => {
+        const workedDays = Math.max(0, goalDays - Math.max(0, inputs.leavesTaken));
+        return { workedDays, minutes: Math.round(workedDays * avgDayMinutes) };
+      })();
 
   const minuteLines: MinuteLine[] = [
-    { label: "Total hours", minutes: parseDuration(inputs.totalHours), sign: 1 },
-    { label: "Break", minutes: -parseDuration(inputs.breakHours), sign: -1 },
+    estimate
+      ? {
+          label: `Estimated (${estimate.workedDays} × ${formatDuration(avgDayMinutes)})`,
+          minutes: estimate.minutes,
+          sign: 1,
+        }
+      : { label: "Total hours", minutes: parseDuration(inputs.totalHours), sign: 1 },
+    { label: "Break", minutes: estimate ? 0 : -parseDuration(inputs.breakHours), sign: -1 },
     {
-      label: paidLeaveDays === 1
-        ? `Paid leave (${formatDuration(avgDayMinutes)})`
-        : `Paid leave (${paidLeaveDays} × ${formatDuration(avgDayMinutes)})`,
+      label: `Paid leave (${formatDuration(avgDayMinutes)})`,
       minutes: paidLeaveMinutes,
       sign: 1,
     },
@@ -239,6 +259,8 @@ export function calculateSalary(
     minuteLines,
     calculatedMinutes,
     paidLeaveMinutes,
+    avgDayMinutes,
+    estimate,
     earned,
     pf,
     net: roundMoney(earned - pf),
