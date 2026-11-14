@@ -17,6 +17,7 @@ export const COMPANY_CARD_IDS = [
   "hikes",
   "longestStint",
   "lastHike",
+  "currentLpa",
 ] as const;
 
 export type CompanyCardId = (typeof COMPANY_CARD_IDS)[number];
@@ -32,6 +33,7 @@ export const COMPANY_CARD_META: Record<CompanyCardId, CardOption> = {
   hikes: { label: "Pay revisions" },
   longestStint: { label: "Longest job" },
   lastHike: { label: "Last pay change" },
+  currentLpa: { label: "Current package", badge: "Actual × 12" },
 };
 
 export const DEFAULT_COMPANY_CARDS: CompanyCardId[] = [
@@ -39,6 +41,7 @@ export const DEFAULT_COMPANY_CARDS: CompanyCardId[] = [
   "experienceMonths",
   "lastHike",
   "currentInHand",
+  "currentLpa",
 ];
 
 export const COMPANY_CARDS_PREFERENCE_KEY = "companyCards";

@@ -27,7 +27,7 @@ import {
   DEFAULT_COMPANY_CARDS,
   type CompanyCardId,
 } from "@/lib/company-cards";
-import { formatDate, formatMoney, formatSpan, formatTenure } from "@/utils/format";
+import { formatDate, formatLpa, formatMoney, formatSpan, formatTenure } from "@/utils/format";
 import { currentEmployment, currentPayRate, type EmploymentListItem, type PayRate } from "@/types";
 
 interface CompanySummaryProps {
@@ -46,6 +46,7 @@ const CARD_ICONS: Record<CompanyCardId, LucideIcon> = {
   hikes: ArrowUpRight,
   longestStint: Timer,
   lastHike: CalendarDays,
+  currentLpa: TrendingUp,
 };
 
 function isCurrent(employment: EmploymentListItem): boolean {
@@ -75,6 +76,8 @@ function cardValue(id: CompanyCardId, employments: EmploymentListItem[]): string
       return pay ? formatMoney(pay.inHandSalary) : "—";
     case "currentActual":
       return pay ? formatMoney(pay.actualSalary) : "—";
+    case "currentLpa":
+      return pay && selected?.paymentType === "MONTHLY" ? formatLpa(pay.actualSalary) : "—";
     case "highestInHand": {
       const rates = employments
         .map((e) => currentPayRate(e.payHistory)?.inHandSalary)

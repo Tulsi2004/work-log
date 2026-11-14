@@ -23,6 +23,11 @@ export function formatMoney(value: number): string {
   })}`;
 }
 
+// A monthly salary as lakhs per annum: ₹25,000 a month → "3 LPA".
+export function formatLpa(monthly: number): string {
+  return `${((monthly * 12) / 100000).toLocaleString("en-IN", { maximumFractionDigits: 2 })} LPA`;
+}
+
 export function formatTime(time?: string | null): string | undefined {
   if (!time) return undefined;
   const [hours, minutes] = time.split(":").map(Number);

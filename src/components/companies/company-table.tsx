@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { formatDate, formatEnumLabel, formatMoney, formatTenure, formatTime } from "@/utils/format";
+import { formatDate, formatEnumLabel, formatLpa, formatMoney, formatTenure, formatTime } from "@/utils/format";
 import { formatCustomValue } from "@/lib/custom-fields";
 import { useCustomFields } from "@/hooks/use-custom-fields";
 import { useTableSort } from "@/hooks/use-table-sort";
@@ -68,6 +68,7 @@ export function CompanyTable({
             <TableHead className="w-[6%]">Payment</TableHead>
             <TableHead className="w-[7%]">Pay from</TableHead>
             <TableHead className="w-[7%] text-right">Actual</TableHead>
+            <TableHead className="w-[6%] text-right">LPA</TableHead>
             <TableHead className="w-[6%] text-right">PF</TableHead>
             <TableHead className="w-[7%] text-right">In-hand</TableHead>
             <TableHead className="w-[6%]">Pay day</TableHead>
@@ -148,6 +149,23 @@ export function CompanyTable({
                           className={cn(!isInForce(rate) && "text-muted-foreground")}
                         >
                           {formatMoney(rate.actualSalary)}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
+                {/* Yearly package per revision, so the climb reads top to bottom. */}
+                <TableCell className="text-right tabular-nums whitespace-nowrap">
+                  {rates.length && employment.paymentType === "MONTHLY" ? (
+                    <div className="space-y-0.5">
+                      {rates.map((rate) => (
+                        <div
+                          key={rate.effectiveFrom}
+                          className={cn(!isInForce(rate) && "text-muted-foreground")}
+                        >
+                          {formatLpa(rate.actualSalary)}
                         </div>
                       ))}
                     </div>
