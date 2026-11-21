@@ -4,43 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth";
 import { employmentLabel, formatDate, formatDay, formatEnumLabel, formatTime } from "@/utils/format";
 import type { WorkReport, WorkReportTask } from "@/types";
+import { formatHours, leaveDates, workedMinutes } from "@/lib/work-time";
 import { PrintButton } from "./print-button";
 
 // Outside the (dashboard) group on purpose: no navbar or chat widget, just the
 // report, laid out for paper. Opened from the Work log's "Export report" dialog.
 export const metadata: Metadata = { title: "Work report" };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 const isDay = (value: unknown): value is string =>
   typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
-
-function minutesOf(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-// A shift that runs past midnight (22:00 to 06:00) still counts its 8 hours.
-function workedMinutes(timeFrom: string, timeTo: string): number {
-  const diff = minutesOf(timeTo) - minutesOf(timeFrom);
-  return Number.isFinite(diff) ? (diff + 24 * 60) % (24 * 60) : 0;
-}
-
-function formatHours(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest ? `${hours} h ${rest} m` : `${hours} h`;
-}
-
-// A long vacation is one row running leaveFrom to leaveTo, so it counts every
-// day it covers — but only the days inside the period being reported.
-function leaveDays(report: WorkReport, from?: Date, to?: Date): number {
-  let start = report.leaveFrom ?? report.date;
-  let end = report.leaveTo ?? start;
-  if (from && start < from) start = from;
-  if (to && end > to) end = to;
-  return Math.max(1, Math.round((end.getTime() - start.getTime()) / DAY_MS) + 1);
-}
 
 function taskLines(report: WorkReport): string[] {
   if (report.hasNoTask) return [report.noTaskNote ? `No task — ${report.noTaskNote}` : "No task"];
@@ -86,7 +58,7 @@ export default async function WorkReportPrintPage({
     ["Office", worked.filter((r) => r.dayType === "OFFICE").length],
     ["Work from home", worked.filter((r) => r.dayType === "WORK_FROM_HOME").length],
     ["Half days", worked.filter((r) => r.dayType === "HALF_DAY").length],
-    ["Leave days", reports.filter((r) => r.isLeave).reduce((n, r) => n + leaveDays(r, fromDate, toDate), 0)],
+    ["Leave days", reports.filter((r) => r.isLeave).reduce((n, r) => n + leaveDates(r, fromDate, toDate).length, 0)],
     ["Meetings", reports.filter((r) => r.hasMeeting).length],
     ...(minutes ? [["Hours logged", formatHours(minutes)] as [string, string]] : []),
   ];

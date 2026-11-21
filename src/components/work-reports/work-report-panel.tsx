@@ -18,7 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkReportTable } from "@/components/work-reports/work-report-table";
+import { WorkTrendChart } from "@/components/work-reports/work-trend-chart";
 import { WorkReportFormDialog } from "@/components/work-reports/work-report-form-dialog";
 import { ReportExportDialog } from "@/components/work-reports/report-export-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -251,30 +253,44 @@ export function WorkReportPanel({ employmentId, onEmploymentChange, initialSearc
               </Link>{" "}
               to start logging work reports.
             </p>
-          ) : isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : reports.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No work reports yet. Add your first one instead of reaching for Word or Excel.
-            </p>
-          ) : visibleReports.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No work reports match the current filters.</p>
           ) : (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground tabular-nums">{visibleReports.length}</span>{" "}
-                {visibleReports.length === 1 ? "entry" : "entries"}
-                {hasActiveFilters && " matching the filters"}
-              </p>
-              <WorkReportTable
-                reports={visibleReports}
-                onEdit={(r) => {
-                  setEditingReport(r);
-                  setFormOpen(true);
-                }}
-                onDelete={(r) => setDeletingReport(r)}
-              />
-            </div>
+            // The filters above scope both tabs, so a date range charts just that span.
+            <Tabs defaultValue="entries">
+              <TabsList>
+                <TabsTrigger value="entries">Entries</TabsTrigger>
+                <TabsTrigger value="trend">Trend</TabsTrigger>
+              </TabsList>
+              <TabsContent value="trend">
+                <WorkTrendChart reports={visibleReports} />
+              </TabsContent>
+              <TabsContent value="entries">
+                {isLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading…</p>
+                ) : reports.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No work reports yet. Add your first one instead of reaching for Word or Excel.
+                  </p>
+                ) : visibleReports.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No work reports match the current filters.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground tabular-nums">{visibleReports.length}</span>{" "}
+                      {visibleReports.length === 1 ? "entry" : "entries"}
+                      {hasActiveFilters && " matching the filters"}
+                    </p>
+                    <WorkReportTable
+                      reports={visibleReports}
+                      onEdit={(r) => {
+                        setEditingReport(r);
+                        setFormOpen(true);
+                      }}
+                      onDelete={(r) => setDeletingReport(r)}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </div>
