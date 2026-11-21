@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leaveDates, monthlyWork, workedMinutes } from "@/lib/work-time";
+import { leaveDates, monthlyWork, projectDays, workedMinutes } from "@/lib/work-time";
 
 const day = (date: string, extra: Partial<Parameters<typeof monthlyWork>[0][number]> = {}) => ({
   date,
@@ -28,6 +28,25 @@ describe("work-time", () => {
     expect(rows[0]).toMatchObject({ office: 1, wfh: 1, leave: 2, hours: 18 });
     expect(rows[1]).toMatchObject({ office: 0, leave: 2, hours: 0 });
     expect(rows[2]).toMatchObject({ halfDay: 1, hours: 4 });
+  });
+
+  it("counts each project once per day, most days first", () => {
+    const report = (projects: string[], isLeave = false) => ({
+      isLeave,
+      tasks: projects.map((projectName) => ({ task: "x", projectName })),
+    });
+    expect(
+      projectDays([
+        report(["Freeserp", "freeserp ", "Bot ads"]),
+        report(["Freeserp"]),
+        report(["Tenon", ""]),
+        report(["Tenon"], true),
+      ])
+    ).toEqual([
+      { name: "Freeserp", days: 2 },
+      { name: "Bot ads", days: 1 },
+      { name: "Tenon", days: 1 },
+    ]);
   });
 
   it("clips a leave range to the period", () => {

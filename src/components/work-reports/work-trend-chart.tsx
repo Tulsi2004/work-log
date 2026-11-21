@@ -1,7 +1,8 @@
 "use client";
 
 import { SERIES_COLOURS, TrendChart } from "@/components/ui/trend-chart";
-import { formatHours, monthlyWork } from "@/lib/work-time";
+import { cn } from "@/lib/utils";
+import { formatHours, monthlyWork, projectDays } from "@/lib/work-time";
 import type { WorkReportWithEmployment } from "@/types";
 
 // Palette order kept as validated, so the series follow it rather than reading order.
@@ -21,7 +22,8 @@ export function WorkTrendChart({ reports }: { reports: WorkReportWithEmployment[
   const rows = monthlyWork(reports);
   const total = (key: "office" | "wfh" | "halfDay" | "leave" | "hours") => rows.reduce((n, r) => n + r[key], 0);
   const worked = total("office") + total("wfh") + total("halfDay");
-  const timed = reports.filter((r) => !r.isLeave && r.timeFrom && r.timeTo).length;
+  const projects = projectDays(reports);
+  const timed =reports.filter((r) => !r.isLeave && r.timeFrom && r.timeTo).length;
 
   const stats = [
     ["Days worked", days(worked)],
@@ -49,6 +51,31 @@ export function WorkTrendChart({ reports }: { reports: WorkReportWithEmployment[
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Hours per month</h3>
         <TrendChart series={HOUR_SERIES} rows={rows} formatValue={hours} empty="No work reports to chart yet." />
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="text-sm font-medium">Days per project</h3>
+        {/* Ranked bars rather than a pie: names stay readable however many projects there are. */}
+        {projects.length ? (
+          <ul className="space-y-1.5">
+            {projects.map((p) => (
+              <li key={p.name} className="grid grid-cols-[minmax(0,10rem)_1fr_auto] items-center gap-3 text-sm">
+                <span className="truncate" title={p.name}>{p.name}</span>
+                <span className="h-4 rounded-sm bg-muted">
+                  <span
+                    className={cn("block h-full rounded-sm", SERIES_COLOURS[0])}
+                    style={{ width: `${(p.days / projects[0].days) * 100}%` }}
+                  />
+                </span>
+                <span className="w-24 text-right text-xs text-muted-foreground tabular-nums">
+                  {days(p.days)} · {Math.round((p.days / worked) * 100)}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No project names on these reports yet.</p>
+        )}
       </section>
     </div>
   );

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { WorkReport } from "@/types";
+import type { WorkReport, WorkReportTask } from "@/types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -88,4 +88,24 @@ export function monthlyWork(reports: ReportLike[]): WorkMonth[] {
     rows.push(row(`${y}-${String(m).padStart(2, "0")}`));
   }
   return rows;
+}
+
+// Days spent on each project, most first. A day with three tasks on one
+// project counts once; names match ignoring case and stray spaces.
+export function projectDays(reports: Pick<WorkReport, "isLeave" | "tasks">[]): { name: string; days: number }[] {
+  const byKey = new Map<string, { name: string; days: number }>();
+  for (const report of reports) {
+    if (report.isLeave) continue;
+    const names = ((report.tasks as WorkReportTask[] | null) ?? []).map((t) => t.projectName?.trim()).filter(Boolean) as string[];
+    const seen = new Set<string>();
+    for (const name of names) {
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const entry = byKey.get(key) ?? { name, days: 0 };
+      entry.days += 1;
+      byKey.set(key, entry);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => b.days - a.days || a.name.localeCompare(b.name));
 }
